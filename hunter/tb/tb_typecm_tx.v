@@ -88,7 +88,8 @@ module tb_typecm_tx(
         else tx_btype <= tx_btype;
     end
 
-    typecm_tx(
+    typecm_tx
+    typecm_tx_dut(
         .clk(clk),
         .rst(rst),
         .fs(fs_tx),

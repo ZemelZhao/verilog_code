@@ -7,7 +7,8 @@ module top(
 
     assign rst = ~rst_n;
 
-    tb_typec_rx(
+    tb_typec_txf
+    tb_typec_txf_dut(
         .clk(clk),
         .rst(rst)
     );

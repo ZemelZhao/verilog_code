@@ -11,7 +11,7 @@ module typecm_txf(
 
     localparam SYNC_DATA = 8'h01;
 
-    (*MARK_DEBUG = "true"*)reg [3:0] state; 
+    reg [3:0] state; 
     reg [3:0] next_state;
     localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
     localparam W0 = 4'h4, W1 = 4'h5, W2 = 4'h6, W3 = 4'h7;

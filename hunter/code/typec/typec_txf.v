@@ -2,7 +2,7 @@ module typec_txf(
     input clk,
     input rst,
 
-    input fs_tx,
+    input fs,
 
     input [7:0] din,
     output reg [3:0] dout,
@@ -24,7 +24,7 @@ module typec_txf(
         case(state)
             IDLE: next_state <= WAIT;
             WAIT: begin
-                if(fs_tx) next_state <= WORK;
+                if(fs) next_state <= WORK;
                 else next_state <= WAIT;
             end
             WORK: begin
@@ -33,7 +33,7 @@ module typec_txf(
             end
             W0: next_state <= W1;
             W1: begin
-                if(~fs_tx) next_state <= DONE;
+                if(~fs) next_state <= DONE;
                 else next_state <= W0;
             end
             DONE: next_state <= WAIT;

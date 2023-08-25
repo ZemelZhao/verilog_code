@@ -255,7 +255,7 @@ module tb_typec_txf(
         .clk(clk_100),
         .rst(rst),
 
-        .fs_tx(fs_typec_tx),
+        .fs(fs_typec_tx),
 
         .din(com_txd),
         .dout(pin),

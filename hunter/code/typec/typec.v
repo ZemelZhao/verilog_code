@@ -8,7 +8,6 @@ module typec(
 
     input pin_rxd,
     output [3:0] pin_txd,
-    // inout [1:0] pin_sbu,
     input fire_recv,
     output fire_send,
 

@@ -7,8 +7,8 @@ module top(
 
     assign rst = ~rst_n;
 
-    tb_typec
-    tb_typec_dut(
+    tb_adc2ram
+    tb_adc2ram_dut(
         .clk(clk),
         .rst(rst)
     );

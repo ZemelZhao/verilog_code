@@ -5,13 +5,12 @@ module ram_rx(
     input fs,
     output fd,
     input [11:0] ram_rxa_init,
+    input [11:0] data_len,
 
     output reg [11:0] ram_rxa,
-    input [7:0] ram_rxd,
-    output ram_rxen
+    input [7:0] ram_rxd
 );
 
-    localparam DATA_LEN = 8'h100;
     reg [3:0] state, next_state;
 
     localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
@@ -20,7 +19,6 @@ module ram_rx(
     reg [7:0] num;
 
     assign fd = (state == DONE);
-    assign ram_rxen = (state == WORK);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -36,7 +34,7 @@ module ram_rx(
             end
             INIT: next_state <= WORK;
             WORK: begin
-                if(num >= DATA_LEN - 1'b1) next_state <= DONE;
+                if(num >= data_len - 1'b1) next_state <= DONE;
                 else next_state <= WORK;
             end
             DONE: begin

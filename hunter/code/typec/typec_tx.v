@@ -37,7 +37,8 @@ module typec_tx(
     localparam HEAD_DTYPE = 4'h1, HEAD_DTEMP = 4'h9, HEAD_DHEAD = 4'h3;
     localparam DATA_DLINK = 12'h123;
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] next_state;
 
     localparam IDLE = 8'h00, WAIT = 8'h01, SYNC = 8'h02, DONE = 8'h03;
     localparam WPID = 8'h10, DLEN0 = 8'h11, DLEN1 = 8'h12;
@@ -50,15 +51,14 @@ module typec_tx(
 
     wire [11:0] dLen;
 
-    wire [7:0] crc5_out;
-    wire [15:0] crc16_out;
-    wire [7:0] crc_in;
-    wire crcen;
+    (*MARK_DEBUG = "true"*)wire [7:0] crc5_out;
+    (*MARK_DEBUG = "true"*)wire [15:0] crc16_out;
+    (*MARK_DEBUG = "true"*)wire [7:0] crc_in;
+    (*MARK_DEBUG = "true"*)reg crcen;
 
     assign fd = (state == DONE);
     assign dLen = data_len + 2'h2;
 
-    assign crcen = (state == DATA) || (state == STAT0) || (state == STAT1) || (state == HEAD0) || (state == HEAD1);
     assign crc_in = com_txd; // 
 
     always@(posedge clk or posedge rst) begin
@@ -171,6 +171,16 @@ module typec_tx(
         if(rst) num <= 12'h0000;
         else if(state == DATA) num <= num + 1'b1;
         else num <= 12'h000;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) crcen <= 1'b0;
+        else if(state == DATA) crcen <= 1'b1;
+        else if(state == STAT0) crcen <= 1'b1;
+        else if(state == STAT1) crcen <= 1'b1;
+        else if(state == HEAD0) crcen <= 1'b1;
+        else if(state == HEAD1) crcen <= 1'b1;
+        else crcen <= 1'b0;
     end
 
     crc5

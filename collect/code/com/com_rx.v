@@ -44,14 +44,14 @@ module com_rx(
 
     reg [11:0] num;
     reg [11:0] stat_len;
-    wire crcen;
-    wire [7:0] crc_in;
-    wire [15:0] crc16_out;
-    wire [7:0] crc5_out;
+    (*MARK_DEBUG = "true"*)wire crcen;
+    (*MARK_DEBUG = "true"*)wire [7:0] crc_in;
+    (*MARK_DEBUG = "true"*)wire [15:0] crc16_out;
+    (*MARK_DEBUG = "true"*)wire [7:0] crc5_out;
 
     assign ram_txen = (state == RDATA);
 
-    assign crcen = (state == RSTAT) || (state == RDATA) || (state == HEAD0) || (state == HEAD1);
+    assign crcen = (state == RSTAT) || (state == PDATA) ||(state == RDATA) || (state == HEAD0) || (state == HEAD1);
     assign crc_in = com_rxd;
     assign fs = (state == DONE);
 

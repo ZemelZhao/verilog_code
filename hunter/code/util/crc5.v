@@ -7,6 +7,8 @@ module crc5(
 
     // CRC5 x^5 + x^2 + 1
 
+    localparam CRC_INIT = 5'h1F;
+
     reg [1:0] state, next_state;
     localparam IDLE = 2'b00, WAIT = 2'b01, WORK = 2'b10, DONE = 2'b11;
 
@@ -42,8 +44,9 @@ module crc5(
     end
 
     always@(posedge clk) begin
-        if(state == IDLE) cout <= 5'h1F;
+        if(state == IDLE) cout <= CRC_INIT;
         else if(state == WORK) cout <= ctmp;
+        else if(state == WAIT) cout <= CRC_INIT;
         else cout <= cout;
     end
 

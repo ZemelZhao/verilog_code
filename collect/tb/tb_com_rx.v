@@ -3,7 +3,7 @@ module tb_com_rx(
     input rst
 );
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, DONE = 8'h02;
     localparam RAM_TX = 8'h10, RAM_RX = 8'h11;
@@ -17,27 +17,27 @@ module tb_com_rx(
     localparam WTEMP = 8'h3C, RTEMP = 8'h3D, WDATA = 8'h3E, RDATA = 8'h3F;
 
     wire ram_txc, ram_rxc;
-    (*MARK_DEBUG = "true"*)wire [11:0] ram_in_txa, ram_in_rxa;
-    (*MARK_DEBUG = "true"*)wire [7:0] ram_in_txd, ram_in_rxd;
-    (*MARK_DEBUG = "true"*)wire ram_in_txen;
-    (*MARK_DEBUG = "true"*)wire [11:0] ram_out_txa, ram_out_rxa;
-    (*MARK_DEBUG = "true"*)wire [7:0] ram_out_txd, ram_out_rxd;
-    (*MARK_DEBUG = "true"*)wire ram_out_txen;
+    wire [11:0] ram_in_txa, ram_in_rxa;
+    wire [7:0] ram_in_txd, ram_in_rxd;
+    wire ram_in_txen;
+    wire [11:0] ram_out_txa, ram_out_rxa;
+    wire [7:0] ram_out_txd, ram_out_rxd;
+    wire ram_out_txen;
 
-    (*MARK_DEBUG = "true"*)wire fs_ram_tx, fd_ram_tx;
-    (*MARK_DEBUG = "true"*)wire fs_typec_tx, fd_typec_tx;
-    (*MARK_DEBUG = "true"*)wire fs_com_rx, fd_com_rx;
-    (*MARK_DEBUG = "true"*)wire fs_ram_rx, fd_ram_rx;
-    (*MARK_DEBUG = "true"*)wire [7:0] com_rxd;
+    wire fs_ram_tx, fd_ram_tx;
+    wire fs_typec_tx, fd_typec_tx;
+    wire fs_com_rx, fd_com_rx;
+    wire fs_ram_rx, fd_ram_rx;
+    wire [7:0] com_rxd;
 
-    (*MARK_DEBUG = "true"*)wire [7:0] com_txd, com_rxd;
+    wire [7:0] com_txd, com_rxd;
 
-    (*MARK_DEBUG = "true"*)reg [3:0] tx_btype;
-    (*MARK_DEBUG = "true"*)wire [3:0] rx_btype;
-    (*MARK_DEBUG = "true"*)wire [7:0] rx_bdata;
-    (*MARK_DEBUG = "true"*)wire [3:0] rx_didx, rx_ddidx;
-    (*MARK_DEBUG = "true"*)wire [3:0] rx_stat;
-    (*MARK_DEBUG = "true"*)wire [11:0] rx_data_len;
+    reg [3:0] tx_btype;
+    wire [3:0] rx_btype;
+    wire [7:0] rx_bdata;
+    wire [3:0] rx_didx, rx_ddidx;
+    wire [3:0] rx_stat;
+    wire [11:0] rx_data_len;
 
 
     localparam BAG_INIT = 4'b0000; 

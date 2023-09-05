@@ -1,4 +1,4 @@
-module com_tx(
+module com_tx_err(
     input clk,
     input rst,
 
@@ -13,13 +13,13 @@ module com_tx(
     output reg [7:0] com_txd
 );
 
-    localparam BAG_INIT = 4'b0000;
+    localparam BAG_INIT = 4'b0000; 
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STALL = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'h1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DHEAD = 4'b1100, BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
 
-    localparam PID_SYNC = 8'h01, PID_LINK = 8'h3C;
+    localparam PID_SYNC = 8'h01;
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STALL = 8'hE1;
     localparam PID_CMD = 8'h1E, PID_STAT = 8'hD2; 
     localparam PID_DATA0 = 8'h96, PID_DATA1 = 8'h5A;
@@ -28,7 +28,6 @@ module com_tx(
 
     (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
-
     localparam IDLE = 8'h00, WAIT = 4'h01, WORK = 8'h02, DONE = 4'h03;
     localparam SYNC = 8'h10, WPID = 8'h11, WCMD = 8'h12, CRC5 = 8'h13;
     localparam DLEN0 = 8'h14, DLEN1 = 8'h15;
@@ -92,7 +91,7 @@ module com_tx(
 
     always@(posedge clk or posedge rst) begin
         if(rst) com_txd <= 8'h00;
-        else if(state == WORK) com_txd <= crc5_out;
+        else if(state == WORK) com_txd <= crc5_out + 1'b1;
         else com_txd <= txd;
     end
 

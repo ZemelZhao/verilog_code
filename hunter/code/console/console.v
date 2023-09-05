@@ -21,7 +21,7 @@ module console(
 
     input [3:0] read_btype,
     output reg [3:0] send_btype,
-    input [3:0] read_btype,
+    input [3:0] read_bdata,
 
     input [7:0] adc_type,
     input [15:0] adc_temp,
@@ -154,7 +154,7 @@ module console(
     always@(posedge clk or posedge rst) begin
         if(rst) adc_freq <= 4'h0;
         else if(state == MAIN_IDLE) adc_freq <= 4'h0;
-        else if(state == CONF_IDLE) adc_freq <= read_btype;
+        else if(state == CONF_IDLE) adc_freq <= read_bdata;
         else adc_freq <= adc_freq;
     end
 

@@ -1,4 +1,4 @@
-module typecm_rxf(
+module com_rxf(
     input clk,
     input rst,
 

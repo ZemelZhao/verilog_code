@@ -45,7 +45,7 @@ module crc5(
 
     always@(posedge clk) begin
         if(state == IDLE) cout <= CRC_INIT;
-        else if(state == WORK) cout <= ctmp;
+        else if(state == WORK && enable) cout <= ctmp;
         else if(state == WAIT) cout <= CRC_INIT;
         else cout <= cout;
     end

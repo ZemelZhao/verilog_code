@@ -1,4 +1,4 @@
-module typecm_txf(
+module com_txf(
     input clk,
     input rst,
 
@@ -12,10 +12,13 @@ module typecm_txf(
     localparam SYNC_DATA = 8'h01;
 
     reg [3:0] state; 
-    reg [3:0] next_state;
-    localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
-    localparam W0 = 4'h4, W1 = 4'h5, W2 = 4'h6, W3 = 4'h7;
-    localparam W4 = 4'h8, W5 = 4'h9, W6 = 4'hA, W7 = 4'hB;
+    reg [7:0] next_state;
+    localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
+    localparam W0 = 8'h04, W1 = 8'h05, W2 = 8'h06, W3 = 8'h07;
+    localparam W4 = 8'h08, W5 = 8'h09, W6 = 8'h0A, W7 = 8'h0B;
+    localparam G0 = 8'h14, G1 = 8'h15, G2 = 8'h16, G3 = 8'h17;
+    localparam G4 = 8'h18, G5 = 8'h19, G6 = 8'h1A, G7 = 8'h1B;
+
     
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -41,9 +44,17 @@ module typecm_txf(
             W5: next_state <= W6;
             W6: next_state <= W7;
             W7: begin
-                if(~fs) next_state <= DONE;
+                if(~fs) next_state <= G0;
                 else next_state <= W0;
             end
+            G0: next_state <= G1;
+            G1: next_state <= G2;
+            G2: next_state <= G3;
+            G3: next_state <= G4;
+            G4: next_state <= G5;
+            G5: next_state <= G6;
+            G6: next_state <= G7;
+            G7: next_state <= DONE;
             DONE: next_state <= IDLE;
             default: next_state <= IDLE;
         endcase
@@ -74,7 +85,14 @@ module typecm_txf(
         else if(state == W5) fire <= 1'b1;
         else if(state == W6) fire <= 1'b1;
         else if(state == W7) fire <= 1'b1;
-        else if(state == DONE) fire <= 1'b0;
+        else if(state == G0) fire <= 1'b1;
+        else if(state == G1) fire <= 1'b1;
+        else if(state == G2) fire <= 1'b1;
+        else if(state == G3) fire <= 1'b1;
+        else if(state == G4) fire <= 1'b1;
+        else if(state == G5) fire <= 1'b1;
+        else if(state == G6) fire <= 1'b1;        
+        else if(state == G7) fire <= 1'b1;
         else fire <= 1'b0;
     end 
 

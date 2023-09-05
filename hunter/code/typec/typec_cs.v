@@ -30,6 +30,8 @@ module typec_cs(
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DHEAD = 4'b1100, BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
 
+    localparam DATA_DLINK = 8'h23;
+
     (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
     reg [7:0] state_goto;
@@ -37,13 +39,14 @@ module typec_cs(
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01;
     localparam SEND_DATA = 8'h10, SEND_ACK = 8'h11, SEND_NAK = 8'h12, SEND_DONE = 8'h13;
     localparam SEND_PDATA0 = 8'h14, SEND_PDATA1 = 8'h15, SEND_PACK = 8'h16, SEND_PNAK = 8'h17;
+    localparam SEND_WNAK = 8'h18;
     localparam RECV_WAIT = 8'h20, RECV_TAKE = 8'h21, RECV_DONE = 8'h22;
-    localparam READ_DATA = 8'h40, READ_TAKE = 8'h41, READ_DONE = 8'h42;
+    localparam READ_DATA = 8'h40, READ_TAKE = 8'h41, READ_DONE = 8'h42, READ_WAIT = 8'h43;
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_DONE);
     assign fs_tx = (state == SEND_DATA) || (state == SEND_ACK) || (state == SEND_NAK);
-    assign fd_rx = (state == RECV_DONE) || (state == READ_TAKE);
+    assign fd_rx = (state == RECV_DONE) || (state == READ_WAIT);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -83,11 +86,16 @@ module typec_cs(
                 if(rx_btype == BAG_DIDX) next_state <= READ_TAKE;
                 else if(rx_btype == BAG_DPARAM) next_state <= READ_TAKE;
                 else if(rx_btype == BAG_DDIDX) next_state <= READ_TAKE;
-                else next_state <= SEND_PNAK;
+                else next_state <= SEND_WNAK;
             end
-            READ_TAKE: begin
+            READ_TAKE: next_state <= READ_WAIT;
+            READ_WAIT: begin
                 if(~fs_rx) next_state <= SEND_PACK;
-                else next_state <= READ_TAKE;
+                else next_state <= READ_WAIT;
+            end
+            SEND_WNAK: begin
+                if(~fs_rx) next_state <= SEND_PNAK;
+                else next_state <= SEND_WNAK;
             end
             SEND_PACK: next_state <= SEND_ACK;
             SEND_ACK: begin

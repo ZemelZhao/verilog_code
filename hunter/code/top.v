@@ -8,8 +8,8 @@ module top(
     assign rst = ~rst_n;
 
 
-    tb_com_rx
-    tb_com_rx_dut(
+    tb_ram2fifo
+    tb_ram2fifo_dut(
         .clk(clk),
         .rst(rst)
     );

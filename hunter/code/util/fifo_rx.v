@@ -5,16 +5,17 @@ module fifo_rx(
     input fs,
     output fd,
 
+    input [15:0] data_len,
+
     output fifo_rxen,
     input [7:0] fifo_rxd
 );
 
-    localparam DATA_NUM = 8'd80;
 
     reg [1:0] state, next_state;
     localparam IDLE = 2'h0, WAIT = 2'h1, WORK = 2'h2, DONE = 2'h3;
 
-    reg [7:0] num;
+    reg [15:0] num;
 
     assign fifo_rxen = (state == WORK);
     assign fd = (state == DONE);
@@ -32,7 +33,7 @@ module fifo_rx(
                 else next_state <= WAIT;
             end
             WORK: begin
-                if(num > DATA_NUM) next_state <= DONE;
+                if(num >= data_len - 1'b1) next_state <= DONE;
                 else next_state <= WORK;
             end
             DONE: begin
@@ -44,9 +45,9 @@ module fifo_rx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) num <= 8'h00;
-        else if(state == IDLE) num <= 8'h00;
-        else if(state == WAIT) num <= 8'h00;
+        if(rst) num <= 16'h00;
+        else if(state == IDLE) num <= 16'h00;
+        else if(state == WAIT) num <= 16'h00;
         else if(state == WORK) num <= num + 1'b1;
         else num <= num;
     end

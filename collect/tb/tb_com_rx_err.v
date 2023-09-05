@@ -1,4 +1,4 @@
-module tb_com_rx(
+module tb_com_rx_err(
     input clk,
     input rst
 );
@@ -28,6 +28,7 @@ module tb_com_rx(
     wire fs_typec_tx, fd_typec_tx;
     wire fs_com_rx, fd_com_rx;
     wire fs_ram_rx, fd_ram_rx;
+    wire [7:0] com_rxd;
 
     wire [7:0] com_txd, com_rxd;
 
@@ -217,8 +218,8 @@ module tb_com_rx(
     );    
 
 
-    typec_tx
-    typec_tx_dut(
+    typec_tx_err
+    typec_tx_err_dut(
         .clk(ram_rxc),
         .rst(rst),
 

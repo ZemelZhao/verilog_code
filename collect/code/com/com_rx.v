@@ -24,6 +24,7 @@ module com_rx(
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DHEAD = 4'b1100, BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
+    localparam BAG_ERROR = 4'b1111;
 
     localparam PID_SYNC = 8'h0F;
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STALL = 8'hE1;
@@ -36,6 +37,7 @@ module com_rx(
     (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, RPID = 8'h02, DONE = 8'h03;
+    localparam ERROR = 8'h04;
     localparam RACK = 8'h10, RNAK = 8'h11, RSTALL = 8'h12;
     localparam SNUM0 = 8'h20, SNUM1 = 8'h21, RSTAT = 8'h22;
     localparam DNUM0 = 8'h30, DNUM1 = 8'h31, HEAD0 = 8'h32, HEAD1 = 8'h33;
@@ -51,7 +53,7 @@ module com_rx(
 
     assign ram_txen = (state == RDATA);
 
-    assign crcen = (state == RSTAT) || (state == PDATA) ||(state == RDATA) || (state == HEAD0) || (state == HEAD1);
+    assign crcen = (state == RSTAT) || (state == PDATA) ||(state == RDATA) || (state == HEAD0) || (state == HEAD1) || (state == SNUM1) || (state == DNUM1);
     assign crc_in = com_rxd;
     assign fs = (state == DONE);
 
@@ -93,14 +95,24 @@ module com_rx(
             HEAD1: next_state <= PDATA;
             PDATA: next_state <= RDATA;
             RDATA: begin
-                if(num >= data_len - 1'b1) next_state <= CRC160;
+                if(num >= data_len - 2'h2) next_state <= CRC160;
                 else next_state <= RDATA;
             end
 
-            CRC5: next_state <= DONE;
-            CRC160: next_state <= CRC161;
-            CRC161: next_state <= DONE;
+            CRC5: begin
+                if(com_rxd == crc5_out) next_state <= DONE;
+                else next_state <= ERROR;
+            end
+            CRC160: begin
+                if(com_rxd == crc16_out[15:8]) next_state <= CRC161;
+                else next_state <= ERROR;
+            end
+            CRC161: begin
+                if(com_rxd == crc16_out[7:0]) next_state <= DONE;
+                else next_state <= ERROR;
+            end 
 
+            ERROR: next_state <= DONE;
             DONE: begin
                 if(fd) next_state <= WAIT;
                 else next_state <= DONE;
@@ -120,6 +132,7 @@ module com_rx(
         else if(state == RSTAT && num == 1'b0 && com_rxd[7:4] == HEAD_DTEMP) btype <= BAG_DTEMP; 
         else if(state == RPID && com_rxd == PID_DATA0) btype <= BAG_DATA0;
         else if(state == RPID && com_rxd == PID_DATA1) btype <= BAG_DATA1;
+        else if(state == ERROR) btype <= BAG_ERROR;
         else btype <= btype;
     end
 

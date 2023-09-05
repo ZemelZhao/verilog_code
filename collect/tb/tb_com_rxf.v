@@ -1,5 +1,8 @@
-module tb_com_rx(
-    input clk,
+module tb_com_rxf(
+    input clk_25,
+    input clk_50,
+    input clk_100,
+    input clk_200,
     input rst
 );
 
@@ -37,6 +40,10 @@ module tb_com_rx(
     wire [3:0] rx_didx, rx_ddidx;
     wire [3:0] rx_stat;
     wire [11:0] rx_data_len;
+    
+    wire clk;
+    wire fire;
+    wire [3:0] pin;
 
 
     localparam BAG_INIT = 4'b0000; 
@@ -51,9 +58,9 @@ module tb_com_rx(
     assign fs_typec_tx = (state == TACK) || (state == TNAK) || (state == TSTALL) || (state == DLINK) || (state == DTYPE) || (state == DTEMP) || (state == DATA0);
     assign fd_com_rx = (state == RACK) || (state == RNAK) || (state == RSTALL) || (state == RLINK) || (state == RTYPE) || (state == RTEMP) || (state == RDATA);
     assign fs_ram_rx = (state == RAM_RX);
-    assign ram_txc = clk;
-    assign ram_rxc = clk;
-    assign com_rxd = com_txd;
+    assign ram_txc = clk_50;
+    assign ram_rxc = clk_50;
+    assign clk = clk_50;
     
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -190,14 +197,14 @@ module tb_com_rx(
 
     ram_tx
     ram_tx_dut(
-        .clk(ram_txc),
+        .clk(clk_50),
         .rst(rst),
 
         .fs(fs_ram_tx),
         .fd(fd_ram_tx),
 
         .addr_init(12'h000),
-        .data_len(12'h800),
+        .data_len(12'h100),
 
         .ram_txa(ram_in_txa),
         .ram_txd(ram_in_txd),
@@ -206,7 +213,7 @@ module tb_com_rx(
 
     ram_rx
     ram_rx_dut(
-        .clk(ram_rxc),
+        .clk(clk_50),
         .rst(rst),
         .fs(fs_ram_rx),
         .fd(fd_ram_rx),
@@ -219,7 +226,7 @@ module tb_com_rx(
 
     typec_tx
     typec_tx_dut(
-        .clk(ram_rxc),
+        .clk(clk_50),
         .rst(rst),
 
         .fs(fs_typec_tx),
@@ -242,7 +249,7 @@ module tb_com_rx(
 
     com_rx
     com_rx_dut(
-        .clk(ram_txc),
+        .clk(clk_50),
         .rst(rst),
 
         .fs(fs_com_rx),
@@ -262,6 +269,29 @@ module tb_com_rx(
         .data_len(rx_data_len)
 
     );
+
+    com_rxf
+    com_rxf_dut(
+        .clk(clk_100),
+        .rst(rst),
+
+        .fire(fire),
+        .din(pin),
+        .dout(com_rxd)
+    );
+
+    typec_txf
+    typec_txf_dut(
+        .clk(clk_100),
+        .rst(rst),
+
+        .fs(fs_typec_tx),
+
+        .din(com_txd),
+        .dout(pin),
+        .fire(fire)
+    );
+
 
     ram
     ram_in(

@@ -7,8 +7,9 @@ module crc16(
 
     // CRC16 x^16 + x^15 + x^2 + 1
     localparam CRC_INIT = 16'hFFFF;
-    reg [1:0] state, next_state;
-    localparam IDLE = 2'b00, WAIT = 2'b01, WORK = 2'b10, DONE = 2'b11;
+    reg [3:0] state, next_state;
+    localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
+    localparam SH0W = 4'h4, SH1W = 4'h5, SH2W = 4'h6, SH3W = 4'h7;
 
     reg [15:0] cout; 
     wire [15:0] ctmp;
@@ -45,8 +46,12 @@ module crc16(
             end
             WORK: begin
                 if(enable) next_state <= WORK;
-                else next_state <= DONE;
+                else next_state <= SH0W;
             end
+            SH0W: next_state <= SH1W;
+            SH1W: next_state <= SH2W;
+            SH2W: next_state <= SH3W;
+            SH3W: next_state <= DONE;
             DONE: next_state <= WAIT;
             default: next_state <= IDLE;
         endcase
@@ -54,7 +59,7 @@ module crc16(
 
     always@(posedge clk) begin
         if(state == IDLE) cout <= CRC_INIT;
-        else if(state == WORK) cout <= ctmp;
+        else if(state == WORK && enable) cout <= ctmp;
         else if(state == WAIT) cout <= CRC_INIT;
         else cout <= cout;
     end

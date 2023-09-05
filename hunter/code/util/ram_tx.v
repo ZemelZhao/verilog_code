@@ -5,6 +5,8 @@ module ram_tx(
     input fs,
     output fd,
 
+    input [7:0] bias,
+
     input [11:0] addr_init,
     input [11:0] data_len,
 
@@ -19,7 +21,7 @@ module ram_tx(
     reg [11:0] num;
 
     assign fd = (state == DONE);
-    assign ram_txd = ram_txa[7:0];
+    assign ram_txd = ram_txa[7:0] + bias;
     assign ram_txen = (state == WORK);
 
     always@(posedge clk or posedge rst) begin

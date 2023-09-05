@@ -1,4 +1,4 @@
-module typec_tx(
+module typec_tx_err(
     input clk,
     input rst,
 
@@ -181,9 +181,9 @@ module typec_tx(
 
     always@(posedge clk or posedge rst) begin
         if(rst) com_txd <= 8'h00;
-        else if(state == WORK0) com_txd <= crc5_out; 
-        else if(state == CRC161) com_txd <= crc16_out[15:8];
-        else if(state == WORK1) com_txd <= crc16_out[7:0];
+        else if(state == WORK0) com_txd <= crc5_out + 1'b1; 
+        else if(state == CRC161) com_txd <= crc16_out[15:8] + 1'b1;
+        else if(state == WORK1) com_txd <= crc16_out[7:0] + 1'b1;
         else com_txd <= txd;
     end
 

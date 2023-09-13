@@ -26,7 +26,7 @@ module com_tx(
 
     localparam HEAD_DDIDX = 4'h1, HEAD_DPARAM = 4'h5, HEAD_DIDX = 4'h9;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
 
     localparam IDLE = 8'h00, WAIT = 4'h01, WORK = 8'h02, DONE = 4'h03;
@@ -36,9 +36,9 @@ module com_tx(
     reg [7:0] pid;
     reg [7:0] txd;
 
-    (*MARK_DEBUG = "true"*)wire [7:0] crc_in;
-    (*MARK_DEBUG = "true"*)wire [7:0] crc5_out;
-    (*MARK_DEBUG = "true"*)wire crcen;
+    wire [7:0] crc_in;
+    wire [7:0] crc5_out;
+    wire crcen;
 
     assign fd = (state == DONE);
     assign crc_in = txd; //

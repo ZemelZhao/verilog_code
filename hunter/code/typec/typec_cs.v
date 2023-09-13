@@ -32,7 +32,7 @@ module typec_cs(
 
     localparam DATA_DLINK = 8'h23;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     reg [7:0] state_goto;
 

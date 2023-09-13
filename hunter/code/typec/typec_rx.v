@@ -25,10 +25,10 @@ module typec_rx(
 
     localparam HEAD_DDIDX = 4'h1, HEAD_DPARAM = 4'h5, HEAD_DIDX = 4'h9;
 
-    (*MARK_DEBUG = "true"*)reg [3:0] state; 
+    reg [3:0] state; 
     reg [3:0] next_state;
-    (*MARK_DEBUG = "true"*)wire crcen;
-    (*MARK_DEBUG = "true"*)wire [7:0] crc_in, crc_out;
+    wire crcen;
+    wire [7:0] crc_in, crc_out;
 
     assign crc_in = com_rxd; // 
 

@@ -33,15 +33,15 @@ module typec(
     wire [3:0] device_idx;
     wire [3:0] data_idx;
 
-    (*MARK_DEBUG = "true"*)wire fs_tx, fd_tx;
-    (*MARK_DEBUG = "true"*)wire fs_rx, fd_rx;
+    wire fs_tx, fd_tx;
+    wire fs_rx, fd_rx;
 
-    (*MARK_DEBUG = "true"*)wire [3:0] rx_btype, tx_btype;
+    wire [3:0] rx_btype, tx_btype;
     wire [3:0] rx_bdata;
 
     wire [7:0] data_head;
 
-    (*MARK_DEBUG = "true"*)wire [7:0] com_txd, com_rxd;
+    wire [7:0] com_txd, com_rxd;
 
     wire fire_send, fire_recv;
 

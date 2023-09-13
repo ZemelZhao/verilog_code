@@ -40,12 +40,21 @@ module sim();
         #5;
     end
 
-
-    tb_ram2fifo
-    tb_ram2fifo(
-        .clk(clk_200),
+    tb_com
+    tb_com_dut(
+        .clk_25(clk_25),
+        .clk_50(clk_50),
+        .clk_100(clk_100),
+        .clk_200(clk_200),
         .rst(rst)
     );
+
+
+    // tb_ram2fifo
+    // tb_ram2fifo(
+    //     .clk(clk_200),
+    //     .rst(rst)
+    // );
 
 
 

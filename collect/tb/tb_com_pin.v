@@ -1,6 +1,17 @@
-module tb_com(
+module tb_com_pin(
     input clk,
-    input rst
+    input rst,
+
+    (*MARK_DEBUG = "true"*)input [3:0] pm_rxd,
+    (*MARK_DEBUG = "true"*)input ps_rxd,
+    (*MARK_DEBUG = "true"*)output [3:0] ps_txd,
+    (*MARK_DEBUG = "true"*)output pm_txd,
+
+    (*MARK_DEBUG = "true"*)input pm_recv,
+    (*MARK_DEBUG = "true"*)input ps_recv,
+
+    (*MARK_DEBUG = "true"*)output pm_send,
+    (*MARK_DEBUG = "true"*)output ps_send
 );
 
     localparam BAG_INIT = 4'b0000; 
@@ -38,21 +49,12 @@ module tb_com(
 
     wire fs_ram_tx, fd_ram_tx;
 
-    (*MARK_DEBUG = "true"*)wire fsm_send, fdm_send;
-    (*MARK_DEBUG = "true"*)wire fsm_read, fdm_read;
-    (*MARK_DEBUG = "true"*)wire fss_send, fds_send;
-    (*MARK_DEBUG = "true"*)wire fss_read, fds_read;
-
-    (*MARK_DEBUG = "true"*)wire fm_send, fm_recv;
-    wire pm_txd;
-    wire [3:0] pm_rxd;
-
-    (*MARK_DEBUG = "true"*)wire fs_send, fs_recv;
-    wire ps_rxd;
-    wire [3:0] ps_txd;
+    wire fsm_send, fdm_send;
+    wire fsm_read, fdm_read;
+    wire fss_send, fds_send;
+    wire fss_read, fds_read;
 
     (*MARK_DEBUG = "true"*)wire [3:0] m_read_btype;
-    (*MARK_DEBUG = "true"*)wire [7:0] m_read_bdata;
 
     (*MARK_DEBUG = "true"*)wire [3:0] s_read_btype;
     (*MARK_DEBUG = "true"*)wire [3:0] s_read_bdata;
@@ -71,14 +73,8 @@ module tb_com(
     assign fds_read = (state == RSDIDX) || (state == RSDPARAM) || (state == RSDDIDX);
     assign fs_ram_tx = (state == RAM_TX);
 
-    assign fm_recv = fs_send;
-    assign fs_recv = fm_send;
-    assign ps_rxd = pm_txd;
-    assign pm_rxd = ps_txd;
 
-    assign clk_50 = clk;
-
-    always@(posedge clk or posedge rst) begin
+    always@(posedge clk_50 or posedge rst) begin
         if(rst) state <= IDLE;
         else state <= next_state;
     end
@@ -195,7 +191,7 @@ module tb_com(
         endcase
     end
 
-    always@(posedge clk or posedge rst) begin
+    always@(posedge clk_50 or posedge rst) begin
         if(rst) m_send_btype <= BAG_INIT;
         else if(state == IDLE) m_send_btype <= BAG_INIT;
         else if(state == PMDIDX) m_send_btype <= BAG_DIDX;
@@ -204,7 +200,7 @@ module tb_com(
         else m_send_btype <= m_send_btype;
     end
 
-    always@(posedge clk or posedge rst) begin
+    always@(posedge clk_50 or posedge rst) begin
         if(rst) s_send_btype <= BAG_INIT;
         else if(state == IDLE) s_send_btype <= BAG_INIT;
         else if(state == PSDLINK) s_send_btype <= BAG_DLINK; 
@@ -218,8 +214,9 @@ module tb_com(
     mmcm_dut(
         .clk_in(clk),
         .clk_out1(clk_25),
-        .clk_out2(clk_100),
-        .clk_out3(clk_200)
+        .clk_out2(clk_50),
+        .clk_out3(clk_100),
+        .clk_out4(clk_200)
     );
 
     ram
@@ -275,8 +272,6 @@ module tb_com(
         .ram_rxd(ramo_rxd)
     );
 
-
-
     com
     com_dut(
         .sys_clk(clk_50),
@@ -291,8 +286,8 @@ module tb_com(
         .fs_read(fsm_read),
         .fd_read(fdm_read),
 
-        .fire_send(fm_send),
-        .fire_recv(fm_recv),
+        .fire_send(pm_send),
+        .fire_recv(pm_recv),
         .pin_txd(pm_txd),
         .pin_rxd(pm_rxd),
 
@@ -330,8 +325,8 @@ module tb_com(
         .fs_read(fss_read),
         .fd_read(fds_read),
 
-        .fire_send(fs_send),
-        .fire_recv(fs_recv),
+        .fire_send(ps_send),
+        .fire_recv(ps_recv),
         .pin_txd(ps_txd),
         .pin_rxd(ps_rxd),
 

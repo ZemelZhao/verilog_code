@@ -34,7 +34,7 @@ module com_rx(
     localparam HEAD_DLINK = 4'hD;
     localparam HEAD_DTYPE = 4'h1, HEAD_DTEMP = 4'h9, HEAD_DHEAD = 4'h3;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, RPID = 8'h02, DONE = 8'h03;
     localparam ERROR = 8'h04;
@@ -46,10 +46,10 @@ module com_rx(
 
     reg [11:0] num;
     reg [11:0] stat_len;
-    (*MARK_DEBUG = "true"*)wire crcen;
-    (*MARK_DEBUG = "true"*)wire [7:0] crc_in;
-    (*MARK_DEBUG = "true"*)wire [15:0] crc16_out;
-    (*MARK_DEBUG = "true"*)wire [7:0] crc5_out;
+    wire crcen;
+    wire [7:0] crc_in;
+    wire [15:0] crc16_out;
+    wire [7:0] crc5_out;
 
     assign ram_txen = (state == RDATA);
 

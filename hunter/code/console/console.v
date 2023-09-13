@@ -23,17 +23,18 @@ module console(
     output reg [3:0] send_btype,
     input [3:0] read_bdata,
 
+    output reg [11:0] ram_addr_init,
+
     input [7:0] adc_type,
     input [15:0] adc_temp,
-    input [7:0] adc_stat,
+    input [3:0] adc_stat,
     output reg [3:0] adc_freq,
 
     output reg [7:0] com_type,
     output reg [7:0] com_temp,
-    output reg [3:0] com_stat,
-    output reg [3:0] com_didx,
-    output reg [3:0] com_ddidx
+    output reg [3:0] com_stat
 );
+
     localparam BAG_INIT = 4'b0000;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
@@ -180,17 +181,10 @@ module console(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) com_didx <= 4'h0;
-        else if(state == MAIN_IDLE) com_didx <= 4'h0;
-        else if(state == TYPE_IDLE) com_didx <= read_btype;
-        else com_didx <= com_didx;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) com_ddidx <= 8'h00;
-        else if(state == MAIN_IDLE) com_ddidx <= 8'h00;
-        else if(state == CONV_IDLE) com_ddidx <= read_btype;
-        else com_ddidx <= com_ddidx;
+        if(rst) ram_addr_init <= 12'h000;
+        else if(state == MAIN_IDLE) ram_addr_init >= 12'h000;
+        else if(state == MAIN_TAKE && read_btype == BAG_DDIDX) ram_addr_init <= ram_addr_init + 12'h400;
+        else ram_addr_init  <= ram_addr_init;
     end
 
 

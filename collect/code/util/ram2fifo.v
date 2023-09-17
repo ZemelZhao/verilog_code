@@ -9,6 +9,7 @@ module ram2fifo(
 
     input [11:0] data_len,
     input [0:7] link,
+    input [15:0] data_idx,
 
     input [63:0] ram_rxd,
     output [95:0] ram_rxa,
@@ -25,7 +26,7 @@ module ram2fifo(
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam INIT = 8'h04;
     localparam HD00 = 8'h08, HD01 = 8'h09, LK00 = 8'h0A, LK01 = 8'h0B;
-    localparam PT00 = 8'h0C, PT01 = 8'h0D;
+    localparam PT00 = 8'h0C, PT01 = 8'h0D, ID00 = 8'h0E, ID01 = 8'h0F; 
 
     localparam RC00 = 8'h10, RP00 = 8'h11, RR00 = 8'h12, RW00 = 8'h13;
     localparam RC01 = 8'h14, RP01 = 8'h15, RR01 = 8'h16, RW01 = 8'h17;
@@ -78,7 +79,9 @@ module ram2fifo(
             HD00: next_state <= HD01;
             HD01: next_state <= LK00;
             LK00: next_state <= LK01;
-            LK01: next_state <= RC00;
+            LK01: next_state <= ID00;
+            ID00: next_state <= ID01;
+            ID01: next_state <= RC00;
 
             RC00: begin
                 if(link[0]) next_state <= RP00;  
@@ -344,6 +347,8 @@ module ram2fifo(
         else if(state == HD01) fifo_txd <= 8'hAA;
         else if(state == LK00) fifo_txd <= 8'h00;
         else if(state == LK01) fifo_txd <= link;
+        else if(state == ID00) fifo_txd <= data_idx[15:8];
+        else if(state == ID01) fifo_txd <= data_idx[7:0];
         else if(state == RR00) fifo_txd <= ram_rxd00;
         else if(state == RW00) fifo_txd <= ram_rxd00;
         else if(state == RR01) fifo_txd <= ram_rxd01;
@@ -373,6 +378,8 @@ module ram2fifo(
         else if(state == HD01) fifo_txen <= 1'b1;
         else if(state == LK00) fifo_txen <= 1'b1;
         else if(state == LK01) fifo_txen <= 1'b1;
+        else if(state == ID00) fifo_txen <= 1'b1;
+        else if(state == ID01) fifo_txen <= 1'b1;
         else if(state == RR00) fifo_txen <= 1'b1;
         else if(state == RW00) fifo_txen <= 1'b1;
         else if(state == RR01) fifo_txen <= 1'b1;

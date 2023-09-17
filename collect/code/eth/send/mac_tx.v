@@ -1,0 +1,90 @@
+module mac_tx(
+    input clk,
+    input rst,
+
+    input [47:0] src_mac_addr,
+    input [47:0] det_mac_addr,
+
+    input fs,
+    output fd,
+
+    input [15:0] mac_mode,
+
+    output fs_ip,
+    input fd_ip,
+    output fs_arp,
+    input fd_arp,
+
+    input [7:0] mac_mode_txd,
+    output reg [7:0] mac_txd
+);
+
+    reg state, next_state;
+
+
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) state <= IDLE;
+        else state <= next_state;
+    end
+    
+    always@(*) begin
+        case(state)
+            IDLE: next_state <= WAIT;
+            WAIT: begin
+                if(fs) next_state <= HD00;
+                else next_state <= WAIT;
+            end
+            HD00: next_state <= HD01;
+            HD01: next_state <= HD02;
+            HD02: next_state <= HD03;
+            HD03: next_state <= HD04;
+            HD04: next_state <= HD05;
+            HD05: next_state <= HD06;
+            HD06: next_state <= HD07;
+            HD07: next_state <= HD08;
+            HD08: next_state <= HD09;
+            HD09: next_state <= HD0A;
+            HD0A: next_state <= HD0B;
+            HD0B: next_state <= HD0C;
+            HD0C: next_state <= HD0D;
+            HD0D: next_state <= WORK;
+            WORK: begin
+                if(fd_up) next_state <= DONE;
+                else next_state <= WORK;
+            end
+            DONE: begin
+                if(~fs) next_state <= WAIT;
+                else next_state <= DONE;
+            end
+            default: next_state <= IDLE;
+        endcase
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) mac_txd <= 8'h00;
+        else if(state == IDLE) mac_txd <= 8'h00;
+        else if(state == WAIT) mac_txd <= 8'h00;
+        else if(state == HD00) mac_txd <= det_mac_addr[47:40];
+        else if(state == HD01) mac_txd <= det_mac_addr[39:32];
+        else if(state == HD02) mac_txd <= det_mac_addr[31:24];
+        else if(state == HD03) mac_txd <= det_mac_addr[23:16];
+        else if(state == HD04) mac_txd <= det_mac_addr[15:8];
+        else if(state == HD05) mac_txd <= det_mac_addr[7:0];
+        else if(state == HD06) mac_txd <= src_mac_addr[47:40];
+        else if(state == HD07) mac_txd <= src_mac_addr[39:32];
+        else if(state == HD08) mac_txd <= src_mac_addr[31:24];
+        else if(state == HD09) mac_txd <= src_mac_addr[23:16];
+        else if(state == HD0A) mac_txd <= src_mac_addr[15:8];
+        else if(state == HD0B) mac_txd <= src_mac_addr[7:0];
+        else if(state == HD0C) mac_txd <= mac_mode[15:8];
+        else if(state == HD0D) mac_txd <= mac_mode[7:0];
+        else if(state == WORK) mac_txd <= mac_mode_txd;
+        else mac_txd <= 8'h00;
+    end
+
+
+
+
+
+endmodule

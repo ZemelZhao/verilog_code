@@ -2,10 +2,10 @@ module mac_tx_top(
 
     input [47:0] src_mac,
     input [47:0] det_mac,
-    input [31:0] src_ip,
-    input [31:0] det_ip,
-    input [15:0] src_port,
-    input [15:0] det_port
+    input [31:0] src_ip_addr,
+    input [31:0] det_ip_addr,
+    input [15:0] src_ip_port,
+    input [15:0] det_ip_port
 
 );
 

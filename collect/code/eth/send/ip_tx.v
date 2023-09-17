@@ -11,13 +11,15 @@ module ip_tx(
 
     input [7:0] ip_mode,
 
-    output fs_udp,
+    output reg fs_udp,
     input fd_udp,
-    output fs_icmp,
+    output reg fs_icmp,
     input fd_icmp,
+    output reg fs_tcp,
+    input fd_tcp,
 
     input [7:0] ip_mode_txd,
-    output reg [7:0] ip_txd,
+    output reg [7:0] ip_txd
 );
 
     localparam IP_VERSION = 4'h4; // IPV4
@@ -26,23 +28,31 @@ module ip_tx(
     localparam DATA_FLAG = 3'b010; // No Fragment
     localparam DATA_FRAGMENT = 13'h0000;
     localparam DATA_TTL = 8'h80;
-    localparam UDP = 8'h11; // UDP
-    localparam ICMP = 8'h06;
 
+    localparam UDP = 8'h11;
+    localparam TCP = 8'h06;
+    localparam ICMP = 8'h01;
+    
 
-    reg state, next_state;
+    reg [7:0] state, next_state;
+    localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
+    localparam HD00 = 8'h10, HD01 = 8'h11, HD02 = 8'h12, HD03 = 8'h13;
+    localparam HD04 = 8'h14, HD05 = 8'h15, HD06 = 8'h16, HD07 = 8'h17;
+    localparam HD08 = 8'h18, HD09 = 8'h19, HD0A = 8'h1A, HD0B = 8'h1B;
+    localparam HD0C = 8'h1C, HD0D = 8'h1D, HD0E = 8'h1E, HD0F = 8'h1F;
+    localparam HD10 = 8'h20, HD11 = 8'h21, HD12 = 8'h22, HD13 = 8'h23;
 
-    localparam IDLE
-
+    reg [20:0] checksum_d2;
+    reg [16:0] checksum_d1;
+    reg [16:0] checksum_d0;
     reg [15:0] checksum;
     reg [15:0] data_idx;
 
     wire fd_up;
+    reg fd_up_s0;
 
-    assign fd_up = |{fd_udp, fd_icmp};
-
-
-
+    assign fd_up = |{fd_udp, fd_icmp, fd_tcp};
+    assign fd = (state == DONE);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -77,7 +87,7 @@ module ip_tx(
             HD12: next_state <= HD13;
             HD13: next_state <= WORK;
             WORK: begin
-                if(fd_up) next_state <= DONE;
+                if(fd_up_s0) next_state <= DONE;
                 else next_state <= WORK;
             end
             DONE: begin
@@ -114,6 +124,78 @@ module ip_tx(
         else if(state == HD13) ip_txd <= det_ip_addr[7:0];
         else if(state == WORK) ip_txd <= ip_mode_txd;
         else ip_txd <= 8'h00;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fs_udp <= 1'b0;
+        else if(state == IDLE) fs_udp <= 1'b0;
+        else if(state == WAIT) fs_udp <= 1'b0;
+        else if(state == HD10 && ip_mode == UDP) fs_udp <= 1'b1;
+        else if(state == DONE) fs_udp <= 1'b0;
+        else fs_udp <= fs_udp;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fs_icmp <= 1'b0;
+        else if(state == IDLE) fs_icmp <= 1'b0;
+        else if(state == WAIT) fs_icmp <= 1'b0;
+        else if(state == HD10 && ip_mode == ICMP) fs_icmp <= 1'b1;
+        else if(state == DONE) fs_icmp <= 1'b0;
+        else fs_icmp <= fs_icmp;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fs_tcp <= 1'b0;
+        else if(state == IDLE) fs_tcp <= 1'b0;
+        else if(state == WAIT) fs_tcp <= 1'b0;
+        else if(state == HD10 && ip_mode == TCP) fs_tcp <= 1'b1;
+        else if(state == DONE) fs_tcp <= 1'b0;
+        else fs_tcp <= fs_tcp;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) checksum <= 16'h0000;
+        else if(state == IDLE) checksum <= 16'h0000;
+        else if(state == WAIT) checksum <= 16'h0000; 
+        else if(state == HD04) checksum <= checksum_d0[16] + checksum_d0[15:0]; 
+        else if(state == HD05) checksum <= ~checksum;
+        else checksum <= checksum;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) checksum_d0 <= 17'h00000;
+        else if(state == IDLE) checksum_d0 <= 17'h00000;
+        else if(state == WAIT) checksum_d0 <= 17'h00000;
+        else if(state == HD03) checksum_d0 <= checksum_d1[16] + checksum_d1[15:0];
+        else checksum_d0 <= checksum_d0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) checksum_d1 <= 17'h00000;
+        else if(state == IDLE) checksum_d1 <= 17'h00000;
+        else if(state == WAIT) checksum_d1 <= 17'h00000;
+        else if(state == HD02) checksum_d1 <= checksum_d2[20:16] + checksum_d2[15:0];
+        else checksum_d1 <= checksum_d1;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) checksum_d2 <= 21'h000000;
+        else if(state == IDLE) checksum_d2 <= 21'h000000;
+        else if(state == WAIT) checksum_d2 <= 21'h000000;
+        else if(state == HD01) checksum_d2 <= {IP_VERSION, HEADER_LENGTH, DIFF_SERVE} + data_len + data_idx + {DATA_FLAG, DATA_FRAGMENT} + 
+                                              {DATA_TTL, ip_mode} + src_ip_addr[31:16] + src_ip_addr[15:0] + det_ip_addr[31:16] + det_ip_addr[15:0];
+        else checksum_d2 <= checksum_d2;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_idx <= 16'h0000;
+        else if(state == IDLE) data_idx <= 16'h0000;
+        else if(state == HD00) data_idx <= data_idx + 1'b1;
+        else data_idx <= data_idx;
+    end
+
+    always@(posedge clk) begin
+        fd_up_s0 <= fd_up;
     end
 
 

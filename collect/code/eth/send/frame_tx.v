@@ -8,7 +8,7 @@ module frame_tx(
     output reg crc_en,
     input [31:0] crc,
 
-    output fs_mac,
+    output reg fs_mac,
     input fd_mac,
 
     input [7:0] mac_txd,

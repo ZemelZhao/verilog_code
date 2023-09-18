@@ -19,7 +19,7 @@ module ip_tx(
     input fd_tcp,
 
     input [7:0] ip_mode_txd,
-    output reg [7:0] ip_txd
+    output reg [7:0] txd
 );
 
     localparam IP_VERSION = 4'h4; // IPV4
@@ -99,31 +99,31 @@ module ip_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ip_txd <= 8'h00;
-        else if(state == IDLE) ip_txd <= 8'h00;
-        else if(state == WAIT) ip_txd <= 8'h00;
-        else if(state == HD00) ip_txd <= {IP_VERSION, HEADER_LENGTH};
-        else if(state == HD01) ip_txd <= DIFF_SERVE;
-        else if(state == HD02) ip_txd <= data_len[15:8];
-        else if(state == HD03) ip_txd <= data_len[7:0];
-        else if(state == HD04) ip_txd <= data_idx[15:8];
-        else if(state == HD05) ip_txd <= data_idx[7:0];
-        else if(state == HD06) ip_txd <= {DATA_FLAG, DATA_FRAGMENT[12:8]};
-        else if(state == HD07) ip_txd <= DATA_FRAGMENT[7:0];
-        else if(state == HD08) ip_txd <= DATA_TTL;
-        else if(state == HD09) ip_txd <= ip_mode;
-        else if(state == HD0A) ip_txd <= checksum[15:8]; 
-        else if(state == HD0B) ip_txd <= checksum[7:0];
-        else if(state == HD0C) ip_txd <= src_ip_addr[31:24];
-        else if(state == HD0D) ip_txd <= src_ip_addr[23:16];
-        else if(state == HD0E) ip_txd <= src_ip_addr[15:8];
-        else if(state == HD0F) ip_txd <= src_ip_addr[7:0];
-        else if(state == HD10) ip_txd <= det_ip_addr[31:24];
-        else if(state == HD11) ip_txd <= det_ip_addr[23:16];
-        else if(state == HD12) ip_txd <= det_ip_addr[15:8];
-        else if(state == HD13) ip_txd <= det_ip_addr[7:0];
-        else if(state == WORK) ip_txd <= ip_mode_txd;
-        else ip_txd <= 8'h00;
+        if(rst) txd <= 8'h00;
+        else if(state == IDLE) txd <= 8'h00;
+        else if(state == WAIT) txd <= 8'h00;
+        else if(state == HD00) txd <= {IP_VERSION, HEADER_LENGTH};
+        else if(state == HD01) txd <= DIFF_SERVE;
+        else if(state == HD02) txd <= data_len[15:8];
+        else if(state == HD03) txd <= data_len[7:0];
+        else if(state == HD04) txd <= data_idx[15:8];
+        else if(state == HD05) txd <= data_idx[7:0];
+        else if(state == HD06) txd <= {DATA_FLAG, DATA_FRAGMENT[12:8]};
+        else if(state == HD07) txd <= DATA_FRAGMENT[7:0];
+        else if(state == HD08) txd <= DATA_TTL;
+        else if(state == HD09) txd <= ip_mode;
+        else if(state == HD0A) txd <= checksum[15:8]; 
+        else if(state == HD0B) txd <= checksum[7:0];
+        else if(state == HD0C) txd <= src_ip_addr[31:24];
+        else if(state == HD0D) txd <= src_ip_addr[23:16];
+        else if(state == HD0E) txd <= src_ip_addr[15:8];
+        else if(state == HD0F) txd <= src_ip_addr[7:0];
+        else if(state == HD10) txd <= det_ip_addr[31:24];
+        else if(state == HD11) txd <= det_ip_addr[23:16];
+        else if(state == HD12) txd <= det_ip_addr[15:8];
+        else if(state == HD13) txd <= det_ip_addr[7:0];
+        else if(state == WORK) txd <= ip_mode_txd;
+        else txd <= 8'h00;
     end
 
     always@(posedge clk or posedge rst) begin

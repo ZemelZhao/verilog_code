@@ -40,8 +40,8 @@ module sim();
         #5;
     end
 
-    tb_mac_tx
-    tb_mac_tx_txp(
+    tb_mac_tx_top
+    tb_mac_tx_top_dut(
         // .clk_25(clk_25),
         .clk(clk_50),
         // .clk_100(clk_100),

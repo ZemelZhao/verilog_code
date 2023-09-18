@@ -2,7 +2,7 @@ module crc32(
     input clk,
     input enable,
     input [0:7] din,
-    output reg [31:0] dout
+    output [31:0] dout
 );
 
     localparam CRC_INIT = 32'hFFFFFFFF;
@@ -70,9 +70,7 @@ module crc32(
             SH2W: next_state <= SH3W;
             SH3W: next_state <= SH4W;
             SH4W: next_state <= SH5W;
-            SH5W: next_state <= SH6W;
-            SH6W: next_state <= SH7W;
-            SH7W: next_state <= DONE;
+            SH5W: next_state <= DONE;
             DONE: next_state <= WAIT;
             default: next_state <= IDLE;
         endcase

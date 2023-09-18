@@ -16,7 +16,7 @@ module mac_tx(
     input fd_arp,
 
     input [7:0] mac_mode_txd,
-    output reg [7:0] mac_txd
+    output reg [7:0] txd
 );
 
     localparam IP = 16'h0800, ARP = 16'h0806;
@@ -74,25 +74,25 @@ module mac_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) mac_txd <= 8'h00;
-        else if(state == IDLE) mac_txd <= 8'h00;
-        else if(state == WAIT) mac_txd <= 8'h00;
-        else if(state == HD00) mac_txd <= det_mac_addr[47:40];
-        else if(state == HD01) mac_txd <= det_mac_addr[39:32];
-        else if(state == HD02) mac_txd <= det_mac_addr[31:24];
-        else if(state == HD03) mac_txd <= det_mac_addr[23:16];
-        else if(state == HD04) mac_txd <= det_mac_addr[15:8];
-        else if(state == HD05) mac_txd <= det_mac_addr[7:0];
-        else if(state == HD06) mac_txd <= src_mac_addr[47:40];
-        else if(state == HD07) mac_txd <= src_mac_addr[39:32];
-        else if(state == HD08) mac_txd <= src_mac_addr[31:24];
-        else if(state == HD09) mac_txd <= src_mac_addr[23:16];
-        else if(state == HD0A) mac_txd <= src_mac_addr[15:8];
-        else if(state == HD0B) mac_txd <= src_mac_addr[7:0];
-        else if(state == HD0C) mac_txd <= mac_mode[15:8];
-        else if(state == HD0D) mac_txd <= mac_mode[7:0];
-        else if(state == WORK) mac_txd <= mac_mode_txd;
-        else mac_txd <= 8'h00;
+        if(rst) txd <= 8'h00;
+        else if(state == IDLE) txd <= 8'h00;
+        else if(state == WAIT) txd <= 8'h00;
+        else if(state == HD00) txd <= det_mac_addr[47:40];
+        else if(state == HD01) txd <= det_mac_addr[39:32];
+        else if(state == HD02) txd <= det_mac_addr[31:24];
+        else if(state == HD03) txd <= det_mac_addr[23:16];
+        else if(state == HD04) txd <= det_mac_addr[15:8];
+        else if(state == HD05) txd <= det_mac_addr[7:0];
+        else if(state == HD06) txd <= src_mac_addr[47:40];
+        else if(state == HD07) txd <= src_mac_addr[39:32];
+        else if(state == HD08) txd <= src_mac_addr[31:24];
+        else if(state == HD09) txd <= src_mac_addr[23:16];
+        else if(state == HD0A) txd <= src_mac_addr[15:8];
+        else if(state == HD0B) txd <= src_mac_addr[7:0];
+        else if(state == HD0C) txd <= mac_mode[15:8];
+        else if(state == HD0D) txd <= mac_mode[7:0];
+        else if(state == WORK) txd <= mac_mode_txd;
+        else txd <= 8'h00;
     end
 
     always@(posedge clk or posedge rst) begin

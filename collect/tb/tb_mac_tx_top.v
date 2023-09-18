@@ -6,6 +6,7 @@ module tb_mac_tx_top(
     wire [15:0] tx_dlen; 
     wire [7:0] eth_txd;
     wire eth_tx_rdy;
+    wire eth_txen;
 
     (*MARK_DEBUG = "true"*)wire [7:0] fifo_txd, fifo_rxd;
     (*MARK_DEBUG = "true"*)wire fifo_txen, fifo_rxen;
@@ -101,6 +102,7 @@ module tb_mac_tx_top(
         .fifo_rxd(fifo_rxd),
 
         .txd(eth_txd),
+        .txen(eth_txen),
         .tx_rdy(eth_tx_rdy)
     );
 

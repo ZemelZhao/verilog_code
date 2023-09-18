@@ -13,6 +13,8 @@ module frame_tx(
 
     input [7:0] mac_txd,
     output reg [7:0] txd,
+    output reg txen,
+
     output eth_txrdy
 );
 
@@ -96,6 +98,26 @@ module frame_tx(
         else if(state == HD07) crc_en <= 1'b1;
         else if(state == WORK && (~fd_mac)) crc_en <= 1'b1;
         else crc_en <= 1'b0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) txen <= 1'b0;
+        else if(state == IDLE) txen <= 1'b0;
+        else if(state == WAIT) txen <= 1'b0;
+        else if(state == DONE) txen <= 1'b0;
+        else if(state == HD00) txen <= 1'b1;
+        else if(state == HD01) txen <= 1'b1;
+        else if(state == HD02) txen <= 1'b1;
+        else if(state == HD03) txen <= 1'b1;
+        else if(state == HD04) txen <= 1'b1;
+        else if(state == HD05) txen <= 1'b1;
+        else if(state == HD06) txen <= 1'b1;
+        else if(state == HD07) txen <= 1'b1;
+        else if(state == WORK) txen <= 1'b1;
+        else if(state == PT00) txen <= 1'b1;
+        else if(state == PT01) txen <= 1'b1;
+        else if(state == PT02) txen <= 1'b1;
+        else if(state == PT03) txen <= 1'b1;
     end
 
 

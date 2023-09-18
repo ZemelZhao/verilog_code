@@ -18,6 +18,7 @@ module mac_tx_top(
     input [7:0] fifo_rxd,
 
     output [7:0] txd,
+    output txen,
     output tx_rdy
 );
 
@@ -191,7 +192,8 @@ module mac_tx_top(
         .mac_txd(mac_txd),
         .txd(txd),
 
-        .eth_txrdy(tx_rdy)
+        .eth_txrdy(tx_rdy),
+        .txen(txen)
     );
 
     crc32

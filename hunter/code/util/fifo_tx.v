@@ -10,7 +10,7 @@ module fifo_tx(
     output [7:0] fifo_txd
 );
 
-    localparam DATA_NUM = 8'h40;
+    localparam DATA_NUM = 8'h80;
 
     reg [1:0] state, next_state;
     localparam IDLE = 2'h0, WAIT = 2'h1, WORK = 2'h2, DONE = 2'h3;

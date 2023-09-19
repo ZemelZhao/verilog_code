@@ -11,12 +11,8 @@ module ip_tx(
 
     input [7:0] ip_mode,
 
-    output reg fs_udp,
-    input fd_udp,
-    output reg fs_icmp,
-    input fd_icmp,
-    output reg fs_tcp,
-    input fd_tcp,
+    output reg fs_mode, 
+    input fd_mode,
 
     input [7:0] ip_mode_txd,
     output reg [7:0] txd
@@ -48,10 +44,6 @@ module ip_tx(
     reg [15:0] checksum;
     reg [15:0] data_idx;
 
-    wire fd_up;
-    reg fd_up_s0;
-
-    assign fd_up = |{fd_udp, fd_icmp, fd_tcp};
     assign fd = (state == DONE);
 
     always@(posedge clk or posedge rst) begin
@@ -87,7 +79,7 @@ module ip_tx(
             HD12: next_state <= HD13;
             HD13: next_state <= WORK;
             WORK: begin
-                if(fd_up_s0) next_state <= DONE;
+                if(fd_mode) next_state <= DONE;
                 else next_state <= WORK;
             end
             DONE: begin
@@ -127,30 +119,12 @@ module ip_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) fs_udp <= 1'b0;
-        else if(state == IDLE) fs_udp <= 1'b0;
-        else if(state == WAIT) fs_udp <= 1'b0;
-        else if(state == HD10 && ip_mode == UDP) fs_udp <= 1'b1;
-        else if(state == DONE) fs_udp <= 1'b0;
-        else fs_udp <= fs_udp;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) fs_icmp <= 1'b0;
-        else if(state == IDLE) fs_icmp <= 1'b0;
-        else if(state == WAIT) fs_icmp <= 1'b0;
-        else if(state == HD10 && ip_mode == ICMP) fs_icmp <= 1'b1;
-        else if(state == DONE) fs_icmp <= 1'b0;
-        else fs_icmp <= fs_icmp;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) fs_tcp <= 1'b0;
-        else if(state == IDLE) fs_tcp <= 1'b0;
-        else if(state == WAIT) fs_tcp <= 1'b0;
-        else if(state == HD10 && ip_mode == TCP) fs_tcp <= 1'b1;
-        else if(state == DONE) fs_tcp <= 1'b0;
-        else fs_tcp <= fs_tcp;
+        if(rst) fs_mode <= 1'b0;
+        else if(state == IDLE) fs_mode <= 1'b0;
+        else if(state == WAIT) fs_mode <= 1'b0;
+        else if(state == HD0F) fs_mode <= 1'b1;
+        else if(state == DONE) fs_mode <= 1'b0;
+        else fs_mode <= fs_mode;
     end
 
     always@(posedge clk or posedge rst) begin
@@ -193,11 +167,6 @@ module ip_tx(
         else if(state == HD00) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;
     end
-
-    always@(posedge clk) begin
-        fd_up_s0 <= fd_up;
-    end
-
 
 
 endmodule

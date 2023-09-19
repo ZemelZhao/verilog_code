@@ -54,7 +54,7 @@ module udp_tx(
             HD07: next_state <= WORK;
             WORK: begin
                 if(cnt >= data_len - 1'h1 && data_len >= MIN_LEN) next_state <= DONE;
-                if(cnt >= data_len - 1'h1 && data_len < MIN_LEN) next_state <= ZERO;
+                else if(cnt >= data_len - 1'h1 && data_len < MIN_LEN) next_state <= ZERO;
                 else next_state <= WORK;
             end
             ZERO: begin

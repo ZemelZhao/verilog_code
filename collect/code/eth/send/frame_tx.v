@@ -13,9 +13,8 @@ module frame_tx(
 
     input [7:0] mac_txd,
     output reg [7:0] txd,
-    output reg txen,
+    output reg txen
 
-    output eth_txrdy
 );
 
     reg [7:0] state, next_state;
@@ -24,7 +23,6 @@ module frame_tx(
     localparam HD04 = 8'h14, HD05 = 8'h15, HD06 = 8'h16, HD07 = 8'h17;
     localparam PT00 = 8'h20, PT01 = 8'h21, PT02 = 8'h23, PT03 = 8'h24;
 
-    assign eth_txrdy = (state == WAIT);
     assign fd = (state == DONE);
 
     always@(posedge clk or posedge rst) begin

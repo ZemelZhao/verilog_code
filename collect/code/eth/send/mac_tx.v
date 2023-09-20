@@ -10,10 +10,8 @@ module mac_tx(
 
     input [15:0] mac_mode,
 
-    output reg fs_ip,
-    input fd_ip,
-    output reg fs_arp,
-    input fd_arp,
+    output reg fs_mode,
+    input fd_mode,
 
     input [7:0] mac_mode_txd,
     output reg [7:0] txd
@@ -29,9 +27,6 @@ module mac_tx(
     localparam HD08 = 8'h18, HD09 = 8'h19, HD0A = 8'h1A, HD0B = 8'h1B;
     localparam HD0C = 8'h1C, HD0D = 8'h1D; 
 
-    wire fd_up;
-    reg fd_up_s0;
-    assign fd_up = |{fd_ip, fd_arp};
     assign fd = (state == DONE);
 
 
@@ -62,7 +57,7 @@ module mac_tx(
             HD0C: next_state <= HD0D;
             HD0D: next_state <= WORK;
             WORK: begin
-                if(fd_up_s0) next_state <= DONE;
+                if(fd_mode) next_state <= DONE;
                 else next_state <= WORK;
             end
             DONE: begin
@@ -96,26 +91,12 @@ module mac_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) fs_ip <= 1'b0;
-        else if(state == IDLE) fs_ip <= 1'b0;
-        else if(state == WAIT) fs_ip <= 1'b0;
-        else if(state == HD0A && mac_mode == IP) fs_ip <= 1'b1;
-        else if(state == DONE) fs_ip <= 1'b0;
-        else fs_ip <= fs_ip;
+        if(rst) fs_mode <= 1'b0;
+        else if(state == IDLE) fs_mode <= 1'b0;
+        else if(state == WAIT) fs_mode <= 1'b0;
+        else if(state == HD09) fs_mode <= 1'b1;
+        else if(state == DONE) fs_mode <= 1'b0;
+        else fs_mode <= fs_mode;
     end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) fs_arp <= 1'b0;
-        else if(state == IDLE) fs_arp <= 1'b0;
-        else if(state == WAIT) fs_arp <= 1'b0;
-        else if(state == HD0A && mac_mode == ARP) fs_arp <= 1'b1;
-        else if(state == DONE) fs_arp <= 1'b0;
-        else fs_arp <= fs_arp;
-    end
-
-    always@(posedge clk) begin
-        fd_up_s0 <= fd_up;
-    end
-
 
 endmodule

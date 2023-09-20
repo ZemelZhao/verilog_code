@@ -1,4 +1,4 @@
-module mac_tx(
+module mac_rx(
     input clk,
     input rst,
 
@@ -7,18 +7,22 @@ module mac_tx(
     input fs,
     output fd,
 
-    output fs_mode,
+    output reg fs_mode,
+    input fd_mode,
+
+    input [15:0] data_len,
 
     output reg [15:0] mac_mode,
     output reg [47:0] src_mac_addr,
     output reg [47:0] det_mac_addr,
     output reg [7:0] mode_rxd
-
 );
+
+    localparam MIN_FLEN = 8'h40, MIN_DLEN = 8'h2E;
 
     reg state, next_state;
 
-
+    reg [15:0] cnt;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -47,8 +51,12 @@ module mac_tx(
             TP00: next_state <= TP01;
             TP01: next_state <= WORK;
             WORK: begin
-                if(cnt >= dlen - 1'b1) next_state <= DONE;
+                if(cnt >= dlen - 1'b1) next_state <= REST;
                 else next_state <= WORK;
+            end
+            REST: begin
+                if(fd_mode) next_state <= DONE;
+                else next_state <= REST;
             end
             DONE: begin
                 if(~fs) next_state <= WAIT;  
@@ -57,6 +65,75 @@ module mac_tx(
             default: next_state <= IDLE;
         endcase
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) dlen <= MIN_DLEN;
+        else if(state == IDLE) dlen <= MIN_DLEN;
+        else if(state == WAIT) dlen <= MIN_DLEN;
+        else if(state == WORK && data_len >= MIN_FLEN) dlen <= data_len - 8'h0E; 
+        else dlen <= dlen;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) cnt <= 16'h0000;
+        else if(state == IDLE) cnt <= 16'h0000;
+        else if(state == WAIT) cnt <= 16'h0000;
+        else if(state == WORK) cnt <= cnt + 1'b1;
+        else cnt <= 16'h0000;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) src_mac_addr <= 48'h000000000000;
+        else if(state == IDLE) src_mac_addr <= 48'h000000000000;
+        else if(state == DM00) src_mac_addr[47:40] <= rxd;
+        else if(state == DM01) src_mac_addr[39:32] <= rxd;
+        else if(state == DM02) src_mac_addr[31:24] <= rxd;
+        else if(state == DM03) src_mac_addr[23:16] <= rxd;
+        else if(state == DM04) src_mac_addr[15:8] <= rxd;
+        else if(state == DM05) src_mac_addr[7:0] <= rxd;
+        else src_mac_addr <= src_mac_addr;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) det_mac_addr <= 48'h000000000000;
+        else if(state == IDLE) det_mac_addr <= 48'h000000000000;
+        else if(state == SM00) det_mac_addr[47:40] <= rxd;
+        else if(state == SM01) det_mac_addr[39:32] <= rxd;
+        else if(state == SM02) det_mac_addr[31:24] <= rxd;
+        else if(state == SM03) det_mac_addr[23:16] <= rxd;
+        else if(state == SM04) det_mac_addr[15:8] <= rxd;
+        else if(state == SM05) det_mac_addr[7:0] <= rxd;
+        else det_mac_addr <= det_mac_addr;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) mac_mode <= 16'h0000;
+        else if(state == TP00) mac_mode[15:8] <= rxd;
+        else if(state == TP00) mac_mode[7:0] <= rxd;
+        else mac_mode <= mac_mode;
+    end
+
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) mode_rxd <= 8'h00;
+        else if(state == IDLE) mode_rxd <= 8'h00;
+        else if(state == WAIT) mode_rxd <= 8'h00;
+        else if(state == WORK) mode_rxd <= rxd;
+        else mode_rxd <= 8'h00;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fs_mode <= 1'b0;
+        else if(state == IDLE) fs_mode <= 1'b0;
+        else if(state == WAIT) fs_mode <= 1'b0;
+        else if(state == TP01) fs_mode <= 1'b1;
+        else if(state == WORK) fs_mode <= 1'b1;
+        else if(state == REST) fs_mode <= 1'b1;
+        else if(state == DONE) fs_mode <= 1'b0;
+        else fs_mode <= fs_mode;
+    end
+
+
 
 
 

@@ -11,6 +11,7 @@ module udp_rx(
     output reg [15:0] src_ip_port,
     output reg [15:0] det_ip_port,
 
+    input fifo_full,
     output reg fifo_txen,
     output reg [7:0] fifo_txd
 );
@@ -32,7 +33,10 @@ module udp_rx(
     
     always@(*) begin
         case(state)
-            IDLE: next_state <= WAIT;
+            IDLE: begin
+                if(fifo_full) next_state <= WAIT;
+                else next_state <= IDLE;
+            end
             WAIT: begin
                 if(fs) next_state <= HD00;
                 else next_state <= WAIT;

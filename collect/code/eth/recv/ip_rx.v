@@ -10,6 +10,8 @@ module ip_rx(
     output reg fs_mode,
     input fd_mode,
 
+    output reg [15:0] data_len,
+
     output reg [7:0] ip_mode,
     output reg [31:0] src_ip_addr,
     output reg [31:0] det_ip_addr,
@@ -17,7 +19,7 @@ module ip_rx(
 
 );
 
-    localparam MIN_HLEN = 8'h14;
+    localparam MIN_HLEN = 8'h14, MIN_DLEN = 8'h2E;
 
     reg [7:0] state, next_state;
 
@@ -136,6 +138,13 @@ module ip_rx(
         else if(state == REST) fs_mode <= 1'b1;
         else if(state == DONE) fs_mode <= 1'b0;
         else fs_mode <= fs_mode;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_len <= MIN_DLEN;
+        else if(state == IDLE) data_len <= MIN_DLEN;
+        else if(state == HEAD && cnt == 8'h04) data_len <= dlen; 
+        else data_len <= data_len;
     end
 
 

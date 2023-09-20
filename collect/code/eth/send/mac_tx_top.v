@@ -3,10 +3,10 @@ module mac_tx_top(
     input rst,
 
     input fs,
-    input fd,
+    output fd,
 
-    input [47:0] src_mac,
-    input [47:0] det_mac,
+    input [47:0] src_mac_addr,
+    input [47:0] det_mac_addr,
     input [31:0] src_ip_addr,
     input [31:0] det_ip_addr,
     input [15:0] src_ip_port,
@@ -18,8 +18,7 @@ module mac_tx_top(
     input [7:0] fifo_rxd,
 
     output [7:0] txd,
-    output txen,
-    output tx_rdy
+    output txen
 );
 
     localparam UDP = 8'h11;
@@ -31,9 +30,11 @@ module mac_tx_top(
     wire fs_udp_tx, fd_udp_tx;
     wire fs_icmp_tx, fd_icmp_tx;
     wire fs_tcp_tx, fd_tcp_tx;
+    wire fs_ip_mode, fd_ip_mode;
 
     wire fs_ip_tx, fd_ip_tx;
     wire fs_arp_tx, fd_arp_tx;
+    wire fs_mac_mode, fd_mac_mode;
 
     wire fs_mac_tx, fd_mac_tx;
 
@@ -101,7 +102,17 @@ module mac_tx_top(
         .tcp_txd(tcp_txd),
         .icmp_txd(icmp_txd),
 
-        .tx_mode(ip_mode),
+        .mode(ip_mode),
+        .fs_mode(fs_ip_mode),
+        .fd_mode(fd_ip_mode),
+
+        .fs_udp(fs_udp_tx),
+        .fd_udp(fd_udp_tx),
+        .fs_tcp(fs_tcp_tx),
+        .fd_tcp(fd_tcp_tx),
+        .fs_icmp(fs_icmp_tx),
+        .fd_icmp(fd_icmp_tx),
+
         .txd(ip_mode_txd)
     );
 
@@ -119,12 +130,8 @@ module mac_tx_top(
 
         .ip_mode(ip_mode),
 
-        .fs_udp(fs_udp_tx),
-        .fd_udp(fd_udp_tx),
-        .fs_icmp(fs_icmp_tx),
-        .fd_icmp(fd_icmp_tx),
-        .fs_tcp(fs_tcp_tx),
-        .fd_tcp(fd_tcp_tx),
+        .fs_mode(fs_ip_mode),
+        .fd_mode(fd_ip_mode),
 
         .ip_mode_txd(ip_mode_txd),
         .txd(ip_txd)
@@ -147,7 +154,15 @@ module mac_tx_top(
         .ip_txd(ip_txd),
         .arp_txd(arp_txd),
 
-        .tx_mode(mac_mode),
+        .mode(mac_mode),
+
+        .fs_mode(fs_mac_mode),
+        .fd_mode(fd_mac_mode),
+
+        .fs_ip(fs_ip_tx),
+        .fd_ip(fd_ip_tx),
+        .fs_arp(fs_arp_tx),
+        .fd_arp(fd_arp_tx),
 
         .txd(mac_mode_txd)
     );
@@ -157,18 +172,16 @@ module mac_tx_top(
         .clk(clk),
         .rst(rst),
 
-        .src_mac_addr(48'h1A510F000001),
-        .det_mac_addr(48'hFFFFFFFFFFFF),
+        .src_mac_addr(src_mac_addr),
+        .det_mac_addr(det_mac_addr),
         
         .fs(fs_mac_tx),
         .fd(fd_mac_tx),
 
         .mac_mode(mac_mode),
-
-        .fs_ip(fs_ip_tx),
-        .fd_ip(fd_ip_tx),
-        .fs_arp(fs_arp_tx),
-        .fd_arp(fd_arp_tx),
+        
+        .fs_mode(fs_mac_mode),
+        .fd_mode(fd_mac_mode),
 
         .mac_mode_txd(mac_mode_txd),
         .txd(mac_txd)
@@ -192,7 +205,6 @@ module mac_tx_top(
         .mac_txd(mac_txd),
         .txd(txd),
 
-        .eth_txrdy(tx_rdy),
         .txen(txen)
     );
 

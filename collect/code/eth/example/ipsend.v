@@ -82,7 +82,7 @@ begin
 				 dataout<=0;
 				 ram_rd_addr<=1;
 				 tx_data_counter<=0;
-             if (time_counter==32'h04000000) begin     //等待延迟, 每隔一段时间发送一个数据包，值越小，包发送之间的间隔越小
+             if (time_counter==32'h0100) begin     //等待延迟, 每隔一段时间发送一个数据包，值越小，包发送之间的间隔越小
 				     tx_state<=start;  
                  time_counter<=0;
              end

@@ -4,6 +4,7 @@ module tb_mac(
 );
 
 
+    localparam GLEN = 8'h40;
 
     reg [7:0] state; 
     reg [7:0] next_state;
@@ -41,7 +42,7 @@ module tb_mac(
     assign e0_rxd = e1_txd;
     assign e1_rxd = e0_txd;
 
-    assign tx_dlen0 = 16'h20;
+    assign tx_dlen0 = 16'h0A;
     assign tx_dlen1 = 16'h20;
 
     assign fs_send0 = (state == UDP0) || (state == UDP1) || (state == UDP2) || (state == UDP3);
@@ -68,7 +69,7 @@ module tb_mac(
                 else next_state <= UDP0;
             end
             GAP0: begin
-                if(cnt >= 8'h20) next_state <= UDP1;
+                if(cnt >= GLEN) next_state <= UDP1;
                 else next_state <= GAP0;
             end
             UDP1: begin
@@ -76,7 +77,7 @@ module tb_mac(
                 else next_state <= UDP1;
             end
             GAP1: begin
-                if(cnt >= 8'h20) next_state <= UDP2;
+                if(cnt >= GLEN) next_state <= UDP2;
                 else next_state <= GAP1;
             end
             UDP2: begin
@@ -84,7 +85,7 @@ module tb_mac(
                 else next_state <= UDP2;
             end
             GAP2: begin
-                if(cnt >= 8'h20) next_state <= UDP3;
+                if(cnt >= GLEN) next_state <= UDP3;
                 else next_state <= GAP2;
             end
             UDP3: begin
@@ -92,7 +93,7 @@ module tb_mac(
                 else next_state <= UDP3;
             end
             GAP3: begin
-                if(cnt >= 8'h20) next_state <= DONE;
+                if(cnt >= GLEN) next_state <= DONE;
                 else next_state <= GAP3;
             end
             DONE: next_state <= WAIT;
@@ -127,9 +128,12 @@ module tb_mac(
     fifo_tx_dut(
         .clk(clk),
         .rst(rst),
+
         .full(fifo_full),
         .fs(fs_fifo_tx),
         .fd(fd_fifo_tx),
+
+        .dlen({tx_dlen0, 2'b11}),
 
         .fifo_txen(fifo_txen),
         .fifo_txd(fifo_txd)

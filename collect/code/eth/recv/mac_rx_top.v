@@ -25,6 +25,7 @@ module mac_rx_top(
     wire [15:0] mac_mode;
 
     wire [15:0] udp_rx_dlen, ip_rx_dlen, mac_rx_dlen, frame_rx_dlen;
+    wire [15:0] fifo_rx_dlen;
 
     wire fs_udp_rx, fd_udp_rx;
     wire fs_tcp_rx, fd_tcp_rx;
@@ -52,6 +53,7 @@ module mac_rx_top(
     wire [31:0] crc_data; 
 
     assign data_len = udp_rx_dlen;
+    assign fifo_rx_dln = udp_rx_dlen + 8'h04;
     assign mac_rx_dlen = ip_rx_dlen + 8'h0E;
     assign frame_rx_dlen = mac_rx_dlen + 8'h04;
 
@@ -227,8 +229,8 @@ module mac_rx_top(
     fifo_rx_dut(
         .clk(clk),
 
-        .fs(fs_fifo),
-        .fd(fd_fifo),
+        .fs(fs_fifo_rx),
+        .fd(fd_fifo_rx),
 
         .data_len(udp_rx_dlen),
 

@@ -2,7 +2,7 @@ module icmp_rx(
     input clk,
     input rst,
 
-    input fd,
+    input fs,
     output fd,
 
     input [7:0] rxd

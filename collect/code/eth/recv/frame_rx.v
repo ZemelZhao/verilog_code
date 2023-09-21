@@ -21,7 +21,8 @@ module frame_rx(
     output reg [7:0] mac_rxd
 );
 
-    localparam HEAD_DATA = 8'h55, WAKE_DATA = 8'h5D, PART_LEN = 8'h04, MIN_DLEN = 8'h40;
+    localparam HEAD_DATA = 8'h55, WAKE_DATA = 8'hD5, PART_LEN = 8'h04, MIN_DLEN = 8'h40;
+    localparam HEAD_LEN = 8'h07;
 
     reg [7:0] state, next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
@@ -35,6 +36,11 @@ module frame_rx(
     assign fs_read = (state == DONE);
     assign fs_fifo = (state == ERROR);
 
+    always@(posedge clk or posedge rst) begin
+        if(rst) state <= IDLE;
+        else state <= next_state;
+    end
+
     always@(*) begin
         case(state)
             IDLE: next_state <= WAIT;
@@ -43,7 +49,7 @@ module frame_rx(
                 else next_state <= WAIT;
             end
             HEAD: begin
-                if(rxdv && rxd == HEAD_DATA && cnt >= HEAD_LEN - 1'b1) next_state <= WAKE;
+                if(rxdv && rxd == HEAD_DATA && cnt >= HEAD_LEN - 2'h2) next_state <= WAKE;
                 else if(rxdv && rxd == HEAD_DATA) next_state <= HEAD;
                 else next_state <= WAIT;
             end 
@@ -131,8 +137,9 @@ module frame_rx(
 
     always@(posedge clk or posedge rst) begin
         if(rst) crc_en <= 1'b0;
+        else if(state == HEAD && cnt >= HEAD_LEN - 2'h2) crc_en <= 1'b1;
         else if(state == WAKE) crc_en <= 1'b1;
-        else if(state == WORK) crc_en <= 1'b1;
+        else if(state == WORK && cnt < dlen - 1'b1) crc_en <= 1'b1;
         else if(state == PART) crc_en <= 1'b0;
         else crc_en <= 1'b0;
     end

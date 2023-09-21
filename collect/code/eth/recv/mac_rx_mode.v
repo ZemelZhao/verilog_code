@@ -1,7 +1,7 @@
 module mac_rx_mode(
     input clk,
 
-    input [7:0] mode,
+    input [15:0] mode,
 
     input fs_mode,
     output reg fd_mode,

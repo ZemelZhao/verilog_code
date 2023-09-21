@@ -20,9 +20,17 @@ module mac_rx(
 
     localparam MIN_FLEN = 8'h40, MIN_DLEN = 8'h2E;
 
-    reg state, next_state;
+    reg [7:0] state, next_state;
+    localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
+    localparam DM00 = 8'h10, DM01 = 8'h11, DM02 = 8'h12, DM03 = 8'h13;
+    localparam DM04 = 8'h14, DM05 = 8'h15;
+    localparam SM00 = 8'h20, SM01 = 8'h21, SM02 = 8'h22, SM03 = 8'h23;
+    localparam SM04 = 8'h24, SM05 = 8'h25;
+    localparam TP00 = 8'h30, TP01 = 8'h31;
+    localparam REST = 8'h40;
 
     reg [15:0] cnt;
+    reg [15:0] dlen;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;

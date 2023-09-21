@@ -1,6 +1,5 @@
 module mac_rx_top(
     input clk,
-    input fifo_rxc,
     input rst,
 
     output fs,
@@ -226,7 +225,7 @@ module mac_rx_top(
 
     fifo_rx
     fifo_rx_dut(
-        .clk(fifo_rxc),
+        .clk(clk),
 
         .fs(fs_fifo),
         .fd(fd_fifo),
@@ -244,7 +243,7 @@ module mac_rx_top(
         .wr_en(fifo_txen),
         .din(fifo_txd),
 
-        .rd_clk(fifo_rxc),
+        .rd_clk(clk),
         .rd_en(fifo_rxen || fifo_rxen_in),
         .dout(fifo_rxd)
     );

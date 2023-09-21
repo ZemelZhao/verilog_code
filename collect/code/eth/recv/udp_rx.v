@@ -34,7 +34,7 @@ module udp_rx(
     always@(*) begin
         case(state)
             IDLE: begin
-                if(fifo_full) next_state <= WAIT;
+                if(~fifo_full) next_state <= WAIT;
                 else next_state <= IDLE;
             end
             WAIT: begin

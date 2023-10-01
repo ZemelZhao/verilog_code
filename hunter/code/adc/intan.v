@@ -21,6 +21,9 @@ module intan(
     output reg [1:0] type,
     output reg [15:0] chip_temp,
 
+    input [3:0] filt_up,
+    input [3:0] filt_low,
+
     input spi_miso,
     output spi_mosi,
     output spi_sclk,
@@ -54,10 +57,40 @@ module intan(
     localparam DATA_REG03_NORMAL = 8'h00, 
     localparam DATA_REG03_TEMP_EN = 8'h04, DATA_REG03_TEMP_00 = 8'h0C, DATA_REG03_TEMP_01 = 8'h1C, DATA_REG03_TEMP_10 = 8'h14;
     localparam DATA_REG04 = 8'hDD, DATA_REG05 = 8'h00, DATA_REG06 = 8'h00, DATA_REG07 = 8'h00;
-    localparam DATA_REG08 = 8'h08, DATA_REG09 = 8'h00, DATA_REG10 = 8'h04, DATA_REG11 = 8'h00;
-    localparam DATA_REG12 = 8'h10, DATA_REG13 = 8'h7C, DATA_REG14 = 8'hFF, DATA_REG15 = 8'hFF;
+    localparam DATA_REG08 = 8'h00, DATA_REG09 = 8'h00, DATA_REG10 = 8'h00, DATA_REG11 = 8'h00;
+    localparam DATA_REG12 = 8'h00, DATA_REG13 = 8'h00, DATA_REG14 = 8'hFF, DATA_REG15 = 8'hFF;
     localparam DATA_REG16 = 8'hFF, DATA_REG17 = 8'hFF, DATA_REG18 = 8'hFF, DATA_REG19 = 8'hFF;
     localparam DATA_REG20 = 8'hFF, DATA_REG21 = 8'hFF;
+
+    localparam RH1_DAC1_20K = 6'h08, RH1_DAC1_15K = 6'h0B, RH1_DAC1_10K = 6'h11, RH1_DAC1_7K5 = 6'h16; 
+    localparam RH1_DAC1_5K0 = 6'h21, RH1_DAC1_3K0 = 6'h03, RH1_DAC1_2K5 = 6'h0D, RH1_DAC1_2K0 = 6'h1B;
+    localparam RH1_DAC1_1K5 = 6'h01, RH1_DAC1_1K0 = 6'h2E, RH1_DAC1_750 = 6'h29, RH1_DAC1_500 = 6'h1E;
+    localparam RH1_DAC1_300 = 6'h06, RH1_DAC1_200 = 6'h18, RH1_DAC1_100 = 6'h26;
+
+    localparam RH1_DAC2_20K = 5'h00, RH1_DAC2_15K = 5'h00, RH1_DAC2_10K = 5'h00, RH1_DAC2_7K5 = 5'h00; 
+    localparam RH1_DAC2_5K0 = 5'h00, RH1_DAC2_3K0 = 5'h01, RH1_DAC2_2K5 = 5'h01, RH1_DAC2_2K0 = 5'h01;
+    localparam RH1_DAC2_1K5 = 5'h02, RH1_DAC2_1K0 = 5'h02, RH1_DAC2_750 = 5'h03, RH1_DAC2_500 = 5'h05;
+    localparam RH1_DAC2_300 = 5'h09, RH1_DAC2_200 = 5'h0D, RH1_DAC2_100 = 5'h1A;
+
+    localparam RH2_DAC1_20K = 6'h04, RH2_DAC1_15K = 6'h08, RH2_DAC1_10K = 6'h10, RH2_DAC1_7K5 = 6'h17; 
+    localparam RH2_DAC1_5K0 = 6'h25, RH2_DAC1_3K0 = 6'h0D, RH2_DAC1_2K5 = 6'h19, RH2_DAC1_2K0 = 6'h2C;
+    localparam RH2_DAC1_1K5 = 6'h17, RH2_DAC1_1K0 = 6'h1E, RH2_DAC1_750 = 6'h24, RH2_DAC1_500 = 6'h2B;
+    localparam RH2_DAC1_300 = 6'h02, RH2_DAC1_200 = 6'h07, RH2_DAC1_100 = 6'h05;
+
+    localparam RH2_DAC2_20K = 5'h00, RH2_DAC2_15K = 5'h00, RH2_DAC2_10K = 5'h00, RH2_DAC2_7K5 = 5'h00; 
+    localparam RH2_DAC2_5K0 = 5'h00, RH2_DAC2_3K0 = 5'h01, RH2_DAC2_2K5 = 5'h01, RH2_DAC2_2K0 = 5'h01;
+    localparam RH2_DAC2_1K5 = 5'h02, RH2_DAC2_1K0 = 5'h03, RH2_DAC2_750 = 5'h04, RH2_DAC2_500 = 5'h06;
+    localparam RH2_DAC2_300 = 5'h0B, RH2_DAC2_200 = 5'h10, RH2_DAC2_100 = 5'h1F;
+
+    localparam RL_DAC1_100 = 7'h19, RL_DAC1_020 = 7'h36, RL_DAC1_015 = 7'h3E, RL_DAC1_010 = 7'h05;
+    localparam RL_DAC1_7D5 = 7'h12, RL_DAC1_5D0 = 7'h28, RL_DAC1_3D0 = 7'h14, RL_DAC1_2D5 = 7'h2A;
+    localparam RL_DAC1_2D0 = 7'h08, RL_DAC1_1D0 = 7'h2C, RL_DAC1_D75 = 7'h31, RL_DAC1_D50 = 7'h23;
+    localparam RL_DAC1_D30 = 7'h01, RL_DAC1_D25 = 7'h38, RL_DAC1_D10 = 7'h10;
+
+    localparam RL_DAC2_100 = 7'h00, RL_DAC2_020 = 7'h00, RL_DAC2_015 = 7'h00, RL_DAC2_010 = 7'h01;
+    localparam RL_DAC2_7D5 = 7'h01, RL_DAC2_5D0 = 7'h01, RL_DAC2_3D0 = 7'h02, RL_DAC2_2D5 = 7'h02;
+    localparam RL_DAC2_2D0 = 7'h03, RL_DAC2_1D0 = 7'h06, RL_DAC2_D75 = 7'h09, RL_DAC2_D50 = 7'h11;
+    localparam RL_DAC2_D30 = 7'h28, RL_DAC2_D25 = 7'h36, RL_DAC2_D10 = 7'h7C;
 
     localparam CH00 = 6'h00, CH01 = 6'h01, CH02 = 6'h02, CH03 = 6'h03;
     localparam CH04 = 6'h04, CH05 = 6'h05, CH06 = 6'h06, CH07 = 6'h07;
@@ -148,6 +181,9 @@ module intan(
     reg [15:0] num, num_wait;
 
     reg [15:0] temp_measure;
+
+    reg [7:0] data_reg08, data_reg09, data_reg10, data_reg11;
+    reg [7:0] data_reg12, data_reg13;
 
     wire fs_spi, fd_spi, fd_prd;
     wire fs_fifo, fd_fifo;
@@ -543,12 +579,12 @@ module intan(
         else if(state == CONF_REG05) chip_txd <= {HEAD_TX, REG05, DATA_REG05};
         else if(state == CONF_REG06) chip_txd <= {HEAD_TX, REG06, DATA_REG06};
         else if(state == CONF_REG07) chip_txd <= {HEAD_TX, REG07, DATA_REG07};
-        else if(state == CONF_REG08) chip_txd <= {HEAD_TX, REG08, DATA_REG08};
-        else if(state == CONF_REG09) chip_txd <= {HEAD_TX, REG09, DATA_REG09};
-        else if(state == CONF_REG10) chip_txd <= {HEAD_TX, REG10, DATA_REG10};
-        else if(state == CONF_REG11) chip_txd <= {HEAD_TX, REG11, DATA_REG11};
-        else if(state == CONF_REG12) chip_txd <= {HEAD_TX, REG12, DATA_REG12};
-        else if(state == CONF_REG13) chip_txd <= {HEAD_TX, REG13, DATA_REG13};
+        else if(state == CONF_REG08) chip_txd <= {HEAD_TX, REG08, data_reg08};
+        else if(state == CONF_REG09) chip_txd <= {HEAD_TX, REG09, data_reg09};
+        else if(state == CONF_REG10) chip_txd <= {HEAD_TX, REG10, data_reg10};
+        else if(state == CONF_REG11) chip_txd <= {HEAD_TX, REG11, data_reg11};
+        else if(state == CONF_REG12) chip_txd <= {HEAD_TX, REG12, data_reg12};
+        else if(state == CONF_REG13) chip_txd <= {HEAD_TX, REG13, data_reg13};
         else if(state == CONF_REG14) chip_txd <= {HEAD_TX, REG14, DATA_REG14};
         else if(state == CONF_REG15) chip_txd <= {HEAD_TX, REG15, DATA_REG15};
         else if(state == CONF_REG16) chip_txd <= {HEAD_TX, REG16, DATA_REG16};
@@ -613,29 +649,29 @@ module intan(
         else if(state == INIT_REG43) chip_rxda_res <= {RHEAD_RX, DATA_REG43};
         else if(state == INIT_REG44) chip_rxda_res <= {RHEAD_RX, DATA_REG44};
         else if(state == TYPE_REG59) chip_rxda_res <= {RHEAD_RX, DATA_REG59_A};
-        else if(state == CONF_REG00) chip_rxda_res <= {RHEAD_TX, DATA_REG00_NORMAL};
-        else if(state == CONF_REG01) chip_rxda_res <= {RHEAD_TX, data_reg01};
-        else if(state == CONF_REG02) chip_rxda_res <= {RHEAD_TX, data_reg02};
-        else if(state == CONF_REG03) chip_rxda_res <= {RHEAD_TX, DATA_REG03_NORMAL};
-        else if(state == CONF_REG04) chip_rxda_res <= {RHEAD_TX, DATA_REG04};
-        else if(state == CONF_REG05) chip_rxda_res <= {RHEAD_TX, DATA_REG05};
-        else if(state == CONF_REG06) chip_rxda_res <= {RHEAD_TX, DATA_REG06};
-        else if(state == CONF_REG07) chip_rxda_res <= {RHEAD_TX, DATA_REG07};
-        else if(state == CONF_REG08) chip_rxda_res <= {RHEAD_TX, DATA_REG08};
-        else if(state == CONF_REG09) chip_rxda_res <= {RHEAD_TX, DATA_REG09};
-        else if(state == CONF_REG10) chip_rxda_res <= {RHEAD_TX, DATA_REG10};
-        else if(state == CONF_REG11) chip_rxda_res <= {RHEAD_TX, DATA_REG11};
-        else if(state == CONF_REG12) chip_rxda_res <= {RHEAD_TX, DATA_REG12};
-        else if(state == CONF_REG13) chip_rxda_res <= {RHEAD_TX, DATA_REG13};
-        else if(state == CONF_REG14) chip_rxda_res <= {RHEAD_TX, DATA_REG14};
-        else if(state == CONF_REG15) chip_rxda_res <= {RHEAD_TX, DATA_REG15};
-        else if(state == CONF_REG16) chip_rxda_res <= {RHEAD_TX, DATA_REG16};
-        else if(state == CONF_REG17) chip_rxda_res <= {RHEAD_TX, DATA_REG17};
-        else if(state == CONF_REG18) chip_rxda_res <= {RHEAD_TX, DATA_REG18};
-        else if(state == CONF_REG19) chip_rxda_res <= {RHEAD_TX, DATA_REG19};
-        else if(state == CONF_REG20) chip_rxda_res <= {RHEAD_TX, DATA_REG20};
-        else if(state == CONF_REG21) chip_rxda_res <= {RHEAD_TX, DATA_REG21};
-        else if(state == TEMP_RESET) chip_rxda_res <= {RHEAD_TX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG00) chip_rxda_res <= {RHEAD_RX, DATA_REG00_NORMAL};
+        else if(state == CONF_REG01) chip_rxda_res <= {RHEAD_RX, data_reg01};
+        else if(state == CONF_REG02) chip_rxda_res <= {RHEAD_RX, data_reg02};
+        else if(state == CONF_REG03) chip_rxda_res <= {RHEAD_RX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG04) chip_rxda_res <= {RHEAD_RX, DATA_REG04};
+        else if(state == CONF_REG05) chip_rxda_res <= {RHEAD_RX, DATA_REG05};
+        else if(state == CONF_REG06) chip_rxda_res <= {RHEAD_RX, DATA_REG06};
+        else if(state == CONF_REG07) chip_rxda_res <= {RHEAD_RX, DATA_REG07};
+        else if(state == CONF_REG08) chip_rxda_res <= {RHEAD_RX, DATA_REG08};
+        else if(state == CONF_REG09) chip_rxda_res <= {RHEAD_RX, DATA_REG09};
+        else if(state == CONF_REG10) chip_rxda_res <= {RHEAD_RX, DATA_REG10};
+        else if(state == CONF_REG11) chip_rxda_res <= {RHEAD_RX, DATA_REG11};
+        else if(state == CONF_REG12) chip_rxda_res <= {RHEAD_RX, DATA_REG12};
+        else if(state == CONF_REG13) chip_rxda_res <= {RHEAD_RX, DATA_REG13};
+        else if(state == CONF_REG14) chip_rxda_res <= {RHEAD_RX, DATA_REG14};
+        else if(state == CONF_REG15) chip_rxda_res <= {RHEAD_RX, DATA_REG15};
+        else if(state == CONF_REG16) chip_rxda_res <= {RHEAD_RX, DATA_REG16};
+        else if(state == CONF_REG17) chip_rxda_res <= {RHEAD_RX, DATA_REG17};
+        else if(state == CONF_REG18) chip_rxda_res <= {RHEAD_RX, DATA_REG18};
+        else if(state == CONF_REG19) chip_rxda_res <= {RHEAD_RX, DATA_REG19};
+        else if(state == CONF_REG20) chip_rxda_res <= {RHEAD_RX, DATA_REG20};
+        else if(state == CONF_REG21) chip_rxda_res <= {RHEAD_RX, DATA_REG21};
+        else if(state == TEMP_RESET) chip_rxda_res <= {RHEAD_RX, DATA_REG03_NORMAL};
         else chip_rxda_res <= chip_rxda_res;
     end
 
@@ -649,29 +685,29 @@ module intan(
         else if(state == INIT_REG43) chip_rxdb_res <= {RHEAD_RX, DATA_REG43};
         else if(state == INIT_REG44) chip_rxdb_res <= {RHEAD_RX, DATA_REG44};
         else if(state == TYPE_REG59) chip_rxdb_res <= {RHEAD_RX, DATA_REG59_B};
-        else if(state == CONF_REG00) chip_rxdb_res <= {RHEAD_TX, DATA_REG00_NORMAL};
-        else if(state == CONF_REG01) chip_rxdb_res <= {RHEAD_TX, data_reg01};
-        else if(state == CONF_REG02) chip_rxdb_res <= {RHEAD_TX, data_reg02};
-        else if(state == CONF_REG03) chip_rxdb_res <= {RHEAD_TX, DATA_REG03_NORMAL};
-        else if(state == CONF_REG04) chip_rxdb_res <= {RHEAD_TX, DATA_REG04};
-        else if(state == CONF_REG05) chip_rxdb_res <= {RHEAD_TX, DATA_REG05};
-        else if(state == CONF_REG06) chip_rxdb_res <= {RHEAD_TX, DATA_REG06};
-        else if(state == CONF_REG07) chip_rxdb_res <= {RHEAD_TX, DATA_REG07};
-        else if(state == CONF_REG08) chip_rxdb_res <= {RHEAD_TX, DATA_REG08};
-        else if(state == CONF_REG09) chip_rxdb_res <= {RHEAD_TX, DATA_REG09};
-        else if(state == CONF_REG10) chip_rxdb_res <= {RHEAD_TX, DATA_REG10};
-        else if(state == CONF_REG11) chip_rxdb_res <= {RHEAD_TX, DATA_REG11};
-        else if(state == CONF_REG12) chip_rxdb_res <= {RHEAD_TX, DATA_REG12};
-        else if(state == CONF_REG13) chip_rxdb_res <= {RHEAD_TX, DATA_REG13};
-        else if(state == CONF_REG14) chip_rxdb_res <= {RHEAD_TX, DATA_REG14};
-        else if(state == CONF_REG15) chip_rxdb_res <= {RHEAD_TX, DATA_REG15};
-        else if(state == CONF_REG16) chip_rxdb_res <= {RHEAD_TX, DATA_REG16};
-        else if(state == CONF_REG17) chip_rxdb_res <= {RHEAD_TX, DATA_REG17};
-        else if(state == CONF_REG18) chip_rxdb_res <= {RHEAD_TX, DATA_REG18};
-        else if(state == CONF_REG19) chip_rxdb_res <= {RHEAD_TX, DATA_REG19};
-        else if(state == CONF_REG20) chip_rxdb_res <= {RHEAD_TX, DATA_REG20};
-        else if(state == CONF_REG21) chip_rxdb_res <= {RHEAD_TX, DATA_REG21};
-        else if(state == TEMP_RESET) chip_rxdb_res <= {RHEAD_TX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG00) chip_rxdb_res <= {RHEAD_RX, DATA_REG00_NORMAL};
+        else if(state == CONF_REG01) chip_rxdb_res <= {RHEAD_RX, data_reg01};
+        else if(state == CONF_REG02) chip_rxdb_res <= {RHEAD_RX, data_reg02};
+        else if(state == CONF_REG03) chip_rxdb_res <= {RHEAD_RX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG04) chip_rxdb_res <= {RHEAD_RX, DATA_REG04};
+        else if(state == CONF_REG05) chip_rxdb_res <= {RHEAD_RX, DATA_REG05};
+        else if(state == CONF_REG06) chip_rxdb_res <= {RHEAD_RX, DATA_REG06};
+        else if(state == CONF_REG07) chip_rxdb_res <= {RHEAD_RX, DATA_REG07};
+        else if(state == CONF_REG08) chip_rxdb_res <= {RHEAD_RX, data_reg08};
+        else if(state == CONF_REG09) chip_rxdb_res <= {RHEAD_RX, data_reg09};
+        else if(state == CONF_REG10) chip_rxdb_res <= {RHEAD_RX, data_reg10};
+        else if(state == CONF_REG11) chip_rxdb_res <= {RHEAD_RX, data_reg11};
+        else if(state == CONF_REG12) chip_rxdb_res <= {RHEAD_RX, data_reg12};
+        else if(state == CONF_REG13) chip_rxdb_res <= {RHEAD_RX, data_reg13};
+        else if(state == CONF_REG14) chip_rxdb_res <= {RHEAD_RX, DATA_REG14};
+        else if(state == CONF_REG15) chip_rxdb_res <= {RHEAD_RX, DATA_REG15};
+        else if(state == CONF_REG16) chip_rxdb_res <= {RHEAD_RX, DATA_REG16};
+        else if(state == CONF_REG17) chip_rxdb_res <= {RHEAD_RX, DATA_REG17};
+        else if(state == CONF_REG18) chip_rxdb_res <= {RHEAD_RX, DATA_REG18};
+        else if(state == CONF_REG19) chip_rxdb_res <= {RHEAD_RX, DATA_REG19};
+        else if(state == CONF_REG20) chip_rxdb_res <= {RHEAD_RX, DATA_REG20};
+        else if(state == CONF_REG21) chip_rxdb_res <= {RHEAD_RX, DATA_REG21};
+        else if(state == TEMP_RESET) chip_rxdb_res <= {RHEAD_RX, DATA_REG03_NORMAL};
         else chip_rxdb_res <= chip_rxdb_res;
     end
 
@@ -788,6 +824,133 @@ module intan(
         else if(state == TEMP_DONE) chip_temp <= temp_measure;
         else chip_temp <= chip_temp;
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_reg08 <= {2'h0, RH1_DAC1_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg08 <= {2'h0, RH1_DAC1_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg08 <= {2'h0, RH1_DAC1_15K};
+        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg08 <= {2'h0, RH1_DAC1_10K};
+        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg08 <= {2'h0, RH1_DAC1_7K5};
+        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg08 <= {2'h0, RH1_DAC1_5K0};
+        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg08 <= {2'h0, RH1_DAC1_3K0};
+        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg08 <= {2'h0, RH1_DAC1_2K5};
+        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg08 <= {2'h0, RH1_DAC1_2K0};
+        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg08 <= {2'h0, RH1_DAC1_1K5};
+        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg08 <= {2'h0, RH1_DAC1_1K0};
+        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg08 <= {2'h0, RH1_DAC1_750};
+        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg08 <= {2'h0, RH1_DAC1_500};
+        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg08 <= {2'h0, RH1_DAC1_300};
+        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg08 <= {2'h0, RH1_DAC1_200};
+        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg08 <= {2'h0, RH1_DAC1_100};
+        else if(state == CONF_IDLE) data_reg08 <= {2'h0, RH1_DAC1_20K};
+        else data_reg08 <= data_reg08;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_reg09 <= {3'h0, RH1_DAC2_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg09 <= {3'h0, RH1_DAC2_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg09 <= {3'h0, RH1_DAC2_15K};
+        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg09 <= {3'h0, RH1_DAC2_10K};
+        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg09 <= {3'h0, RH1_DAC2_7K5};
+        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg09 <= {3'h0, RH1_DAC2_5K0};
+        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg09 <= {3'h0, RH1_DAC2_3K0};
+        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg09 <= {3'h0, RH1_DAC2_2K5};
+        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg09 <= {3'h0, RH1_DAC2_2K0};
+        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg09 <= {3'h0, RH1_DAC2_1K5};
+        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg09 <= {3'h0, RH1_DAC2_1K0};
+        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg09 <= {3'h0, RH1_DAC2_750};
+        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg09 <= {3'h0, RH1_DAC2_500};
+        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg09 <= {3'h0, RH1_DAC2_300};
+        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg09 <= {3'h0, RH1_DAC2_200};
+        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg09 <= {3'h0, RH1_DAC2_100};
+        else if(state == CONF_IDLE) data_reg09 <= {3'h0, RH1_DAC2_20K};
+        else data_reg09 <= data_reg09;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_reg10 <= {2'h0, RH2_DAC1_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg10 <= {2'h0, RH2_DAC1_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg10 <= {2'h0, RH2_DAC1_15K};
+        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg10 <= {2'h0, RH2_DAC1_10K};
+        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg10 <= {2'h0, RH2_DAC1_7K5};
+        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg10 <= {2'h0, RH2_DAC1_5K0};
+        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg10 <= {2'h0, RH2_DAC1_3K0};
+        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg10 <= {2'h0, RH2_DAC1_2K5};
+        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg10 <= {2'h0, RH2_DAC1_2K0};
+        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg10 <= {2'h0, RH2_DAC1_1K5};
+        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg10 <= {2'h0, RH2_DAC1_1K0};
+        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg10 <= {2'h0, RH2_DAC1_750};
+        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg10 <= {2'h0, RH2_DAC1_500};
+        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg10 <= {2'h0, RH2_DAC1_300};
+        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg10 <= {2'h0, RH2_DAC1_200};
+        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg10 <= {2'h0, RH2_DAC1_100};
+        else if(state == CONF_IDLE) data_reg10 <= {2'h0, RH2_DAC1_20K};
+        else data_reg10 <= data_reg10;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_reg11 <= {3'h0, RH2_DAC2_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg11 <= {3'h0, RH2_DAC2_20K};
+        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg11 <= {3'h0, RH2_DAC2_15K};
+        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg11 <= {3'h0, RH2_DAC2_10K};
+        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg11 <= {3'h0, RH2_DAC2_7K5};
+        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg11 <= {3'h0, RH2_DAC2_5K0};
+        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg11 <= {3'h0, RH2_DAC2_3K0};
+        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg11 <= {3'h0, RH2_DAC2_2K5};
+        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg11 <= {3'h0, RH2_DAC2_2K0};
+        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg11 <= {3'h0, RH2_DAC2_1K5};
+        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg11 <= {3'h0, RH2_DAC2_1K0};
+        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg11 <= {3'h0, RH2_DAC2_750};
+        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg11 <= {3'h0, RH2_DAC2_500};
+        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg11 <= {3'h0, RH2_DAC2_300};
+        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg11 <= {3'h0, RH2_DAC2_200};
+        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg11 <= {3'h0, RH2_DAC2_100};
+        else if(state == CONF_IDLE) data_reg11 <= {3'h0, RH2_DAC2_20K};
+        else data_reg11 <= data_reg11;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_reg12 <= {1'b0, RL_DAC1_D10};
+        else if(state == CONF_IDLE && filt_low == 4'h1) data_reg12 <= {1'b0, RL_DAC1_100};
+        else if(state == CONF_IDLE && filt_low == 4'h2) data_reg12 <= {1'b0, RL_DAC1_020};
+        else if(state == CONF_IDLE && filt_low == 4'h3) data_reg12 <= {1'b0, RL_DAC1_015};
+        else if(state == CONF_IDLE && filt_low == 4'h4) data_reg12 <= {1'b0, RL_DAC1_010};
+        else if(state == CONF_IDLE && filt_low == 4'h5) data_reg12 <= {1'b0, RL_DAC1_7D5};
+        else if(state == CONF_IDLE && filt_low == 4'h6) data_reg12 <= {1'b0, RL_DAC1_5D0};
+        else if(state == CONF_IDLE && filt_low == 4'h7) data_reg12 <= {1'b0, RL_DAC1_3D0};
+        else if(state == CONF_IDLE && filt_low == 4'h8) data_reg12 <= {1'b0, RL_DAC1_2D5};
+        else if(state == CONF_IDLE && filt_low == 4'h9) data_reg12 <= {1'b0, RL_DAC1_2D0};
+        else if(state == CONF_IDLE && filt_low == 4'hA) data_reg12 <= {1'b0, RL_DAC1_1D0};
+        else if(state == CONF_IDLE && filt_low == 4'hB) data_reg12 <= {1'b0, RL_DAC1_D75};
+        else if(state == CONF_IDLE && filt_low == 4'hC) data_reg12 <= {1'b0, RL_DAC1_D50};
+        else if(state == CONF_IDLE && filt_low == 4'hD) data_reg12 <= {1'b0, RL_DAC1_D30};
+        else if(state == CONF_IDLE && filt_low == 4'hE) data_reg12 <= {1'b0, RL_DAC1_D25};
+        else if(state == CONF_IDLE && filt_low == 4'hF) data_reg12 <= {1'b0, RL_DAC1_D10};
+        else if(state == CONF_IDLE) data_reg12 <= {1'b0, RL_DAC1_D10};
+        else data_reg12 <= data_reg12;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_reg12 <= {1'b0, RL_DAC2_D10};
+        else if(state == CONF_IDLE && filt_low == 4'h1) data_reg13 <= {1'b0, RL_DAC2_100};
+        else if(state == CONF_IDLE && filt_low == 4'h2) data_reg13 <= {1'b0, RL_DAC2_020};
+        else if(state == CONF_IDLE && filt_low == 4'h3) data_reg13 <= {1'b0, RL_DAC2_015};
+        else if(state == CONF_IDLE && filt_low == 4'h4) data_reg13 <= {1'b0, RL_DAC2_010};
+        else if(state == CONF_IDLE && filt_low == 4'h5) data_reg13 <= {1'b0, RL_DAC2_7D5};
+        else if(state == CONF_IDLE && filt_low == 4'h6) data_reg13 <= {1'b0, RL_DAC2_5D0};
+        else if(state == CONF_IDLE && filt_low == 4'h7) data_reg13 <= {1'b0, RL_DAC2_3D0};
+        else if(state == CONF_IDLE && filt_low == 4'h8) data_reg13 <= {1'b0, RL_DAC2_2D5};
+        else if(state == CONF_IDLE && filt_low == 4'h9) data_reg13 <= {1'b0, RL_DAC2_2D0};
+        else if(state == CONF_IDLE && filt_low == 4'hA) data_reg13 <= {1'b0, RL_DAC2_1D0};
+        else if(state == CONF_IDLE && filt_low == 4'hB) data_reg13 <= {1'b0, RL_DAC2_D75};
+        else if(state == CONF_IDLE && filt_low == 4'hC) data_reg13 <= {1'b0, RL_DAC2_D50};
+        else if(state == CONF_IDLE && filt_low == 4'hD) data_reg13 <= {1'b0, RL_DAC2_D30};
+        else if(state == CONF_IDLE && filt_low == 4'hE) data_reg13 <= {1'b0, RL_DAC2_D25};
+        else if(state == CONF_IDLE && filt_low == 4'hF) data_reg13 <= {1'b0, RL_DAC2_D10};
+        else if(state == CONF_IDLE) data_reg13 <= {1'b0, RL_DAC2_D10};
+        else data_reg13 <= data_reg13;
+    end
+ 
  
     spi
     spi_dut(

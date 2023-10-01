@@ -39,6 +39,7 @@ wire [7:0] e_txd_crc;
 //IP frame·¢ËÍ
 ipsend ipsend_inst(
 	.clk(e_rxc),
+	.rst(~reset_n),
 	.txen(),
 	.txer(e_txer),
 	.dataout(e_txd_crc),

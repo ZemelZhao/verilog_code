@@ -28,6 +28,7 @@ module frame_rx(
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam HEAD = 8'h10, WAKE = 8'h11, PART = 8'h12, ERROR = 8'h13; 
     localparam CK00 = 8'h20, CK01 = 8'h21, CK02 = 8'h22;
+    localparam REST0 = 8'h30, REST1 = 8'h31;
 
     reg [31:0] checksum;
     reg [15:0] dlen;
@@ -70,8 +71,16 @@ module frame_rx(
             CK00: next_state <= CK01;
             CK01: next_state <= CK02;
             CK02: begin
-                if(crc == checksum) next_state <= DONE;
-                else next_state <= ERROR;
+                if(crc == checksum) next_state <= REST1;
+                else next_state <= REST0;
+            end
+            REST0: begin
+                if(fd_mac) next_state <= ERROR;
+                else next_state <= REST0;
+            end
+            REST1: begin
+                if(fd_mac) next_state <= DONE;
+                else next_state <= REST1;
             end
             ERROR: begin
                 if(fd_fifo) next_state <= WAIT;

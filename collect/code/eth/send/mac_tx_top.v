@@ -5,6 +5,10 @@ module mac_tx_top(
     input fs,
     output fd,
 
+    input [15:0] mac_mode,
+    input [7:0] ip_mode,
+    input arp_req,
+
     input [47:0] src_mac_addr,
     input [47:0] det_mac_addr,
     input [31:0] src_ip_addr,
@@ -55,8 +59,6 @@ module mac_tx_top(
     wire [31:0] crc_data;
 
     assign ip_tx_dlen = data_len + 8'h1C;
-    assign ip_mode = UDP;
-    assign mac_mode = IP;
 
     udp_tx
     udp_tx_dut(
@@ -65,7 +67,7 @@ module mac_tx_top(
         .fs(fs_udp_tx),
         .fd(fd_udp_tx),
         .src_port(src_ip_port),
-        .det_port(src_ip_port),
+        .det_port(det_ip_port),
         .data_len(data_len),
         .fifo_rxen(fifo_rxen),
         .fifo_rxd(fifo_rxd),
@@ -144,6 +146,12 @@ module mac_tx_top(
 
         .fs(fs_arp_tx),
         .fd(fd_arp_tx),
+        .btype(arp_req),
+        
+        .src_mac_addr(src_mac_addr),
+        .det_mac_addr(det_mac_addr),
+        .src_ip_addr(src_ip_addr),
+        .det_ip_addr(det_ip_addr),
 
         .txd(arp_txd)
     );

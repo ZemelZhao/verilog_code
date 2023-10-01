@@ -5,6 +5,7 @@
 
 module ipsend(
 				  input              clk,                   //GMII发送的时钟信号
+				  input rst,
 				  output reg         txen,                  //GMII数据使能信号
 				  output reg         txer,                  //GMII发送错误信号
 				  output reg [7:0]   dataout,               //GMII发送数据
@@ -72,6 +73,11 @@ initial
 //UDP数据发送程序	 
 always@(posedge clk)
 begin		
+	if(rst) begin
+		time_counter <= 4'h0;
+		ip_header[1][31:15] <= 16'h0000;
+	end
+	else begin
 		case(tx_state)
 		  idle:begin
 				 txer<=1'b0;
@@ -258,6 +264,7 @@ begin
 			end					
 			default:tx_state<=idle;		
        endcase	  
+end
  end
 
 

@@ -38,6 +38,7 @@ module typec(
 
     wire [3:0] rx_btype, tx_btype;
     wire [3:0] rx_bdata;
+    wire [7:0] rx_filter;
 
     wire [7:0] data_head;
 
@@ -121,7 +122,8 @@ module typec(
         .com_rxd(com_rxd),
 
         .btype(rx_btype),
-        .bdata(rx_bdata)
+        .bdata(rx_bdata),
+        .filter(rx_filter)
     );
 
     typec_rxf

@@ -32,6 +32,8 @@ module mac_rx(
     reg [15:0] cnt;
     reg [15:0] dlen;
 
+    assign fd = (state == DONE);
+
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
         else state <= next_state;

@@ -11,12 +11,19 @@ module mac(
 
     output e_rstn,
     output e_mdc,
-    input e_mdio,
+    inout e_mdio,
 
     input fs_send,
     output fd_send,
     output fs_recv,
     input fd_recv,
+
+    input [15:0] mac_tx_mode,
+    input [7:0] ip_tx_mode,
+    output [15:0] mac_rx_mode,
+    output [7:0] ip_rx_mode,
+
+    input arp_tx_req,
 
     input rst,
     input [15:0] tx_dlen,
@@ -28,10 +35,10 @@ module mac(
     input [7:0] fifo_data_rxd
 );
 
-    localparam SRC_MAC_ADDR = 48'h1A510F000001;
+    localparam SRC_MAC_ADDR = 48'hF5DB0A3EBE79;
     localparam DET_MAC_ADDR = 48'hFFFFFFFFFFFF;
-    localparam SRC_IP_ADDR = 32'hC0A80002;
-    localparam DET_IP_ADDR = 32'hC0A80003;
+    localparam SRC_IP_ADDR = 32'hC0A80003;
+    localparam DET_IP_ADDR = 32'hC0A80002;
     localparam SRC_IP_PORT = 16'h1F90;
     localparam DET_IP_PORT = 16'h1F90;
 
@@ -42,14 +49,17 @@ module mac(
     assign e_rstn = 1'b1;
     assign e_mdc = 1'b0;
     assign e_gtxc = e_grxc;
+    assign e_txer = 1'b0;
 
 
     mac_rx_top
     mac_rx_top_dut(
-        .clk(e_grxc),
+        .clk(~e_grxc),
         .rst(rst),
         .fs(fs_recv),
         .fd(fd_recv),
+        .mac_mode(mac_rx_mode),
+        .ip_mode(ip_rx_mode),
 
         .src_mac_addr(tgt_mac_addr),
         .det_mac_addr(src_mac_addr),
@@ -72,6 +82,9 @@ module mac(
         .rst(rst),
         .fs(fs_send),
         .fd(fd_send),
+        .mac_mode(mac_tx_mode),
+        .ip_mode(ip_tx_mode),
+        .arp_req(arp_tx_req),
 
         .src_mac_addr(SRC_MAC_ADDR),
         .det_mac_addr(DET_MAC_ADDR),

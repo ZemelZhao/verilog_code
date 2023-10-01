@@ -40,8 +40,8 @@ module sim();
         #5;
     end
 
-    tb_mac
-    tb_mac_dut(
+    tb_crc32
+    tb_crc32_dut(
         // .clk_25(clk_25),
         .clk(clk_50),
         // .clk_100(clk_100),

@@ -7,7 +7,8 @@ module typec_rx(
 
     input [7:0] com_rxd,
     output reg [3:0] btype,
-    output reg [3:0] bdata
+    output reg [3:0] bdata,
+    output reg [7:0] filter
 );
 
 
@@ -29,6 +30,8 @@ module typec_rx(
     reg [3:0] next_state;
     wire crcen;
     wire [7:0] crc_in, crc_out;
+    reg [15:0] clen;
+    reg [7:0] cnum;
 
     assign crc_in = com_rxd; // 
 
@@ -66,7 +69,10 @@ module typec_rx(
             RLINK: next_state <= DONE;
             NUM0: next_state <= NUM1;
             NUM1: next_state <= RCMD;
-            RCMD: next_state <= CRC5;
+            RCMD: begin
+                if(cnum >= clen - 1'b1) next_state <= CRC5;
+                else next_state <= RCMD;
+            end
             CRC5: begin
                 if(com_rxd == crc_out) next_state <= DONE;
                 else next_state <= ERROR;
@@ -86,9 +92,9 @@ module typec_rx(
         else if(state == RACK) btype <= BAG_ACK;
         else if(state == RNAK) btype <= BAG_NAK;
         else if(state == RSTALL) btype <= BAG_STALL;
-        else if(state == RCMD && com_rxd[7:4] == HEAD_DIDX) btype <= BAG_DIDX;
-        else if(state == RCMD && com_rxd[7:4] == HEAD_DDIDX) btype <= BAG_DDIDX;
-        else if(state == RCMD && com_rxd[7:4] == HEAD_DPARAM) btype <= BAG_DPARAM;
+        else if(state == RCMD && com_rxd[7:4] == HEAD_DIDX && cnum == 8'h00) btype <= BAG_DIDX;
+        else if(state == RCMD && com_rxd[7:4] == HEAD_DDIDX && cnum == 8'h00) btype <= BAG_DDIDX;
+        else if(state == RCMD && com_rxd[7:4] == HEAD_DPARAM && cnum == 8'h00) btype <= BAG_DPARAM;
         else if(state == ERROR) btype <= BAG_ERROR;
         else btype <= btype;
     end
@@ -96,8 +102,33 @@ module typec_rx(
     always@(posedge clk or posedge rst) begin // bdata
         if(rst) bdata <= 4'h0;
         else if(state == IDLE) bdata <= 4'h0;
-        else if(state == RCMD) bdata <= com_rxd[3:0];
+        else if(state == RCMD && clen == 8'h00) bdata <= com_rxd[3:0];
         else bdata <= bdata;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) filter <= 8'h00;
+        else if(state == IDLE) filter <= 8'h00;
+        else if(state == RCMD && cnum == 8'h01) filter <= com_rxd;
+        else filter <= filter;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) clen <= 16'h0000; 
+        else if(state == IDLE) clen <= 16'h0000;
+        else if(state == WAIT) clen <= 16'h0000;
+        else if(state == RPID) clen <= 16'h0000;
+        else if(state == NUM0) clen[15:8] <= com_rxd;
+        else if(state == NUM0) clen[7:0] <= com_rxd;
+        else clen <= clen;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) cnum <= 8'h00;
+        else if(state == IDLE) cnum <= 8'h00; 
+        else if(state == WAIT) cnum <= 8'h00; 
+        else if(state == RCMD) cnum <= cnum + 1'b1;
+        else cnum <= 8'h00;
     end
 
     crc5

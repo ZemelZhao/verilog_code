@@ -54,7 +54,7 @@ module intan(
     localparam DATA_REG00_NORMAL = 8'hDE, DATA_REG00_RESET = 8'hFE; 
     localparam DATA_REG01_12KHZ = 8'h20, DATA_REG01_4KHZ = 8'h10, DATA_REG01_8KHZ = 8'h08, DATA_REG01_16KHZ = 8'h03;
     localparam DATA_REG02_12KHZ = 8'h28, DATA_REG02_4KHZ = 8'h28, DATA_REG02_8KHZ = 8'h1A, DATA_REG02_16KHZ = 8'h07;
-    localparam DATA_REG03_NORMAL = 8'h00, 
+    localparam DATA_REG03_NORMAL = 8'h00; 
     localparam DATA_REG03_TEMP_EN = 8'h04, DATA_REG03_TEMP_00 = 8'h0C, DATA_REG03_TEMP_01 = 8'h1C, DATA_REG03_TEMP_10 = 8'h14;
     localparam DATA_REG04 = 8'hDD, DATA_REG05 = 8'h00, DATA_REG06 = 8'h00, DATA_REG07 = 8'h00;
     localparam DATA_REG08 = 8'h00, DATA_REG09 = 8'h00, DATA_REG10 = 8'h00, DATA_REG11 = 8'h00;
@@ -124,7 +124,7 @@ module intan(
     localparam RREG_FAIL = 8'h10;
     localparam TREG_WAIT = 8'h14, TREG_WORK = 8'h15, TREG_TRAN = 8'h16, TREG_DONE = 8'h17;
     localparam REST_WAIT = 8'h18, REST_WORK = 8'h19, REST_DONE = 8'h1A;
-    localparam TEMP_WAIT = 8'h1C, TEMP_WORK = 8'h1D, TEMP_TRAN = 8'h1E, TEMP_DONE = 8'h1F;
+    localparam RTMP_WAIT = 8'h1C, RTMP_WORK = 8'h1D, RTMP_TRAN = 8'h1E, RTMP_DONE = 8'h1F;
 
     localparam INIT_IDLE = 8'h20, INIT_DONE = 8'h21, INIT_RXD0 = 8'h22, INIT_RXD1 = 8'h23;
 
@@ -143,7 +143,7 @@ module intan(
     localparam INIT_REG40 = 8'h40, INIT_REG41 = 8'h41, INIT_REG42 = 8'h42, INIT_REG43 = 8'h43;
     localparam INIT_REG44 = 8'h44; 
 
-    localparam TYPE_REG59 = 8'h50, TYPE_REG60 = 8'h51, TYPE_REG61 = 8'h52; TYPE_REG62 = 8'h53;
+    localparam TYPE_REG59 = 8'h50, TYPE_REG60 = 8'h51, TYPE_REG61 = 8'h52, TYPE_REG62 = 8'h53;
     localparam TYPE_REG63 = 8'h54;
 
     localparam CONF_REG00 = 8'h80, CONF_REG01 = 8'h81, CONF_REG02 = 8'h82, CONF_REG03 = 8'h83;
@@ -190,7 +190,7 @@ module intan(
     wire [15:0] fifo_txd;
     wire [1:0] fifo_txen, fifo_full;
 
-    assign fs_spi = (state == IDLE_WAIT) || (state == WRAM_WAIT) || (state == RREG_WAIT) || (state == TREG_WAIT) || (state == TEMP_WAIT);
+    assign fs_spi = (state == IDLE_WAIT) || (state == WRAM_WAIT) || (state == RREG_WAIT) || (state == TREG_WAIT) || (state == RTMP_WAIT);
     assign fs_fifo = (state == WRAM_WORK);
     assign fd_init = (state == INIT_DONE);
     assign fd_type = (state == TYPE_DONE);
@@ -243,7 +243,7 @@ module intan(
                 else next_state <= RREG_WAIT;
             end
             RREG_WORK: begin
-                if(chip_rxda == chip_rxda_res_d1) && (chip_rxdb == chip_rxdb_res_d1) next_state <= RREG_TRAN; 
+                if((chip_rxda == chip_rxda_res_d1) && (chip_rxdb == chip_rxdb_res_d1)) next_state <= RREG_TRAN; 
                 else next_state <= RREG_FAIL;
             end
             RREG_TRAN: next_state <= RREG_DONE;
@@ -274,15 +274,15 @@ module intan(
             end
             REST_DONE: next_state <= state_goto;
 
-            TEMP_WAIT: begin
-                if(fd_spi) next_state <= TEMP_WORK;
-                else next_state <= TEMP_WAIT;
+            RTMP_WAIT: begin
+                if(fd_spi) next_state <= RTMP_WORK;
+                else next_state <= RTMP_WAIT;
             end
-            TEMP_WORK: next_state <= TEMP_TRAN;
-            TEMP_TRAN: next_state <= TEMP_DONE;
-            TEMP_DONE: begin
+            RTMP_WORK: next_state <= RTMP_TRAN;
+            RTMP_TRAN: next_state <= RTMP_DONE;
+            RTMP_DONE: begin
                 if(fd_prd) next_state <= state_goto;
-                else next_state <= TEMP_DONE;
+                else next_state <= RTMP_DONE;
             end
 
             INIT_IDLE: next_state <= INIT_REG40;
@@ -337,7 +337,7 @@ module intan(
             CONF_RXD1: next_state <= RREG_WAIT;
             CONF_DONE: next_state <= TEMP_IDLE;
 
-            TEMP_IDLE: next_state <= TEMP_STP00;
+            TEMP_IDLE: next_state <= TEMP_WREG0;
             TEMP_WREG0: next_state <= IDLE_WAIT;
             TEMP_REST0: next_state <= REST_WAIT;
             TEMP_WREG1: next_state <= IDLE_WAIT;
@@ -346,12 +346,12 @@ module intan(
             TEMP_REST2: next_state <= REST_WAIT;
             TEMP_RRESA: next_state <= IDLE_WAIT;
             TEMP_RXD0: next_state <= IDLE_WAIT;
-            TEMP_RXD1: next_state <= TEMP_WAIT;
+            TEMP_RXD1: next_state <= RTMP_WAIT;
             TEMP_WREG3: next_state <= IDLE_WAIT;
             TEMP_REST3: next_state <= REST_WAIT;
             TEMP_RRESB: next_state <= IDLE_WAIT;
             TEMP_RESET: next_state <= IDLE_WAIT;
-            TEMP_RXD2: next_state <= TEMP_WAIT;
+            TEMP_RXD2: next_state <= RTMP_WAIT;
             TEMP_RXD3: next_state <= RREG_WAIT;
             TEMP_DONE: next_state <= CALI_IDLE;
 
@@ -643,7 +643,7 @@ module intan(
         if(rst) chip_rxda_res <= CHIP_RXD_INIT;
         else if(state == MAIN_IDLE) chip_rxda_res <= CHIP_RXD_INIT;
         else if(state == MAIN_WAIT) chip_rxda_res <= CHIP_RXD_INIT;
-        else if(state == IDLE_REG40) chip_rxda_res <= {RHEAD_RX, DATA_REG40};
+        else if(state == INIT_REG40) chip_rxda_res <= {RHEAD_RX, DATA_REG40};
         else if(state == INIT_REG41) chip_rxda_res <= {RHEAD_RX, DATA_REG41};
         else if(state == INIT_REG42) chip_rxda_res <= {RHEAD_RX, DATA_REG42};
         else if(state == INIT_REG43) chip_rxda_res <= {RHEAD_RX, DATA_REG43};
@@ -679,7 +679,7 @@ module intan(
         if(rst) chip_rxdb_res <= CHIP_RXD_INIT;
         else if(state == MAIN_IDLE) chip_rxdb_res <= CHIP_RXD_INIT;
         else if(state == MAIN_WAIT) chip_rxdb_res <= CHIP_RXD_INIT;
-        else if(state == IDLE_REG40) chip_rxdb_res <= {RHEAD_RX, DATA_REG40};
+        else if(state == INIT_REG40) chip_rxdb_res <= {RHEAD_RX, DATA_REG40};
         else if(state == INIT_REG41) chip_rxdb_res <= {RHEAD_RX, DATA_REG41};
         else if(state == INIT_REG42) chip_rxdb_res <= {RHEAD_RX, DATA_REG42};
         else if(state == INIT_REG43) chip_rxdb_res <= {RHEAD_RX, DATA_REG43};
@@ -719,7 +719,7 @@ module intan(
         else if(state == WRAM_TRAN) chip_rxda_res_d0 <= chip_rxda_res;
         else if(state == RREG_TRAN) chip_rxda_res_d0 <= chip_rxda_res;
         else if(state == TREG_TRAN) chip_rxda_res_d0 <= chip_rxda_res;
-        else if(state == TEMP_TRAN) chip_rxda_res_d0 <= chip_rxda_res;
+        else if(state == RTMP_TRAN) chip_rxda_res_d0 <= chip_rxda_res;
         else chip_rxda_res_d0 <= chip_rxda_res_d0;
     end
 
@@ -731,7 +731,7 @@ module intan(
         else if(state == WRAM_TRAN) chip_rxdb_res_d0 <= chip_rxdb_res;
         else if(state == RREG_TRAN) chip_rxdb_res_d0 <= chip_rxdb_res;
         else if(state == TREG_TRAN) chip_rxdb_res_d0 <= chip_rxdb_res;
-        else if(state == TEMP_TRAN) chip_rxdb_res_d0 <= chip_rxdb_res;
+        else if(state == RTMP_TRAN) chip_rxdb_res_d0 <= chip_rxdb_res;
         else chip_rxdb_res_d0 <= chip_rxdb_res_d0;
     end
 
@@ -743,7 +743,7 @@ module intan(
         else if(state == WRAM_TRAN) chip_rxda_res_d1 <= chip_rxda_res_d0;
         else if(state == RREG_TRAN) chip_rxda_res_d1 <= chip_rxda_res_d0;
         else if(state == TREG_TRAN) chip_rxda_res_d1 <= chip_rxda_res_d0;
-        else if(state == TEMP_TRAN) chip_rxda_res_d1 <= chip_rxda_res_d0;
+        else if(state == RTMP_TRAN) chip_rxda_res_d1 <= chip_rxda_res_d0;
         else chip_rxda_res_d1 <= chip_rxda_res_d1;
     end
 
@@ -755,37 +755,37 @@ module intan(
         else if(state == WRAM_TRAN) chip_rxdb_res_d1 <= chip_rxdb_res_d0;
         else if(state == RREG_TRAN) chip_rxdb_res_d1 <= chip_rxdb_res_d0;
         else if(state == TREG_TRAN) chip_rxdb_res_d1 <= chip_rxdb_res_d0;
-        else if(state == TEMP_TRAN) chip_rxdb_res_d1 <= chip_rxdb_res_d0;
+        else if(state == RTMP_TRAN) chip_rxdb_res_d1 <= chip_rxdb_res_d0;
         else chip_rxdb_res_d1 <= chip_rxdb_res_d1;
     end
 
     always@(posedge clk or posedge rst) begin // type
         if(rst) type <= 2'b00;
-        else if(state == TREG_WORK) && (chip_rxd0 == {RHEAD_RX, DATA_REG63_RHD2116}) type <= 2'b01;
-        else if(state == TREG_WORK) && (chip_rxd0 == {RHEAD_RX, DATA_REG63_RHD2132}) type <= 2'b10;
-        else if(state == TREG_WORK) && (chip_rxd0 == {RHEAD_RX, DATA_REG63_RHD2164}) type <= 2'b11;
+        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2116})) type <= 2'b01;
+        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2132})) type <= 2'b10;
+        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2164})) type <= 2'b11;
         else type <= type;
     end
 
     always@(posedge clk or posedge rst) begin // data_reg01
         if(rst) data_reg01 <= 8'h00;
         else if(state == MAIN_IDLE) data_reg01  <=  8'h00;
-        else if(state == CONF_REG01) && (fs == FS_1KHZ) data_reg01 <= DATA_REG01_12KHZ;
-        else if(state == CONF_REG01) && (fs == FS_2KHZ) data_reg01 <= DATA_REG01_12KHZ;
-        else if(state == CONF_REG01) && (fs == FS_4KHZ) data_reg01 <= DATA_REG01_4KHZ;
-        else if(state == CONF_REG01) && (fs == FS_8KHZ) data_reg01 <= DATA_REG01_8KHZ;
-        else if(state == CONF_REG01) && (fs == FS_16KHZ) data_reg01 <= DATA_REG01_16KHZ;
+        else if((state == CONF_REG01) && (fs == FS_1KHZ)) data_reg01 <= DATA_REG01_12KHZ;
+        else if((state == CONF_REG01) && (fs == FS_2KHZ)) data_reg01 <= DATA_REG01_12KHZ;
+        else if((state == CONF_REG01) && (fs == FS_4KHZ)) data_reg01 <= DATA_REG01_4KHZ;
+        else if((state == CONF_REG01) && (fs == FS_8KHZ)) data_reg01 <= DATA_REG01_8KHZ;
+        else if((state == CONF_REG01) && (fs == FS_16KHZ)) data_reg01 <= DATA_REG01_16KHZ;
         else data_reg01 <= data_reg01;
     end 
 
     always@(posedge clk or posedge rst) begin // data_reg02
         if(rst) data_reg02 <= 8'h00;
         else if(state == MAIN_IDLE) data_reg02  <=  8'h00;
-        else if(state == CONF_REG02) && (fs == FS_1KHZ) data_reg02 <= DATA_REG02_12KHZ;
-        else if(state == CONF_REG02) && (fs == FS_2KHZ) data_reg02 <= DATA_REG02_12KHZ;
-        else if(state == CONF_REG02) && (fs == FS_4KHZ) data_reg02 <= DATA_REG02_4KHZ;
-        else if(state == CONF_REG02) && (fs == FS_8KHZ) data_reg02 <= DATA_REG02_8KHZ;
-        else if(state == CONF_REG02) && (fs == FS_16KHZ) data_reg02 <= DATA_REG02_16KHZ;
+        else if((state == CONF_REG02) && (fs == FS_1KHZ)) data_reg02 <= DATA_REG02_12KHZ;
+        else if((state == CONF_REG02) && (fs == FS_2KHZ)) data_reg02 <= DATA_REG02_12KHZ;
+        else if((state == CONF_REG02) && (fs == FS_4KHZ)) data_reg02 <= DATA_REG02_4KHZ;
+        else if((state == CONF_REG02) && (fs == FS_8KHZ)) data_reg02 <= DATA_REG02_8KHZ;
+        else if((state == CONF_REG02) && (fs == FS_16KHZ)) data_reg02 <= DATA_REG02_16KHZ;
         else data_reg02 <= data_reg02;
     end 
 
@@ -803,7 +803,7 @@ module intan(
     always@(posedge clk or posedge rst) begin // num
         if(rst) num <= 16'h0000;
         else if(state == MAIN_IDLE) num <= 16'h0000;
-        else if(state == MAIN_WATI) num <= 16'h0000;
+        else if(state == MAIN_WAIT) num <= 16'h0000;
         else if(state == REST_WAIT) num <= 16'h0000;
         else if(state == REST_WORK) num <= num + 1'b1;
         else num <= 16'h0000;
@@ -813,8 +813,8 @@ module intan(
         if(rst) temp_measure <= 16'h00000;
         else if(state == MAIN_IDLE) temp_measure <= 16'h0000;
         else if(state == MAIN_WAIT) temp_measure <= 16'h0000;
-        else if(state == RRESA) temp_measure <= 16'h0000;
-        else if(state == TEMP_WORK) temp_measure <= chip_rxd0 - temp_measure;
+        else if(state == TEMP_RRESA) temp_measure <= 16'h0000;
+        else if(state == RTMP_WORK) temp_measure <= chip_rxda - temp_measure;
         else temp_measure <= temp_measure;
     end
 
@@ -931,7 +931,7 @@ module intan(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_reg12 <= {1'b0, RL_DAC2_D10};
+        if(rst) data_reg13 <= {1'b0, RL_DAC2_D10};
         else if(state == CONF_IDLE && filt_low == 4'h1) data_reg13 <= {1'b0, RL_DAC2_100};
         else if(state == CONF_IDLE && filt_low == 4'h2) data_reg13 <= {1'b0, RL_DAC2_020};
         else if(state == CONF_IDLE && filt_low == 4'h3) data_reg13 <= {1'b0, RL_DAC2_015};
@@ -984,7 +984,7 @@ module intan(
 
         .fifo_full(fifo_full),
         .fifo_txen(fifo_txen),
-        .fifo_txd(fifo_txd),
+        .fifo_txd(fifo_txd)
     );
 
     fifo_intan

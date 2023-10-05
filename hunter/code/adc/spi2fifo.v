@@ -10,7 +10,7 @@ module spi2fifo(
 
     input [1:0] fifo_full,
     output [1:0] fifo_txen,
-    output [15:0] fifo_txd, 
+    output [15:0] fifo_txd 
 );
 
     reg [3:0] state, next_state;

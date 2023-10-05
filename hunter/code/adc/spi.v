@@ -2,21 +2,21 @@ module spi(
     input clk,
     input rst,
 
-    input fs,
-    output reg fd_spi,
-    output fd_prd,
+    (*MARK_DEBUG = "true"*)input fs,
+    (*MARK_DEBUG = "true"*)output reg fd_spi,
+    (*MARK_DEBUG = "true"*)output fd_prd,
 
-    input miso,
-    output reg sclk,
-    output reg mosi,
-    output reg cs,
+    (*MARK_DEBUG = "true"*)input miso,
+    (*MARK_DEBUG = "true"*)output reg sclk,
+    (*MARK_DEBUG = "true"*)output reg mosi,
+    (*MARK_DEBUG = "true"*)output reg cs,
 
     input [15:0] chip_txd,
     output reg [15:0] chip_rxda,
     output reg [15:0] chip_rxdb
 );
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
     reg [15:0] chip_rxd0, chip_rxd1;
 
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
@@ -38,8 +38,8 @@ module spi(
     localparam MOSIE = 8'h48, SCLKE = 8'h49, RESTE = 8'h4A, MISOE = 8'h4B;
     localparam MOSIF = 8'h4C, SCLKF = 8'h4D, RESTF = 8'h4E, MISOF = 8'h4F;
     localparam LAST0 = 8'h50, LAST1 = 8'h51, LAST2 = 8'h52;
-    localparam WAIT0 = 8'h60, WAIT1 = 8'h61, WAIT2 = 8'h62, WAIT3 = 4'h63;
-    localparam WAIT4 = 8'h64, WAIT5 = 8'h65, WAIT6 = 8'h66, WAIT7 = 4'h67;
+    localparam WAIT0 = 8'h60, WAIT1 = 8'h61, WAIT2 = 8'h62, WAIT3 = 8'h63;
+    localparam WAIT4 = 8'h64, WAIT5 = 8'h65, WAIT6 = 8'h66, WAIT7 = 8'h67;
     localparam WAIT8 = 8'h68, WAIT9 = 8'h69; 
 
     assign fd_prd = (state == DONE);

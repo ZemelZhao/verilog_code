@@ -2,42 +2,42 @@ module spi(
     input clk,
     input rst,
 
-    (*MARK_DEBUG = "true"*)input fs,
-    (*MARK_DEBUG = "true"*)output reg fd_spi,
-    (*MARK_DEBUG = "true"*)output fd_prd,
+    input fs,
+    output reg fd_spi,
+    output fd_prd,
 
-    (*MARK_DEBUG = "true"*)input miso,
-    (*MARK_DEBUG = "true"*)output reg sclk,
-    (*MARK_DEBUG = "true"*)output reg mosi,
-    (*MARK_DEBUG = "true"*)output reg cs,
+    input miso,
+    output reg sclk,
+    output reg mosi,
+    output reg cs,
 
     input [15:0] chip_txd,
     output reg [15:0] chip_rxda,
     output reg [15:0] chip_rxdb
 );
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
+    reg [7:0] state, next_state;
     reg [15:0] chip_rxd0, chip_rxd1;
 
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam SPIPD = 8'h04;
-    localparam MOSI0 = 8'h10, SCLK0 = 8'h11, REST0 = 8'h12, MISO0 = 8'h13;
-    localparam MOSI1 = 8'h14, SCLK1 = 8'h15, REST1 = 8'h16, MISO1 = 8'h17;
-    localparam MOSI2 = 8'h18, SCLK2 = 8'h19, REST2 = 8'h1A, MISO2 = 8'h1B;
-    localparam MOSI3 = 8'h1C, SCLK3 = 8'h1D, REST3 = 8'h1E, MISO3 = 8'h1F;
-    localparam MOSI4 = 8'h20, SCLK4 = 8'h21, REST4 = 8'h22, MISO4 = 8'h23;
-    localparam MOSI5 = 8'h24, SCLK5 = 8'h25, REST5 = 8'h26, MISO5 = 8'h27;
-    localparam MOSI6 = 8'h28, SCLK6 = 8'h29, REST6 = 8'h2A, MISO6 = 8'h2B;
-    localparam MOSI7 = 8'h2C, SCLK7 = 8'h2D, REST7 = 8'h2E, MISO7 = 8'h2F;
-    localparam MOSI8 = 8'h30, SCLK8 = 8'h31, REST8 = 8'h32, MISO8 = 8'h33;
-    localparam MOSI9 = 8'h34, SCLK9 = 8'h35, REST9 = 8'h36, MISO9 = 8'h37;
-    localparam MOSIA = 8'h38, SCLKA = 8'h39, RESTA = 8'h3A, MISOA = 8'h3B;
-    localparam MOSIB = 8'h3C, SCLKB = 8'h3D, RESTB = 8'h3E, MISOB = 8'h3F;
-    localparam MOSIC = 8'h40, SCLKC = 8'h41, RESTC = 8'h42, MISOC = 8'h43;
-    localparam MOSID = 8'h44, SCLKD = 8'h45, RESTD = 8'h46, MISOD = 8'h47;
-    localparam MOSIE = 8'h48, SCLKE = 8'h49, RESTE = 8'h4A, MISOE = 8'h4B;
-    localparam MOSIF = 8'h4C, SCLKF = 8'h4D, RESTF = 8'h4E, MISOF = 8'h4F;
-    localparam LAST0 = 8'h50, LAST1 = 8'h51, LAST2 = 8'h52;
+    localparam SPI00 = 8'h10, SPI10 = 8'h11, SPI20 = 8'h12, SPI30 = 8'h13;
+    localparam SPI01 = 8'h14, SPI11 = 8'h15, SPI21 = 8'h16, SPI31 = 8'h17;
+    localparam SPI02 = 8'h18, SPI12 = 8'h19, SPI22 = 8'h1A, SPI32 = 8'h1B;
+    localparam SPI03 = 8'h1C, SPI13 = 8'h1D, SPI23 = 8'h1E, SPI33 = 8'h1F;
+    localparam SPI04 = 8'h20, SPI14 = 8'h21, SPI24 = 8'h22, SPI34 = 8'h23;
+    localparam SPI05 = 8'h24, SPI15 = 8'h25, SPI25 = 8'h26, SPI35 = 8'h27;
+    localparam SPI06 = 8'h28, SPI16 = 8'h29, SPI26 = 8'h2A, SPI36 = 8'h2B;
+    localparam SPI07 = 8'h2C, SPI17 = 8'h2D, SPI27 = 8'h2E, SPI37 = 8'h2F;
+    localparam SPI08 = 8'h30, SPI18 = 8'h31, SPI28 = 8'h32, SPI38 = 8'h33;
+    localparam SPI09 = 8'h34, SPI19 = 8'h35, SPI29 = 8'h36, SPI39 = 8'h37;
+    localparam SPI0A = 8'h38, SPI1A = 8'h39, SPI2A = 8'h3A, SPI3A = 8'h3B;
+    localparam SPI0B = 8'h3C, SPI1B = 8'h3D, SPI2B = 8'h3E, SPI3B = 8'h3F;
+    localparam SPI0C = 8'h40, SPI1C = 8'h41, SPI2C = 8'h42, SPI3C = 8'h43;
+    localparam SPI0D = 8'h44, SPI1D = 8'h45, SPI2D = 8'h46, SPI3D = 8'h47;
+    localparam SPI0E = 8'h48, SPI1E = 8'h49, SPI2E = 8'h4A, SPI3E = 8'h4B;
+    localparam SPI0F = 8'h4C, SPI1F = 8'h4D, SPI2F = 8'h4E, SPI3F = 8'h4F;
+    localparam LAST0 = 8'h50, LAST1 = 8'h51, LAST2 = 8'h52, LAST3 = 8'h53;
     localparam WAIT0 = 8'h60, WAIT1 = 8'h61, WAIT2 = 8'h62, WAIT3 = 8'h63;
     localparam WAIT4 = 8'h64, WAIT5 = 8'h65, WAIT6 = 8'h66, WAIT7 = 8'h67;
     localparam WAIT8 = 8'h68, WAIT9 = 8'h69; 
@@ -56,74 +56,75 @@ module spi(
                 if(fs) next_state <= WORK;
                 else next_state <= WAIT;
             end
-            WORK: next_state <= MOSI0;
-            MOSI0: next_state <= SCLK0;
-            SCLK0: next_state <= REST0;
-            REST0: next_state <= MISO0;
-            MISO0: next_state <= MOSI1;
-            MOSI1: next_state <= SCLK1;
-            SCLK1: next_state <= REST1;
-            REST1: next_state <= MISO1;
-            MISO1: next_state <= MOSI2;
-            MOSI2: next_state <= SCLK2;
-            SCLK2: next_state <= REST2;
-            REST2: next_state <= MISO2;
-            MISO2: next_state <= MOSI3;
-            MOSI3: next_state <= SCLK3;
-            SCLK3: next_state <= REST3;
-            REST3: next_state <= MISO3;
-            MISO3: next_state <= MOSI4;
-            MOSI4: next_state <= SCLK4;
-            SCLK4: next_state <= REST4;
-            REST4: next_state <= MISO4;
-            MISO4: next_state <= MOSI5;
-            MOSI5: next_state <= SCLK5;
-            SCLK5: next_state <= REST5;
-            REST5: next_state <= MISO5;
-            MISO5: next_state <= MOSI6;
-            MOSI6: next_state <= SCLK6;
-            SCLK6: next_state <= REST6;
-            REST6: next_state <= MISO6;
-            MISO6: next_state <= MOSI7;
-            MOSI7: next_state <= SCLK7;
-            SCLK7: next_state <= REST7;
-            REST7: next_state <= MISO7;
-            MISO7: next_state <= MOSI8;
-            MOSI8: next_state <= SCLK8;
-            SCLK8: next_state <= REST8;
-            REST8: next_state <= MISO8;
-            MISO8: next_state <= MOSI9;
-            MOSI9: next_state <= SCLK9;
-            SCLK9: next_state <= REST9;
-            REST9: next_state <= MISO9;
-            MISO9: next_state <= MOSIA;
-            MOSIA: next_state <= SCLKA;
-            SCLKA: next_state <= RESTA;
-            RESTA: next_state <= MISOA;
-            MISOA: next_state <= MOSIB;
-            MOSIB: next_state <= SCLKB;
-            SCLKB: next_state <= RESTB;
-            RESTB: next_state <= MISOB;
-            MISOB: next_state <= MOSIC;
-            MOSIC: next_state <= SCLKC;
-            SCLKC: next_state <= RESTC;
-            RESTC: next_state <= MISOC;
-            MISOC: next_state <= MOSID;
-            MOSID: next_state <= SCLKD;
-            SCLKD: next_state <= RESTD;
-            RESTD: next_state <= MISOD;
-            MISOD: next_state <= MOSIE;
-            MOSIE: next_state <= SCLKE;
-            SCLKE: next_state <= RESTE;
-            RESTE: next_state <= MISOE;
-            MISOE: next_state <= MOSIF;
-            MOSIF: next_state <= SCLKF;
-            SCLKF: next_state <= RESTF;
-            RESTF: next_state <= MISOF;
-            MISOF: next_state <= LAST0;
+            WORK: next_state <= SPI00;
+            SPI00: next_state <= SPI10;
+            SPI10: next_state <= SPI20;
+            SPI20: next_state <= SPI30;
+            SPI30: next_state <= SPI01;
+            SPI01: next_state <= SPI11;
+            SPI11: next_state <= SPI21;
+            SPI21: next_state <= SPI31;
+            SPI31: next_state <= SPI02;
+            SPI02: next_state <= SPI12;
+            SPI12: next_state <= SPI22;
+            SPI22: next_state <= SPI32;
+            SPI32: next_state <= SPI03;
+            SPI03: next_state <= SPI13;
+            SPI13: next_state <= SPI23;
+            SPI23: next_state <= SPI33;
+            SPI33: next_state <= SPI04;
+            SPI04: next_state <= SPI14;
+            SPI14: next_state <= SPI24;
+            SPI24: next_state <= SPI34;
+            SPI34: next_state <= SPI05;
+            SPI05: next_state <= SPI15;
+            SPI15: next_state <= SPI25;
+            SPI25: next_state <= SPI35;
+            SPI35: next_state <= SPI06;
+            SPI06: next_state <= SPI16;
+            SPI16: next_state <= SPI26;
+            SPI26: next_state <= SPI36;
+            SPI36: next_state <= SPI07;
+            SPI07: next_state <= SPI17;
+            SPI17: next_state <= SPI27;
+            SPI27: next_state <= SPI37;
+            SPI37: next_state <= SPI08;
+            SPI08: next_state <= SPI18;
+            SPI18: next_state <= SPI28;
+            SPI28: next_state <= SPI38;
+            SPI38: next_state <= SPI09;
+            SPI09: next_state <= SPI19;
+            SPI19: next_state <= SPI29;
+            SPI29: next_state <= SPI39;
+            SPI39: next_state <= SPI0A;
+            SPI0A: next_state <= SPI1A;
+            SPI1A: next_state <= SPI2A;
+            SPI2A: next_state <= SPI3A;
+            SPI3A: next_state <= SPI0B;
+            SPI0B: next_state <= SPI1B;
+            SPI1B: next_state <= SPI2B;
+            SPI2B: next_state <= SPI3B;
+            SPI3B: next_state <= SPI0C;
+            SPI0C: next_state <= SPI1C;
+            SPI1C: next_state <= SPI2C;
+            SPI2C: next_state <= SPI3C;
+            SPI3C: next_state <= SPI0D;
+            SPI0D: next_state <= SPI1D;
+            SPI1D: next_state <= SPI2D;
+            SPI2D: next_state <= SPI3D;
+            SPI3D: next_state <= SPI0E;
+            SPI0E: next_state <= SPI1E;
+            SPI1E: next_state <= SPI2E;
+            SPI2E: next_state <= SPI3E;
+            SPI3E: next_state <= SPI0F;
+            SPI0F: next_state <= SPI1F;
+            SPI1F: next_state <= SPI2F;
+            SPI2F: next_state <= SPI3F;
+            SPI3F: next_state <= LAST0;
             LAST0: next_state <= LAST1;
             LAST1: next_state <= LAST2;
-            LAST2: next_state <= SPIPD;
+            LAST2: next_state <= LAST3;
+            LAST3: next_state <= SPIPD;
             SPIPD: next_state <= WAIT0;
             WAIT0: next_state <= WAIT1;
             WAIT1: next_state <= WAIT2;
@@ -156,22 +157,22 @@ module spi(
         else if(state == IDLE) mosi <= 1'b0;
         else if(state == SPIPD) mosi <= 1'b0;
         else if(state == WORK) mosi <= 1'b0;
-        else if(state == MOSI0) mosi <= chip_txd[15];
-        else if(state == MOSI1) mosi <= chip_txd[14];
-        else if(state == MOSI2) mosi <= chip_txd[13];
-        else if(state == MOSI3) mosi <= chip_txd[12];
-        else if(state == MOSI4) mosi <= chip_txd[11];
-        else if(state == MOSI5) mosi <= chip_txd[10];
-        else if(state == MOSI6) mosi <= chip_txd[9];
-        else if(state == MOSI7) mosi <= chip_txd[8];
-        else if(state == MOSI8) mosi <= chip_txd[7];
-        else if(state == MOSI9) mosi <= chip_txd[6];
-        else if(state == MOSIA) mosi <= chip_txd[5];
-        else if(state == MOSIB) mosi <= chip_txd[4];
-        else if(state == MOSIC) mosi <= chip_txd[3];
-        else if(state == MOSID) mosi <= chip_txd[2];
-        else if(state == MOSIE) mosi <= chip_txd[1];
-        else if(state == MOSIF) mosi <= chip_txd[0];
+        else if(state == SPI00) mosi <= chip_txd[15];
+        else if(state == SPI01) mosi <= chip_txd[14];
+        else if(state == SPI02) mosi <= chip_txd[13];
+        else if(state == SPI03) mosi <= chip_txd[12];
+        else if(state == SPI04) mosi <= chip_txd[11];
+        else if(state == SPI05) mosi <= chip_txd[10];
+        else if(state == SPI06) mosi <= chip_txd[9];
+        else if(state == SPI07) mosi <= chip_txd[8];
+        else if(state == SPI08) mosi <= chip_txd[7];
+        else if(state == SPI09) mosi <= chip_txd[6];
+        else if(state == SPI0A) mosi <= chip_txd[5];
+        else if(state == SPI0B) mosi <= chip_txd[4];
+        else if(state == SPI0C) mosi <= chip_txd[3];
+        else if(state == SPI0D) mosi <= chip_txd[2];
+        else if(state == SPI0E) mosi <= chip_txd[1];
+        else if(state == SPI0F) mosi <= chip_txd[0];
         else mosi <= mosi;
     end
 
@@ -179,22 +180,22 @@ module spi(
         if(rst) chip_rxd0 <= 16'h0000;
         else if(state == IDLE) chip_rxd0 <= 16'h0000;
         else if(state == WAIT) chip_rxd0 <= 16'h0000;
-        else if(state == MISO0) chip_rxd0[15] <= miso;
-        else if(state == MISO1) chip_rxd0[14] <= miso;
-        else if(state == MISO2) chip_rxd0[13] <= miso;
-        else if(state == MISO3) chip_rxd0[12] <= miso;
-        else if(state == MISO4) chip_rxd0[11] <= miso;
-        else if(state == MISO5) chip_rxd0[10] <= miso;
-        else if(state == MISO6) chip_rxd0[9] <= miso;
-        else if(state == MISO7) chip_rxd0[8] <= miso;
-        else if(state == MISO8) chip_rxd0[7] <= miso;
-        else if(state == MISO9) chip_rxd0[6] <= miso;
-        else if(state == MISOA) chip_rxd0[5] <= miso;
-        else if(state == MISOB) chip_rxd0[4] <= miso;
-        else if(state == MISOC) chip_rxd0[3] <= miso;
-        else if(state == MISOD) chip_rxd0[2] <= miso;
-        else if(state == MISOE) chip_rxd0[1] <= miso;
-        else if(state == MISOF) chip_rxd0[0] <= miso;
+        else if(state == SPI01) chip_rxd0[15] <= miso;
+        else if(state == SPI02) chip_rxd0[14] <= miso;
+        else if(state == SPI03) chip_rxd0[13] <= miso;
+        else if(state == SPI04) chip_rxd0[12] <= miso;
+        else if(state == SPI05) chip_rxd0[11] <= miso;
+        else if(state == SPI06) chip_rxd0[10] <= miso;
+        else if(state == SPI07) chip_rxd0[9] <= miso;
+        else if(state == SPI08) chip_rxd0[8] <= miso;
+        else if(state == SPI09) chip_rxd0[7] <= miso;
+        else if(state == SPI0A) chip_rxd0[6] <= miso;
+        else if(state == SPI0B) chip_rxd0[5] <= miso;
+        else if(state == SPI0C) chip_rxd0[4] <= miso;
+        else if(state == SPI0D) chip_rxd0[3] <= miso;
+        else if(state == SPI0E) chip_rxd0[2] <= miso;
+        else if(state == SPI0F) chip_rxd0[1] <= miso;
+        else if(state == LAST0) chip_rxd0[0] <= miso;
         else chip_rxd0 <= chip_rxd0;
     end
     
@@ -202,22 +203,22 @@ module spi(
         if(rst) chip_rxd1 <= 16'h0000;
         else if(state == IDLE) chip_rxd1 <= 16'h0000;
         else if(state == WAIT) chip_rxd1 <= 16'h0000;
-        else if(state == SCLK1) chip_rxd1[15] <= miso;
-        else if(state == SCLK2) chip_rxd1[14] <= miso;
-        else if(state == SCLK3) chip_rxd1[13] <= miso;
-        else if(state == SCLK4) chip_rxd1[12] <= miso;
-        else if(state == SCLK5) chip_rxd1[11] <= miso;
-        else if(state == SCLK6) chip_rxd1[10] <= miso;
-        else if(state == SCLK7) chip_rxd1[9] <= miso;
-        else if(state == SCLK8) chip_rxd1[8] <= miso;
-        else if(state == SCLK9) chip_rxd1[7] <= miso;
-        else if(state == SCLKA) chip_rxd1[6] <= miso;
-        else if(state == SCLKB) chip_rxd1[5] <= miso;
-        else if(state == SCLKC) chip_rxd1[4] <= miso;
-        else if(state == SCLKD) chip_rxd1[3] <= miso;
-        else if(state == SCLKE) chip_rxd1[2] <= miso;
-        else if(state == SCLKF) chip_rxd1[1] <= miso;
-        else if(state == LAST1) chip_rxd1[0] <= miso;
+        else if(state == SPI21) chip_rxd1[15] <= miso;
+        else if(state == SPI22) chip_rxd1[14] <= miso;
+        else if(state == SPI23) chip_rxd1[13] <= miso;
+        else if(state == SPI24) chip_rxd1[12] <= miso;
+        else if(state == SPI25) chip_rxd1[11] <= miso;
+        else if(state == SPI26) chip_rxd1[10] <= miso;
+        else if(state == SPI27) chip_rxd1[9] <= miso;
+        else if(state == SPI28) chip_rxd1[8] <= miso;
+        else if(state == SPI29) chip_rxd1[7] <= miso;
+        else if(state == SPI2A) chip_rxd1[6] <= miso;
+        else if(state == SPI2B) chip_rxd1[5] <= miso;
+        else if(state == SPI2C) chip_rxd1[4] <= miso;
+        else if(state == SPI2D) chip_rxd1[3] <= miso;
+        else if(state == SPI2E) chip_rxd1[2] <= miso;
+        else if(state == SPI2F) chip_rxd1[1] <= miso;
+        else if(state == LAST2) chip_rxd1[0] <= miso;
         else chip_rxd1 <= chip_rxd1;
     end
 
@@ -226,38 +227,38 @@ module spi(
         else if(state == IDLE) sclk <= 1'b0;
         else if(state == WAIT) sclk <= 1'b0;
         else if(state == SPIPD) sclk <= 1'b0;
-        else if(state == SCLK0) sclk <= 1'b1;
-        else if(state == SCLK1) sclk <= 1'b1;
-        else if(state == SCLK2) sclk <= 1'b1;
-        else if(state == SCLK3) sclk <= 1'b1;
-        else if(state == SCLK4) sclk <= 1'b1;
-        else if(state == SCLK5) sclk <= 1'b1;
-        else if(state == SCLK6) sclk <= 1'b1;
-        else if(state == SCLK7) sclk <= 1'b1;
-        else if(state == SCLK8) sclk <= 1'b1;
-        else if(state == SCLK9) sclk <= 1'b1;
-        else if(state == SCLKA) sclk <= 1'b1;
-        else if(state == SCLKB) sclk <= 1'b1;
-        else if(state == SCLKC) sclk <= 1'b1;
-        else if(state == SCLKD) sclk <= 1'b1;
-        else if(state == SCLKE) sclk <= 1'b1;
-        else if(state == SCLKF) sclk <= 1'b1;
-        else if(state == MISO0) sclk <= 1'b0;
-        else if(state == MISO1) sclk <= 1'b0;
-        else if(state == MISO2) sclk <= 1'b0;
-        else if(state == MISO3) sclk <= 1'b0;
-        else if(state == MISO4) sclk <= 1'b0;
-        else if(state == MISO5) sclk <= 1'b0;
-        else if(state == MISO6) sclk <= 1'b0;
-        else if(state == MISO7) sclk <= 1'b0;
-        else if(state == MISO8) sclk <= 1'b0;
-        else if(state == MISO9) sclk <= 1'b0;
-        else if(state == MISOA) sclk <= 1'b0;
-        else if(state == MISOB) sclk <= 1'b0;
-        else if(state == MISOC) sclk <= 1'b0;
-        else if(state == MISOD) sclk <= 1'b0;
-        else if(state == MISOE) sclk <= 1'b0;
-        else if(state == MISOF) sclk <= 1'b0;
+        else if(state == SPI10) sclk <= 1'b1;
+        else if(state == SPI11) sclk <= 1'b1;
+        else if(state == SPI12) sclk <= 1'b1;
+        else if(state == SPI13) sclk <= 1'b1;
+        else if(state == SPI14) sclk <= 1'b1;
+        else if(state == SPI15) sclk <= 1'b1;
+        else if(state == SPI16) sclk <= 1'b1;
+        else if(state == SPI17) sclk <= 1'b1;
+        else if(state == SPI18) sclk <= 1'b1;
+        else if(state == SPI19) sclk <= 1'b1;
+        else if(state == SPI1A) sclk <= 1'b1;
+        else if(state == SPI1B) sclk <= 1'b1;
+        else if(state == SPI1C) sclk <= 1'b1;
+        else if(state == SPI1D) sclk <= 1'b1;
+        else if(state == SPI1E) sclk <= 1'b1;
+        else if(state == SPI1F) sclk <= 1'b1;
+        else if(state == SPI30) sclk <= 1'b0;
+        else if(state == SPI31) sclk <= 1'b0;
+        else if(state == SPI32) sclk <= 1'b0;
+        else if(state == SPI33) sclk <= 1'b0;
+        else if(state == SPI34) sclk <= 1'b0;
+        else if(state == SPI35) sclk <= 1'b0;
+        else if(state == SPI36) sclk <= 1'b0;
+        else if(state == SPI37) sclk <= 1'b0;
+        else if(state == SPI38) sclk <= 1'b0;
+        else if(state == SPI39) sclk <= 1'b0;
+        else if(state == SPI3A) sclk <= 1'b0;
+        else if(state == SPI3B) sclk <= 1'b0;
+        else if(state == SPI3C) sclk <= 1'b0;
+        else if(state == SPI3D) sclk <= 1'b0;
+        else if(state == SPI3E) sclk <= 1'b0;
+        else if(state == SPI3F) sclk <= 1'b0;
         else sclk <= sclk;
     end
 
@@ -273,14 +274,14 @@ module spi(
     always@(posedge clk or posedge rst) begin
         if(rst) chip_rxda <= 16'h0000;
         else if(state == IDLE) chip_rxda <= 16'h0000;
-        else if(state == LAST2) chip_rxda <= chip_rxd0;
+        else if(state == LAST3) chip_rxda <= chip_rxd0;
         else chip_rxda <= chip_rxda;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) chip_rxdb <= 16'h0000;
         else if(state == IDLE) chip_rxdb <= 16'h0000;
-        else if(state == LAST2) chip_rxdb <= chip_rxd1;
+        else if(state == LAST3) chip_rxdb <= chip_rxd1;
         else chip_rxdb <= chip_rxdb;
     end
 

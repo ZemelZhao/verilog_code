@@ -26,6 +26,9 @@ module com_cs(
     input [7:0] rx_ram_tlen
 );
 
+    localparam TIMEOUT = 8'h80;
+    localparam NUMOUT = 8'h10;
+
     localparam BAG_INIT = 4'b0000;
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
@@ -42,6 +45,7 @@ module com_cs(
     localparam RANS_WAIT = 8'h40, RANS_TAKE = 8'h41, RANS_DONE = 8'h42;
     localparam WANS_PREP = 8'h50, WANS_DONE = 8'h51;
 
+    reg [7:0] time_cnt, num_cnt;
     reg didx;
 
     assign fd_send = (state == SEND_DONE);
@@ -69,7 +73,8 @@ module com_cs(
                 else next_state <= SEND_DATA;
             end
             RANS_WAIT: begin
-                if(fs_rx) next_state <= RANS_TAKE;
+                if(time_cnt >= TIMEOUT- 1'b1) next_state <= SEND_DONE; 
+                else if(fs_rx) next_state <= RANS_TAKE;
                 else next_state <= RANS_WAIT;
             end
             RANS_TAKE: next_state <= RANS_DONE;
@@ -105,6 +110,7 @@ module com_cs(
         else if(state == MAIN_IDLE) state_goto <= MAIN_IDLE;
         else if(state == MAIN_WAIT) state_goto <= MAIN_IDLE;
         else if(state == RANS_TAKE && rx_btype == BAG_ACK) state_goto <= SEND_DONE;
+        else if(state == RANS_TAKE && rx_btype == BAG_NAK && num_cnt >= NUMOUT - 1'b1) state_goto <= SEND_DONE;
         else if(state == RANS_TAKE && rx_btype == BAG_NAK) state_goto <= SEND_DATA;
         else state_goto <= state_goto;
     end
@@ -131,6 +137,7 @@ module com_cs(
         else if(state == MAIN_WAIT) tx_btype <= BAG_INIT;
         else if(state == SEND_PREP && tx_btype == BAG_DATA0 && didx == 1'b1) tx_btype <= BAG_DATA1;
         else if(state == SEND_PREP) tx_btype <= send_btype;
+        else if(state == WANS_PREP && num_cnt >= NUMOUT - 1'b1) tx_btype <= BAG_ACK;
         else if(state == WANS_PREP && rx_btype == BAG_ERROR) tx_btype <= BAG_NAK;
         else if(state == WANS_PREP) tx_btype <= BAG_ACK;
         else tx_btype <= tx_btype;
@@ -158,5 +165,23 @@ module com_cs(
         else if(state == SEND_DONE && next_state == MAIN_WAIT) didx <= ~didx;
         else didx <= didx;
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) time_cnt <= 8'h00;
+        else if(state == MAIN_IDLE) time_cnt <= 8'h00;
+        else if(state == MAIN_WAIT) time_cnt <= 8'h00;
+        else if(state == RANS_WAIT) time_cnt <= time_cnt + 1'b1;
+        else time_cnt <= 8'h00;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) num_cnt <= 8'h00;
+        else if(state == MAIN_IDLE) num_cnt <= 8'h00;
+        else if(state == MAIN_WAIT) num_cnt <= 8'h00;
+        else if(state == RANS_TAKE) num_cnt <= num_cnt + 1'b1;
+        else if(state == WANS_PREP) num_cnt <= num_cnt + 1'b1;
+        else num_cnt <= num_cnt;
+    end
+
 
 endmodule

@@ -17,6 +17,8 @@ module adc(
     output fd_conv,
 
     input [2:0] freq,
+    input [3:0] filt_up,
+    input [3:0] filt_low,
     output [7:0] type,
     output [15:0] chip_temp,
 
@@ -64,6 +66,9 @@ module adc(
         .type(type[7:6]),
         .chip_temp(tempa),
 
+        .filt_up(filt_up),
+        .filt_low(filt_low),
+
         .spi_miso(spi_miso[3]),
         .spi_mosi(spi_mosi[3]),
         .spi_sclk(spi_sclk[3]),
@@ -95,6 +100,9 @@ module adc(
         .fs(freq[2:0]),
         .type(type[5:4]),
         .chip_temp(tempb),
+
+        .filt_up(filt_up),
+        .filt_low(filt_low),
 
         .spi_miso(spi_miso[2]),
         .spi_mosi(spi_mosi[2]),
@@ -128,6 +136,9 @@ module adc(
         .type(type[3:2]),
         .chip_temp(tempc),
 
+        .filt_up(filt_up),
+        .filt_low(filt_low),
+
         .spi_miso(spi_miso[1]),
         .spi_mosi(spi_mosi[1]),
         .spi_sclk(spi_sclk[1]),
@@ -159,6 +170,9 @@ module adc(
         .fs(freq[2:0]),
         .type(type[1:0]),
         .chip_temp(tempd),
+
+        .filt_up(filt_up),
+        .filt_low(filt_low),
 
         .spi_miso(spi_miso[0]),
         .spi_mosi(spi_mosi[0]),

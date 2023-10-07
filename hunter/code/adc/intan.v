@@ -43,6 +43,7 @@ module intan(
     localparam RHEAD_TX = 8'hFF, RHEAD_RX = 8'h00;
 
     localparam CHIP_INIT = 16'h0000, CHIP_CALIBRATE = 16'h5500, CHIP_CLEAR = 16'h6A00;
+    localparam CHIP_GAP = {HEAD_RX, REG40, 8'h00};
     localparam CHIP_RXD_INIT = 16'h0000;
 
     localparam WAIT_FOR_0US = 16'h0000, WAIT_FOR_100US = 16'd5_000; 
@@ -50,6 +51,16 @@ module intan(
 
     localparam FS_1KHZ = 3'h1, FS_2KHZ = 3'h2, FS_4KHZ = 3'h3; 
     localparam FS_8KHZ = 3'h4, FS_16KHZ = 3'h5;
+
+    localparam FILTUP_20K = 4'h1, FILTUP_15K = 4'h2, FILTUP_10K = 4'h3, FILTUP_7K5 = 4'h4;
+    localparam FILTUP_5K0 = 4'h5, FILTUP_3K0 = 4'h6, FILTUP_2K5 = 4'h7, FILTUP_2K0 = 4'h8;
+    localparam FILTUP_1K5 = 4'h9, FILTUP_1K0 = 4'hA, FILTUP_750 = 4'hB, FILTUP_500 = 4'hC;
+    localparam FILTUP_300 = 4'hD, FILTUP_200 = 4'hE, FILTUP_100 = 4'hF;
+
+    localparam FILTLOW_100 = 4'h1, FILTLOW_020 = 4'h2, FILTLOW_015 = 4'h3, FILTLOW_010 = 4'h4;
+    localparam FILTLOW_7D5 = 4'h5, FILTLOW_5D0 = 4'h6, FILTLOW_3D0 = 4'h7, FILTLOW_2D5 = 4'h8;
+    localparam FILTLOW_2D0 = 4'h9, FILTLOW_1D0 = 4'hA, FILTLOW_D75 = 4'hB, FILTLOW_D50 = 4'hC;
+    localparam FILTLOW_D30 = 4'hD, FILTLOW_D25 = 4'hE, FILTLOW_D10 = 4'hF;
 
     localparam DATA_REG00_NORMAL = 8'hDE, DATA_REG00_RESET = 8'hFE; 
     localparam DATA_REG01_12KHZ = 8'h20, DATA_REG01_4KHZ = 8'h10, DATA_REG01_8KHZ = 8'h08, DATA_REG01_16KHZ = 8'h03;
@@ -113,8 +124,8 @@ module intan(
     localparam REG59 = 6'h3B; 
     localparam REG60 = 6'h3C, REG61 = 6'h3D, REG62 = 6'h3E, REG63 = 6'h3F;
 
-    reg [7:0] state, next_state;
-    reg [7:0] state_goto, state_back;
+    (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state_goto, state_back;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_FAIL = 8'h02;
 
@@ -170,8 +181,8 @@ module intan(
     localparam CONV_CH24 = 8'hD8, CONV_CH25 = 8'hD9, CONV_CH26 = 8'hDA, CONV_CH27 = 8'hDB;
     localparam CONV_CH28 = 8'hDC, CONV_CH29 = 8'hDD, CONV_CH30 = 8'hDE, CONV_CH31 = 8'hDF;
 
-    reg [15:0] chip_txd;
-    wire [15:0] chip_rxda, chip_rxdb;
+    (*MARK_DEBUG = "true"*)reg [15:0] chip_txd;
+    (*MARK_DEBUG = "true"*)wire [15:0] chip_rxda, chip_rxdb;
 
     reg [7:0] data_reg01, data_reg02;
 
@@ -190,7 +201,7 @@ module intan(
     wire [15:0] fifo_txd;
     wire [1:0] fifo_txen, fifo_full;
 
-    assign fs_spi = (state == IDLE_WAIT) || (state == WRAM_WAIT) || (state == RREG_WAIT) || (state == TREG_WAIT) || (state == RTMP_WAIT);
+    assign fs_spi = (state >= IDLE_WAIT) && (state <= RTMP_DONE);
     assign fs_fifo = (state == WRAM_WORK);
     assign fd_init = (state == INIT_DONE);
     assign fd_type = (state == TYPE_DONE);
@@ -221,7 +232,7 @@ module intan(
             IDLE_TRAN: next_state <= IDLE_DONE;
             IDLE_DONE: begin
                 if(fd_prd) next_state <= state_goto;
-                else next_state <= IDLE_WAIT;
+                else next_state <= IDLE_DONE;
             end
 
             WRAM_WAIT: begin
@@ -534,18 +545,18 @@ module intan(
         if(rst) chip_txd <= CHIP_INIT;
         else if(state == MAIN_IDLE) chip_txd <= CHIP_INIT;
         else if(state == MAIN_WAIT) chip_txd <= CHIP_INIT;
-        else if(state == INIT_RXD0) chip_txd <= CHIP_INIT;
-        else if(state == INIT_RXD1) chip_txd <= CHIP_INIT;
-        else if(state == TYPE_RXD0) chip_txd <= CHIP_INIT;
-        else if(state == TYPE_RXD1) chip_txd <= CHIP_INIT;
-        else if(state == TYPE_RXD2) chip_txd <= CHIP_INIT;
-        else if(state == TYPE_RXD3) chip_txd <= CHIP_INIT;
-        else if(state == CONF_RXD0) chip_txd <= CHIP_INIT;
-        else if(state == CONF_RXD1) chip_txd <= CHIP_INIT;
-        else if(state == TEMP_RXD0) chip_txd <= CHIP_INIT;
-        else if(state == TEMP_RXD1) chip_txd <= CHIP_INIT;
-        else if(state == TEMP_RXD2) chip_txd <= CHIP_INIT;
-        else if(state == TEMP_RXD3) chip_txd <= CHIP_INIT;
+        else if(state == INIT_RXD0) chip_txd <= CHIP_GAP;
+        else if(state == INIT_RXD1) chip_txd <= CHIP_GAP;
+        else if(state == TYPE_RXD0) chip_txd <= CHIP_GAP;
+        else if(state == TYPE_RXD1) chip_txd <= CHIP_GAP;
+        else if(state == TYPE_RXD2) chip_txd <= CHIP_GAP;
+        else if(state == TYPE_RXD3) chip_txd <= CHIP_GAP;
+        else if(state == CONF_RXD0) chip_txd <= CHIP_GAP;
+        else if(state == CONF_RXD1) chip_txd <= CHIP_GAP;
+        else if(state == TEMP_RXD0) chip_txd <= CHIP_GAP;
+        else if(state == TEMP_RXD1) chip_txd <= CHIP_GAP;
+        else if(state == TEMP_RXD2) chip_txd <= CHIP_GAP;
+        else if(state == TEMP_RXD3) chip_txd <= CHIP_GAP;
         else if(state == CALI_RXD0) chip_txd <= CHIP_INIT;
         else if(state == CALI_RXD1) chip_txd <= CHIP_INIT;
         else if(state == CALI_RXD2) chip_txd <= CHIP_INIT;
@@ -827,126 +838,126 @@ module intan(
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_reg08 <= {2'h0, RH1_DAC1_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg08 <= {2'h0, RH1_DAC1_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg08 <= {2'h0, RH1_DAC1_15K};
-        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg08 <= {2'h0, RH1_DAC1_10K};
-        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg08 <= {2'h0, RH1_DAC1_7K5};
-        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg08 <= {2'h0, RH1_DAC1_5K0};
-        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg08 <= {2'h0, RH1_DAC1_3K0};
-        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg08 <= {2'h0, RH1_DAC1_2K5};
-        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg08 <= {2'h0, RH1_DAC1_2K0};
-        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg08 <= {2'h0, RH1_DAC1_1K5};
-        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg08 <= {2'h0, RH1_DAC1_1K0};
-        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg08 <= {2'h0, RH1_DAC1_750};
-        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg08 <= {2'h0, RH1_DAC1_500};
-        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg08 <= {2'h0, RH1_DAC1_300};
-        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg08 <= {2'h0, RH1_DAC1_200};
-        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg08 <= {2'h0, RH1_DAC1_100};
+        else if(state == CONF_IDLE && filt_up == FILTUP_20K) data_reg08 <= {2'h0, RH1_DAC1_20K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_15K) data_reg08 <= {2'h0, RH1_DAC1_15K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_10K) data_reg08 <= {2'h0, RH1_DAC1_10K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_7K5) data_reg08 <= {2'h0, RH1_DAC1_7K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_5K0) data_reg08 <= {2'h0, RH1_DAC1_5K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_3K0) data_reg08 <= {2'h0, RH1_DAC1_3K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K5) data_reg08 <= {2'h0, RH1_DAC1_2K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K0) data_reg08 <= {2'h0, RH1_DAC1_2K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K5) data_reg08 <= {2'h0, RH1_DAC1_1K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K0) data_reg08 <= {2'h0, RH1_DAC1_1K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_750) data_reg08 <= {2'h0, RH1_DAC1_750};
+        else if(state == CONF_IDLE && filt_up == FILTUP_500) data_reg08 <= {2'h0, RH1_DAC1_500};
+        else if(state == CONF_IDLE && filt_up == FILTUP_300) data_reg08 <= {2'h0, RH1_DAC1_300};
+        else if(state == CONF_IDLE && filt_up == FILTUP_200) data_reg08 <= {2'h0, RH1_DAC1_200};
+        else if(state == CONF_IDLE && filt_up == FILTUP_100) data_reg08 <= {2'h0, RH1_DAC1_100};
         else if(state == CONF_IDLE) data_reg08 <= {2'h0, RH1_DAC1_20K};
         else data_reg08 <= data_reg08;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_reg09 <= {3'h0, RH1_DAC2_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg09 <= {3'h0, RH1_DAC2_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg09 <= {3'h0, RH1_DAC2_15K};
-        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg09 <= {3'h0, RH1_DAC2_10K};
-        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg09 <= {3'h0, RH1_DAC2_7K5};
-        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg09 <= {3'h0, RH1_DAC2_5K0};
-        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg09 <= {3'h0, RH1_DAC2_3K0};
-        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg09 <= {3'h0, RH1_DAC2_2K5};
-        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg09 <= {3'h0, RH1_DAC2_2K0};
-        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg09 <= {3'h0, RH1_DAC2_1K5};
-        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg09 <= {3'h0, RH1_DAC2_1K0};
-        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg09 <= {3'h0, RH1_DAC2_750};
-        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg09 <= {3'h0, RH1_DAC2_500};
-        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg09 <= {3'h0, RH1_DAC2_300};
-        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg09 <= {3'h0, RH1_DAC2_200};
-        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg09 <= {3'h0, RH1_DAC2_100};
+        else if(state == CONF_IDLE && filt_up == FILTUP_20K) data_reg09 <= {3'h0, RH1_DAC2_20K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_15K) data_reg09 <= {3'h0, RH1_DAC2_15K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_10K) data_reg09 <= {3'h0, RH1_DAC2_10K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_7K5) data_reg09 <= {3'h0, RH1_DAC2_7K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_5K0) data_reg09 <= {3'h0, RH1_DAC2_5K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_3K0) data_reg09 <= {3'h0, RH1_DAC2_3K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K5) data_reg09 <= {3'h0, RH1_DAC2_2K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K0) data_reg09 <= {3'h0, RH1_DAC2_2K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K5) data_reg09 <= {3'h0, RH1_DAC2_1K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K0) data_reg09 <= {3'h0, RH1_DAC2_1K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_750) data_reg09 <= {3'h0, RH1_DAC2_750};
+        else if(state == CONF_IDLE && filt_up == FILTUP_500) data_reg09 <= {3'h0, RH1_DAC2_500};
+        else if(state == CONF_IDLE && filt_up == FILTUP_300) data_reg09 <= {3'h0, RH1_DAC2_300};
+        else if(state == CONF_IDLE && filt_up == FILTUP_200) data_reg09 <= {3'h0, RH1_DAC2_200};
+        else if(state == CONF_IDLE && filt_up == FILTUP_100) data_reg09 <= {3'h0, RH1_DAC2_100};
         else if(state == CONF_IDLE) data_reg09 <= {3'h0, RH1_DAC2_20K};
         else data_reg09 <= data_reg09;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_reg10 <= {2'h0, RH2_DAC1_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg10 <= {2'h0, RH2_DAC1_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg10 <= {2'h0, RH2_DAC1_15K};
-        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg10 <= {2'h0, RH2_DAC1_10K};
-        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg10 <= {2'h0, RH2_DAC1_7K5};
-        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg10 <= {2'h0, RH2_DAC1_5K0};
-        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg10 <= {2'h0, RH2_DAC1_3K0};
-        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg10 <= {2'h0, RH2_DAC1_2K5};
-        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg10 <= {2'h0, RH2_DAC1_2K0};
-        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg10 <= {2'h0, RH2_DAC1_1K5};
-        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg10 <= {2'h0, RH2_DAC1_1K0};
-        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg10 <= {2'h0, RH2_DAC1_750};
-        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg10 <= {2'h0, RH2_DAC1_500};
-        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg10 <= {2'h0, RH2_DAC1_300};
-        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg10 <= {2'h0, RH2_DAC1_200};
-        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg10 <= {2'h0, RH2_DAC1_100};
+        else if(state == CONF_IDLE && filt_up == FILTUP_20K) data_reg10 <= {2'h0, RH2_DAC1_20K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_15K) data_reg10 <= {2'h0, RH2_DAC1_15K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_10K) data_reg10 <= {2'h0, RH2_DAC1_10K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_7K5) data_reg10 <= {2'h0, RH2_DAC1_7K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_5K0) data_reg10 <= {2'h0, RH2_DAC1_5K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_3K0) data_reg10 <= {2'h0, RH2_DAC1_3K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K5) data_reg10 <= {2'h0, RH2_DAC1_2K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K0) data_reg10 <= {2'h0, RH2_DAC1_2K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K5) data_reg10 <= {2'h0, RH2_DAC1_1K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K0) data_reg10 <= {2'h0, RH2_DAC1_1K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_750) data_reg10 <= {2'h0, RH2_DAC1_750};
+        else if(state == CONF_IDLE && filt_up == FILTUP_500) data_reg10 <= {2'h0, RH2_DAC1_500};
+        else if(state == CONF_IDLE && filt_up == FILTUP_300) data_reg10 <= {2'h0, RH2_DAC1_300};
+        else if(state == CONF_IDLE && filt_up == FILTUP_200) data_reg10 <= {2'h0, RH2_DAC1_200};
+        else if(state == CONF_IDLE && filt_up == FILTUP_100) data_reg10 <= {2'h0, RH2_DAC1_100};
         else if(state == CONF_IDLE) data_reg10 <= {2'h0, RH2_DAC1_20K};
         else data_reg10 <= data_reg10;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_reg11 <= {3'h0, RH2_DAC2_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h1) data_reg11 <= {3'h0, RH2_DAC2_20K};
-        else if(state == CONF_IDLE && filt_up == 4'h2) data_reg11 <= {3'h0, RH2_DAC2_15K};
-        else if(state == CONF_IDLE && filt_up == 4'h3) data_reg11 <= {3'h0, RH2_DAC2_10K};
-        else if(state == CONF_IDLE && filt_up == 4'h4) data_reg11 <= {3'h0, RH2_DAC2_7K5};
-        else if(state == CONF_IDLE && filt_up == 4'h5) data_reg11 <= {3'h0, RH2_DAC2_5K0};
-        else if(state == CONF_IDLE && filt_up == 4'h6) data_reg11 <= {3'h0, RH2_DAC2_3K0};
-        else if(state == CONF_IDLE && filt_up == 4'h7) data_reg11 <= {3'h0, RH2_DAC2_2K5};
-        else if(state == CONF_IDLE && filt_up == 4'h8) data_reg11 <= {3'h0, RH2_DAC2_2K0};
-        else if(state == CONF_IDLE && filt_up == 4'h9) data_reg11 <= {3'h0, RH2_DAC2_1K5};
-        else if(state == CONF_IDLE && filt_up == 4'hA) data_reg11 <= {3'h0, RH2_DAC2_1K0};
-        else if(state == CONF_IDLE && filt_up == 4'hB) data_reg11 <= {3'h0, RH2_DAC2_750};
-        else if(state == CONF_IDLE && filt_up == 4'hC) data_reg11 <= {3'h0, RH2_DAC2_500};
-        else if(state == CONF_IDLE && filt_up == 4'hD) data_reg11 <= {3'h0, RH2_DAC2_300};
-        else if(state == CONF_IDLE && filt_up == 4'hE) data_reg11 <= {3'h0, RH2_DAC2_200};
-        else if(state == CONF_IDLE && filt_up == 4'hF) data_reg11 <= {3'h0, RH2_DAC2_100};
+        else if(state == CONF_IDLE && filt_up == FILTUP_20K) data_reg11 <= {3'h0, RH2_DAC2_20K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_15K) data_reg11 <= {3'h0, RH2_DAC2_15K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_10K) data_reg11 <= {3'h0, RH2_DAC2_10K};
+        else if(state == CONF_IDLE && filt_up == FILTUP_7K5) data_reg11 <= {3'h0, RH2_DAC2_7K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_5K0) data_reg11 <= {3'h0, RH2_DAC2_5K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_3K0) data_reg11 <= {3'h0, RH2_DAC2_3K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K5) data_reg11 <= {3'h0, RH2_DAC2_2K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_2K0) data_reg11 <= {3'h0, RH2_DAC2_2K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K5) data_reg11 <= {3'h0, RH2_DAC2_1K5};
+        else if(state == CONF_IDLE && filt_up == FILTUP_1K0) data_reg11 <= {3'h0, RH2_DAC2_1K0};
+        else if(state == CONF_IDLE && filt_up == FILTUP_750) data_reg11 <= {3'h0, RH2_DAC2_750};
+        else if(state == CONF_IDLE && filt_up == FILTUP_500) data_reg11 <= {3'h0, RH2_DAC2_500};
+        else if(state == CONF_IDLE && filt_up == FILTUP_300) data_reg11 <= {3'h0, RH2_DAC2_300};
+        else if(state == CONF_IDLE && filt_up == FILTUP_200) data_reg11 <= {3'h0, RH2_DAC2_200};
+        else if(state == CONF_IDLE && filt_up == FILTUP_100) data_reg11 <= {3'h0, RH2_DAC2_100};
         else if(state == CONF_IDLE) data_reg11 <= {3'h0, RH2_DAC2_20K};
         else data_reg11 <= data_reg11;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_reg12 <= {1'b0, RL_DAC1_D10};
-        else if(state == CONF_IDLE && filt_low == 4'h1) data_reg12 <= {1'b0, RL_DAC1_100};
-        else if(state == CONF_IDLE && filt_low == 4'h2) data_reg12 <= {1'b0, RL_DAC1_020};
-        else if(state == CONF_IDLE && filt_low == 4'h3) data_reg12 <= {1'b0, RL_DAC1_015};
-        else if(state == CONF_IDLE && filt_low == 4'h4) data_reg12 <= {1'b0, RL_DAC1_010};
-        else if(state == CONF_IDLE && filt_low == 4'h5) data_reg12 <= {1'b0, RL_DAC1_7D5};
-        else if(state == CONF_IDLE && filt_low == 4'h6) data_reg12 <= {1'b0, RL_DAC1_5D0};
-        else if(state == CONF_IDLE && filt_low == 4'h7) data_reg12 <= {1'b0, RL_DAC1_3D0};
-        else if(state == CONF_IDLE && filt_low == 4'h8) data_reg12 <= {1'b0, RL_DAC1_2D5};
-        else if(state == CONF_IDLE && filt_low == 4'h9) data_reg12 <= {1'b0, RL_DAC1_2D0};
-        else if(state == CONF_IDLE && filt_low == 4'hA) data_reg12 <= {1'b0, RL_DAC1_1D0};
-        else if(state == CONF_IDLE && filt_low == 4'hB) data_reg12 <= {1'b0, RL_DAC1_D75};
-        else if(state == CONF_IDLE && filt_low == 4'hC) data_reg12 <= {1'b0, RL_DAC1_D50};
-        else if(state == CONF_IDLE && filt_low == 4'hD) data_reg12 <= {1'b0, RL_DAC1_D30};
-        else if(state == CONF_IDLE && filt_low == 4'hE) data_reg12 <= {1'b0, RL_DAC1_D25};
-        else if(state == CONF_IDLE && filt_low == 4'hF) data_reg12 <= {1'b0, RL_DAC1_D10};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_100) data_reg12 <= {1'b0, RL_DAC1_100};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_020) data_reg12 <= {1'b0, RL_DAC1_020};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_015) data_reg12 <= {1'b0, RL_DAC1_015};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_010) data_reg12 <= {1'b0, RL_DAC1_010};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_7D5) data_reg12 <= {1'b0, RL_DAC1_7D5};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_5D0) data_reg12 <= {1'b0, RL_DAC1_5D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_3D0) data_reg12 <= {1'b0, RL_DAC1_3D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_2D5) data_reg12 <= {1'b0, RL_DAC1_2D5};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_2D0) data_reg12 <= {1'b0, RL_DAC1_2D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_1D0) data_reg12 <= {1'b0, RL_DAC1_1D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D75) data_reg12 <= {1'b0, RL_DAC1_D75};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D50) data_reg12 <= {1'b0, RL_DAC1_D50};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D30) data_reg12 <= {1'b0, RL_DAC1_D30};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D25) data_reg12 <= {1'b0, RL_DAC1_D25};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D10) data_reg12 <= {1'b0, RL_DAC1_D10};
         else if(state == CONF_IDLE) data_reg12 <= {1'b0, RL_DAC1_D10};
         else data_reg12 <= data_reg12;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_reg13 <= {1'b0, RL_DAC2_D10};
-        else if(state == CONF_IDLE && filt_low == 4'h1) data_reg13 <= {1'b0, RL_DAC2_100};
-        else if(state == CONF_IDLE && filt_low == 4'h2) data_reg13 <= {1'b0, RL_DAC2_020};
-        else if(state == CONF_IDLE && filt_low == 4'h3) data_reg13 <= {1'b0, RL_DAC2_015};
-        else if(state == CONF_IDLE && filt_low == 4'h4) data_reg13 <= {1'b0, RL_DAC2_010};
-        else if(state == CONF_IDLE && filt_low == 4'h5) data_reg13 <= {1'b0, RL_DAC2_7D5};
-        else if(state == CONF_IDLE && filt_low == 4'h6) data_reg13 <= {1'b0, RL_DAC2_5D0};
-        else if(state == CONF_IDLE && filt_low == 4'h7) data_reg13 <= {1'b0, RL_DAC2_3D0};
-        else if(state == CONF_IDLE && filt_low == 4'h8) data_reg13 <= {1'b0, RL_DAC2_2D5};
-        else if(state == CONF_IDLE && filt_low == 4'h9) data_reg13 <= {1'b0, RL_DAC2_2D0};
-        else if(state == CONF_IDLE && filt_low == 4'hA) data_reg13 <= {1'b0, RL_DAC2_1D0};
-        else if(state == CONF_IDLE && filt_low == 4'hB) data_reg13 <= {1'b0, RL_DAC2_D75};
-        else if(state == CONF_IDLE && filt_low == 4'hC) data_reg13 <= {1'b0, RL_DAC2_D50};
-        else if(state == CONF_IDLE && filt_low == 4'hD) data_reg13 <= {1'b0, RL_DAC2_D30};
-        else if(state == CONF_IDLE && filt_low == 4'hE) data_reg13 <= {1'b0, RL_DAC2_D25};
-        else if(state == CONF_IDLE && filt_low == 4'hF) data_reg13 <= {1'b0, RL_DAC2_D10};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_100) data_reg13 <= {1'b0, RL_DAC2_100};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_020) data_reg13 <= {1'b0, RL_DAC2_020};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_015) data_reg13 <= {1'b0, RL_DAC2_015};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_010) data_reg13 <= {1'b0, RL_DAC2_010};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_7D5) data_reg13 <= {1'b0, RL_DAC2_7D5};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_5D0) data_reg13 <= {1'b0, RL_DAC2_5D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_3D0) data_reg13 <= {1'b0, RL_DAC2_3D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_2D5) data_reg13 <= {1'b0, RL_DAC2_2D5};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_2D0) data_reg13 <= {1'b0, RL_DAC2_2D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_1D0) data_reg13 <= {1'b0, RL_DAC2_1D0};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D75) data_reg13 <= {1'b0, RL_DAC2_D75};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D50) data_reg13 <= {1'b0, RL_DAC2_D50};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D30) data_reg13 <= {1'b0, RL_DAC2_D30};
+        else if(state == CONF_IDLE && filt_low == FILTLOW_D25) data_reg13 <= {1'b0, RL_DAC2_D25};
+        else if(state == CONF_IDLE && filt_low == RL_DAC2_D10) data_reg13 <= {1'b0, RL_DAC2_D10};
         else if(state == CONF_IDLE) data_reg13 <= {1'b0, RL_DAC2_D10};
         else data_reg13 <= data_reg13;
     end

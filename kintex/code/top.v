@@ -40,16 +40,19 @@ module top(
     output usb_txd7p,
     output usb_txd7n,
 
-    output [7:0] usb_txf,
-    input [7:0] usb_rxf
+    (*MARK_DEBUG = "true"*)output [7:0] usb_txf,
+    (*MARK_DEBUG = "true"*)output [7:0] usb_rxf
 );
 
     localparam NUM = 32'h40;
 
-    (*MARK_DEBUG = "true"*)reg [1:0] state, next_state;
+    reg [1:0] state, next_state;
     localparam IDLE = 2'h0, WAIT = 2'h1, WORK = 2'h2, DONE = 2'h3;
 
-    (*MARK_DEBUG = "true"*)wire [3:0] usb_rxd0, usb_rxd1; 
+    (*MARK_DEBUG = "true"*)reg [3:0] res_rxd;
+    (*MARK_DEBUG = "true"*)reg res_txd;
+
+    wire [3:0] usb_rxd0, usb_rxd1; 
     wire [3:0] usb_rxd2, usb_rxd3; 
     wire [3:0] usb_rxd4, usb_rxd5, usb_rxd6, usb_rxd7; 
     wire usb_txd0, usb_txd1, udb_txd2, usb_txd3;
@@ -57,8 +60,8 @@ module top(
 
     wire clk_in;
     wire clk;
-    reg [31:0] num;
-    (*MARK_DEBUG = "true"*)reg [3:0] txd;
+    reg [7:0] num;
+    reg [3:0] txd;
     wire rst;
 
     assign rst = ~rst_n;
@@ -69,11 +72,12 @@ module top(
     assign usb_txd1 = 1'b0;
     assign usb_txd2 = 1'b0;
     assign usb_txd3 = 1'b0;
-    assign usb_txd4 = 1'b0;
+    assign usb_txd4 = res_txd;
     assign usb_txd5 = 1'b0;
     assign usb_txd6 = 1'b0;
     assign usb_txd7 = 1'b0;
-    assign usb_txf = 8'h00;
+    assign usb_txf = {8{num[3]}};
+    assign usb_rxf = {8{num[4]}};
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -84,31 +88,46 @@ module top(
         case(state)
             IDLE: next_state <= WAIT;
             WAIT: next_state <= WORK;
-            WORK: begin
-                if(num >= NUM - 1'b1) next_state <= DONE;
-                else next_state <= WORK;
-            end
+            WORK: next_state <= WORK;
             DONE: next_state <= WAIT;
             default: next_state <= IDLE;
         endcase
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) txd <= 4'h0;
-        else if(state == IDLE) txd <= 4'h0;
-        else if(state == WAIT) txd <= 4'h0;
-        else if(state == WORK) txd <= txd + 1'b1;
-        else if(state == DONE) txd <= 4'h0;
-        else txd <= txd;
+        if(rst) num <= 8'h00;
+        else if(state == IDLE) num <= 8'h00; 
+        else if(state == WAIT) num <= 8'h00; 
+        else if(state == WORK) num <= num + 1'b1;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) num <= 32'h00;
-        else if(state == IDLE) num <= 32'h00;
-        else if(state == WAIT) num <= 32'h00;
-        else if(state == WORK) num <= num + 1'b1;
-        else num <= 32'h00;
+        if(rst) res_txd <= 1'b0;
+        else if(state == IDLE) res_txd <= 1'b0;
+        else if(state == WAIT) res_txd <= 1'b0;
+        else if(state == WORK) res_txd <= ~res_txd;
     end
+
+    always@(posedge clk) begin
+        res_rxd <= usb_rxd4;
+    end
+
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) txd <= 4'h0;
+    //     else if(state == IDLE) txd <= 4'h0;
+    //     else if(state == WAIT) txd <= 4'h0;
+    //     else if(state == WORK) txd <= txd + 1'b1;
+    //     else if(state == DONE) txd <= 4'h0;
+    //     else txd <= txd;
+    // end
+
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) num <= 32'h00;
+    //     else if(state == IDLE) num <= 32'h00;
+    //     else if(state == WAIT) num <= 32'h00;
+    //     else if(state == WORK) num <= num + 1'b1;
+    //     else num <= 32'h00;
+    // end
 
     clk_wiz
     clk_wiz_dut(

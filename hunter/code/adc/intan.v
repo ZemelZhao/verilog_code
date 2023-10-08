@@ -442,6 +442,7 @@ module intan(
         else if(state == TEMP_RXD1) state_goto <= TEMP_WREG3;
         else if(state == TEMP_RXD2) state_goto <= TEMP_RXD3;
         else if(state == TEMP_RXD3) state_goto <= TEMP_DONE;
+        else if(state == CALI_WORK) state_goto <= CALI_RXD0;
         else if(state == CALI_RXD0) state_goto <= CALI_RXD1;
         else if(state == CALI_RXD1) state_goto <= CALI_RXD2;
         else if(state == CALI_RXD2) state_goto <= CALI_RXD3;
@@ -499,6 +500,7 @@ module intan(
         else if(state == TEMP_RRESB) state_goto <= TEMP_RESET;
         else if(state == TEMP_RESET) state_goto <= TEMP_RXD2;
 
+
         else if(state == CONV_CH00) state_goto <= CONV_CH01;
         else if(state == CONV_CH01) state_goto <= CONV_CH02;
         else if(state == CONV_CH02) state_goto <= CONV_CH03;
@@ -531,6 +533,7 @@ module intan(
         else if(state == CONV_CH29) state_goto <= CONV_CH30;
         else if(state == CONV_CH30) state_goto <= CONV_CH31;
         else if(state == CONV_CH31) state_goto <= CONV_RXD0;
+
         else state_goto <= state_goto;
     end
 
@@ -557,18 +560,18 @@ module intan(
         else if(state == TEMP_RXD1) chip_txd <= CHIP_GAP;
         else if(state == TEMP_RXD2) chip_txd <= CHIP_GAP;
         else if(state == TEMP_RXD3) chip_txd <= CHIP_GAP;
-        else if(state == CALI_RXD0) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD1) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD2) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD3) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD4) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD5) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD6) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD7) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD8) chip_txd <= CHIP_INIT;
-        else if(state == CALI_RXD9) chip_txd <= CHIP_INIT;
-        else if(state == CONV_RXD0) chip_txd <= CHIP_INIT;
-        else if(state == CONV_RXD1) chip_txd <= CHIP_INIT;
+        else if(state == CALI_RXD0) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD1) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD2) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD3) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD4) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD5) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD6) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD7) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD8) chip_txd <= CHIP_GAP;
+        else if(state == CALI_RXD9) chip_txd <= CHIP_GAP;
+        else if(state == CONV_RXD0) chip_txd <= CHIP_GAP;
+        else if(state == CONV_RXD1) chip_txd <= CHIP_GAP;
 
         else if(state == INIT_REG40) chip_txd <= {HEAD_RX, REG40, 8'h00};
         else if(state == INIT_REG41) chip_txd <= {HEAD_RX, REG41, 8'h00};
@@ -660,29 +663,29 @@ module intan(
         else if(state == INIT_REG43) chip_rxda_res <= {RHEAD_RX, DATA_REG43};
         else if(state == INIT_REG44) chip_rxda_res <= {RHEAD_RX, DATA_REG44};
         else if(state == TYPE_REG59) chip_rxda_res <= {RHEAD_RX, DATA_REG59_A};
-        else if(state == CONF_REG00) chip_rxda_res <= {RHEAD_RX, DATA_REG00_NORMAL};
-        else if(state == CONF_REG01) chip_rxda_res <= {RHEAD_RX, data_reg01};
-        else if(state == CONF_REG02) chip_rxda_res <= {RHEAD_RX, data_reg02};
-        else if(state == CONF_REG03) chip_rxda_res <= {RHEAD_RX, DATA_REG03_NORMAL};
-        else if(state == CONF_REG04) chip_rxda_res <= {RHEAD_RX, DATA_REG04};
-        else if(state == CONF_REG05) chip_rxda_res <= {RHEAD_RX, DATA_REG05};
-        else if(state == CONF_REG06) chip_rxda_res <= {RHEAD_RX, DATA_REG06};
-        else if(state == CONF_REG07) chip_rxda_res <= {RHEAD_RX, DATA_REG07};
-        else if(state == CONF_REG08) chip_rxda_res <= {RHEAD_RX, DATA_REG08};
-        else if(state == CONF_REG09) chip_rxda_res <= {RHEAD_RX, DATA_REG09};
-        else if(state == CONF_REG10) chip_rxda_res <= {RHEAD_RX, DATA_REG10};
-        else if(state == CONF_REG11) chip_rxda_res <= {RHEAD_RX, DATA_REG11};
-        else if(state == CONF_REG12) chip_rxda_res <= {RHEAD_RX, DATA_REG12};
-        else if(state == CONF_REG13) chip_rxda_res <= {RHEAD_RX, DATA_REG13};
-        else if(state == CONF_REG14) chip_rxda_res <= {RHEAD_RX, DATA_REG14};
-        else if(state == CONF_REG15) chip_rxda_res <= {RHEAD_RX, DATA_REG15};
-        else if(state == CONF_REG16) chip_rxda_res <= {RHEAD_RX, DATA_REG16};
-        else if(state == CONF_REG17) chip_rxda_res <= {RHEAD_RX, DATA_REG17};
-        else if(state == CONF_REG18) chip_rxda_res <= {RHEAD_RX, DATA_REG18};
-        else if(state == CONF_REG19) chip_rxda_res <= {RHEAD_RX, DATA_REG19};
-        else if(state == CONF_REG20) chip_rxda_res <= {RHEAD_RX, DATA_REG20};
-        else if(state == CONF_REG21) chip_rxda_res <= {RHEAD_RX, DATA_REG21};
-        else if(state == TEMP_RESET) chip_rxda_res <= {RHEAD_RX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG00) chip_rxda_res <= {RHEAD_TX, DATA_REG00_NORMAL};
+        else if(state == CONF_REG01) chip_rxda_res <= {RHEAD_TX, data_reg01};
+        else if(state == CONF_REG02) chip_rxda_res <= {RHEAD_TX, data_reg02};
+        else if(state == CONF_REG03) chip_rxda_res <= {RHEAD_TX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG04) chip_rxda_res <= {RHEAD_TX, DATA_REG04};
+        else if(state == CONF_REG05) chip_rxda_res <= {RHEAD_TX, DATA_REG05};
+        else if(state == CONF_REG06) chip_rxda_res <= {RHEAD_TX, DATA_REG06};
+        else if(state == CONF_REG07) chip_rxda_res <= {RHEAD_TX, DATA_REG07};
+        else if(state == CONF_REG08) chip_rxda_res <= {RHEAD_TX, data_reg08};
+        else if(state == CONF_REG09) chip_rxda_res <= {RHEAD_TX, data_reg09};
+        else if(state == CONF_REG10) chip_rxda_res <= {RHEAD_TX, data_reg10};
+        else if(state == CONF_REG11) chip_rxda_res <= {RHEAD_TX, data_reg11};
+        else if(state == CONF_REG12) chip_rxda_res <= {RHEAD_TX, data_reg12};
+        else if(state == CONF_REG13) chip_rxda_res <= {RHEAD_TX, data_reg13};
+        else if(state == CONF_REG14) chip_rxda_res <= {RHEAD_TX, DATA_REG14};
+        else if(state == CONF_REG15) chip_rxda_res <= {RHEAD_TX, DATA_REG15};
+        else if(state == CONF_REG16) chip_rxda_res <= {RHEAD_TX, DATA_REG16};
+        else if(state == CONF_REG17) chip_rxda_res <= {RHEAD_TX, DATA_REG17};
+        else if(state == CONF_REG18) chip_rxda_res <= {RHEAD_TX, DATA_REG18};
+        else if(state == CONF_REG19) chip_rxda_res <= {RHEAD_TX, DATA_REG19};
+        else if(state == CONF_REG20) chip_rxda_res <= {RHEAD_TX, DATA_REG20};
+        else if(state == CONF_REG21) chip_rxda_res <= {RHEAD_TX, DATA_REG21};
+        else if(state == TEMP_RESET) chip_rxda_res <= {RHEAD_TX, DATA_REG03_NORMAL};
         else chip_rxda_res <= chip_rxda_res;
     end
 
@@ -696,29 +699,29 @@ module intan(
         else if(state == INIT_REG43) chip_rxdb_res <= {RHEAD_RX, DATA_REG43};
         else if(state == INIT_REG44) chip_rxdb_res <= {RHEAD_RX, DATA_REG44};
         else if(state == TYPE_REG59) chip_rxdb_res <= {RHEAD_RX, DATA_REG59_B};
-        else if(state == CONF_REG00) chip_rxdb_res <= {RHEAD_RX, DATA_REG00_NORMAL};
-        else if(state == CONF_REG01) chip_rxdb_res <= {RHEAD_RX, data_reg01};
-        else if(state == CONF_REG02) chip_rxdb_res <= {RHEAD_RX, data_reg02};
-        else if(state == CONF_REG03) chip_rxdb_res <= {RHEAD_RX, DATA_REG03_NORMAL};
-        else if(state == CONF_REG04) chip_rxdb_res <= {RHEAD_RX, DATA_REG04};
-        else if(state == CONF_REG05) chip_rxdb_res <= {RHEAD_RX, DATA_REG05};
-        else if(state == CONF_REG06) chip_rxdb_res <= {RHEAD_RX, DATA_REG06};
-        else if(state == CONF_REG07) chip_rxdb_res <= {RHEAD_RX, DATA_REG07};
-        else if(state == CONF_REG08) chip_rxdb_res <= {RHEAD_RX, data_reg08};
-        else if(state == CONF_REG09) chip_rxdb_res <= {RHEAD_RX, data_reg09};
-        else if(state == CONF_REG10) chip_rxdb_res <= {RHEAD_RX, data_reg10};
-        else if(state == CONF_REG11) chip_rxdb_res <= {RHEAD_RX, data_reg11};
-        else if(state == CONF_REG12) chip_rxdb_res <= {RHEAD_RX, data_reg12};
-        else if(state == CONF_REG13) chip_rxdb_res <= {RHEAD_RX, data_reg13};
-        else if(state == CONF_REG14) chip_rxdb_res <= {RHEAD_RX, DATA_REG14};
-        else if(state == CONF_REG15) chip_rxdb_res <= {RHEAD_RX, DATA_REG15};
-        else if(state == CONF_REG16) chip_rxdb_res <= {RHEAD_RX, DATA_REG16};
-        else if(state == CONF_REG17) chip_rxdb_res <= {RHEAD_RX, DATA_REG17};
-        else if(state == CONF_REG18) chip_rxdb_res <= {RHEAD_RX, DATA_REG18};
-        else if(state == CONF_REG19) chip_rxdb_res <= {RHEAD_RX, DATA_REG19};
-        else if(state == CONF_REG20) chip_rxdb_res <= {RHEAD_RX, DATA_REG20};
-        else if(state == CONF_REG21) chip_rxdb_res <= {RHEAD_RX, DATA_REG21};
-        else if(state == TEMP_RESET) chip_rxdb_res <= {RHEAD_RX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG00) chip_rxdb_res <= {RHEAD_TX, DATA_REG00_NORMAL};
+        else if(state == CONF_REG01) chip_rxdb_res <= {RHEAD_TX, data_reg01};
+        else if(state == CONF_REG02) chip_rxdb_res <= {RHEAD_TX, data_reg02};
+        else if(state == CONF_REG03) chip_rxdb_res <= {RHEAD_TX, DATA_REG03_NORMAL};
+        else if(state == CONF_REG04) chip_rxdb_res <= {RHEAD_TX, DATA_REG04};
+        else if(state == CONF_REG05) chip_rxdb_res <= {RHEAD_TX, DATA_REG05};
+        else if(state == CONF_REG06) chip_rxdb_res <= {RHEAD_TX, DATA_REG06};
+        else if(state == CONF_REG07) chip_rxdb_res <= {RHEAD_TX, DATA_REG07};
+        else if(state == CONF_REG08) chip_rxdb_res <= {RHEAD_TX, data_reg08};
+        else if(state == CONF_REG09) chip_rxdb_res <= {RHEAD_TX, data_reg09};
+        else if(state == CONF_REG10) chip_rxdb_res <= {RHEAD_TX, data_reg10};
+        else if(state == CONF_REG11) chip_rxdb_res <= {RHEAD_TX, data_reg11};
+        else if(state == CONF_REG12) chip_rxdb_res <= {RHEAD_TX, data_reg12};
+        else if(state == CONF_REG13) chip_rxdb_res <= {RHEAD_TX, data_reg13};
+        else if(state == CONF_REG14) chip_rxdb_res <= {RHEAD_TX, DATA_REG14};
+        else if(state == CONF_REG15) chip_rxdb_res <= {RHEAD_TX, DATA_REG15};
+        else if(state == CONF_REG16) chip_rxdb_res <= {RHEAD_TX, DATA_REG16};
+        else if(state == CONF_REG17) chip_rxdb_res <= {RHEAD_TX, DATA_REG17};
+        else if(state == CONF_REG18) chip_rxdb_res <= {RHEAD_TX, DATA_REG18};
+        else if(state == CONF_REG19) chip_rxdb_res <= {RHEAD_TX, DATA_REG19};
+        else if(state == CONF_REG20) chip_rxdb_res <= {RHEAD_TX, DATA_REG20};
+        else if(state == CONF_REG21) chip_rxdb_res <= {RHEAD_TX, DATA_REG21};
+        else if(state == TEMP_RESET) chip_rxdb_res <= {RHEAD_TX, DATA_REG03_NORMAL};
         else chip_rxdb_res <= chip_rxdb_res;
     end
 

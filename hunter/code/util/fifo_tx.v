@@ -2,25 +2,29 @@ module fifo_tx(
     input clk,
     input rst,
 
-    input full,
+    input [7:0] cfull,
     input fs,
     output fd,
 
-    output fifo_txen,
-    output [7:0] fifo_txd
+    input [63:0] bias,
+
+    output [7:0] fifo_txen,
+    output [63:0] fifo_txd
 );
 
-    localparam DATA_NUM = 8'h80;
+    localparam DATA_NUM = 8'h40;
 
     reg [1:0] state, next_state;
     localparam IDLE = 2'h0, WAIT = 2'h1, WORK = 2'h2, DONE = 2'h3;
 
     reg [7:0] num;
+    wire full;
 
-    assign fifo_txd = num + 1'b1;
-    assign fifo_txen = (state == WORK);
+    assign fifo_txd = {8{num}} + bias;
+    assign fifo_txen = {8{(state == WORK)}};
     assign fd = (state == DONE);
 
+    assign full = |cfull; 
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;

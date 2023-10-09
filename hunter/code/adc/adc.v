@@ -19,8 +19,8 @@ module adc(
     input [2:0] freq,
     input [3:0] filt_up,
     input [3:0] filt_low,
-    output [7:0] type,
-    output [15:0] chip_temp,
+    output [7:0] device_type,
+    output [15:0] device_temp,
 
     input [3:0] spi_miso,
     output [3:0] spi_mosi,
@@ -33,15 +33,15 @@ module adc(
 
     wire [3:0] fdc_init, fdc_type, fdc_conf, fdc_conv;
     wire [15:0] tempa, tempb, tempc, tempd;
-    assign chip_temp = tempa[15:2] + tempb[15:2] + tempc[15:2] + tempd[15:2];
+    wire [17:0] temp;
+
+    assign temp = tempa + tempb + tempc + tempd;
+    assign device_temp = temp[17:2];
 
     assign fd_init = &fdc_init;
     assign fd_type = &fdc_type;
     assign fd_conf = &fdc_conf;
     assign fd_conv = &fdc_conv;
-
-
-
 
     intan
     intan_duta(
@@ -63,7 +63,7 @@ module adc(
         .fd_conv(fdc_conv[3]),
 
         .fs(freq[2:0]),
-        .type(type[7:6]),
+        .type(device_type[7:6]),
         .chip_temp(tempa),
 
         .filt_up(filt_up),
@@ -98,7 +98,7 @@ module adc(
         .fd_conv(fdc_conv[2]),
 
         .fs(freq[2:0]),
-        .type(type[5:4]),
+        .type(device_type[5:4]),
         .chip_temp(tempb),
 
         .filt_up(filt_up),
@@ -133,7 +133,7 @@ module adc(
         .fd_conv(fdc_conv[1]),
 
         .fs(freq[2:0]),
-        .type(type[3:2]),
+        .type(device_type[3:2]),
         .chip_temp(tempc),
 
         .filt_up(filt_up),
@@ -168,7 +168,7 @@ module adc(
         .fd_conv(fdc_conv[0]),
 
         .fs(freq[2:0]),
-        .type(type[1:0]),
+        .type(device_type[1:0]),
         .chip_temp(tempd),
 
         .filt_up(filt_up),

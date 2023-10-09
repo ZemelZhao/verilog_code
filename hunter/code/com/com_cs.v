@@ -9,6 +9,8 @@ module com_cs(
 
     output reg [3:0] read_btype,
     output reg [7:0] read_dlen,
+    output reg [7:0] read_ram_init,
+
     input [3:0] send_btype,
     input [11:0] send_dlen,
     input [11:0] send_ram_init,
@@ -23,7 +25,8 @@ module com_cs(
     output reg [11:0] tx_ram_rlen,
 
     input [3:0] rx_btype,
-    input [7:0] rx_ram_tlen
+    input [3:0] rx_ram_tlen
+    input [7:0] rx_ram_init,
 );
 
     localparam TIMEOUT = 8'h80;
@@ -127,7 +130,7 @@ module com_cs(
         if(rst) read_dlen <= 8'h00;
         else if(state == MAIN_IDLE) read_dlen <= 8'h00;
         else if(state == MAIN_WAIT) read_dlen <= 8'h00;
-        else if(state == READ_PREP) read_dlen <= rx_ram_tlen;
+        else if(state == READ_PREP) read_dlen <= {4'h0, rx_ram_tlen};
         else ram_dlen <= ram_dlen;
     end
 

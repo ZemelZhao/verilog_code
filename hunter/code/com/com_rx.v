@@ -9,6 +9,7 @@ module com_rx(
 
     output reg [3:0] btype,
     output reg [3:0] ram_tlen,
+    output reg [7:0] ram_init,
 
     output reg [7:0] ram_txa,
     output reg [7:0] ram_txd,
@@ -96,11 +97,10 @@ module com_rx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_tlen <= 16'h0000;
-        else if(state == IDLE) ram_tlen <= 16'h0000;
-        else if(state == WAIT) ram_tlen <= 16'h0000;
-        else if(state == DNUM && num == 16'h0000) ram_tlen[15:8] <= com_rxd;
-        else if(state == DNUM && num == 16'h0001) ram_tlen[7:0] <= com_rxd;
+        if(rst) ram_tlen <= 4'h0;
+        else if(state == IDLE) ram_tlen <= 4'h0;
+        else if(state == WAIT) ram_tlen <= 4'h0;
+        else if(state == DNUM && num == 16'h0001) ram_tlen <= com_rxd[3:0];
         else ram_tlen <= ram_tlen;
     end
 
@@ -116,6 +116,16 @@ module com_rx(
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) btype <= BAG_DPARAM;
         else if(state == EROR) btype <= BAG_ERROR;
         else btype <= btype;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) ram_init <= RAM_ADDR_INIT;
+        else if(state == IDLE) ram_init <= RAM_ADDR_INIT;
+        else if(state == WAIT) ram_init <= RAM_ADDR_INIT;
+        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) ram_init <= RAM_DEVICE_IDX_ADDR;
+        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) ram_init <= RAM_DATA_IDX_ADDR;
+        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) ram_init <= RAM_DPARAM_ADDR;
+        else ram_init <= ram_init;
     end
 
     always@(posedge clk or posedge rst) begin

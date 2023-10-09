@@ -13,7 +13,7 @@ module adc2ram(
     output reg [7:0] ram_txd,
     output reg [11:0] ram_txa
 );
-    localparam DATA_LEN = 8'h20, CHIP_LEN = 4'h8;
+    localparam DATA_LEN = 8'h40, CHIP_LEN = 4'h8;
 
     reg [3:0] state, next_state;
 

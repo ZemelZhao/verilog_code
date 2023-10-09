@@ -39,6 +39,7 @@ module com_tx(
 
     reg [11:0] num;
     reg [7:0] txd;
+    reg [7:0] pid;
 
     wire cen;
     wire [7:0] cin;

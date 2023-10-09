@@ -40,8 +40,8 @@ module sim();
         #5;
     end
 
-    tb_adc_test
-    tb_adc_test_dut(
+    tb_com_tx
+    tb_com_tx_dut(
         .clk_25(clk_25),
         .clk_50(clk_50),
         .clk_100(clk_100),

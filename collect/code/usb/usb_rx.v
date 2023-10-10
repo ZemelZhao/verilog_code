@@ -1,4 +1,4 @@
-module com_rx(
+module usb_rx(
     input clk,
     input rst,
 

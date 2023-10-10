@@ -30,7 +30,9 @@ module intan(
     output spi_cs,
 
     input [1:0] fifo_rxen,
-    output [15:0] fifo_rxd
+    output [15:0] fifo_rxd,
+
+    output stat
 );
 
     localparam DATA_REG59_A = 8'h35, DATA_REG59_B = 8'h3A;
@@ -207,6 +209,8 @@ module intan(
     assign fd_type = (state == TYPE_DONE);
     assign fd_conf = (state == CALI_DONE);
     assign fd_conv = (state == CONV_DONE);
+
+    assign stat = ~(state == MAIN_FAIL);
 
     always@(posedge clk or posedge rst) begin // state
         if(rst) state <= MAIN_IDLE;

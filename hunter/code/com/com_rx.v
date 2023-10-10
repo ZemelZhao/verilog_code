@@ -8,12 +8,7 @@ module com_rx(
     input [7:0] com_rxd,
 
     output reg [3:0] btype,
-    output reg [3:0] ram_tlen,
-    output reg [7:0] ram_init,
-
-    output reg [7:0] ram_txa,
-    output reg [7:0] ram_txd,
-    output reg ram_txen
+    output reg [31:0] data_cmd
 );
 
     localparam BAG_INIT = 4'b0000;
@@ -36,6 +31,8 @@ module com_rx(
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam RPID = 8'h04, DNUM = 8'h05, CRC5 = 8'h06;
     localparam EROR = 8'h10;
+
+    localparam DATA_CMD_INIT = 32'h00000000;
 
     reg [15:0] num;
 
@@ -86,7 +83,6 @@ module com_rx(
         endcase
     end
 
-
     always@(posedge clk or posedge rst) begin
         if(rst) num <= 16'h0000;
         else if(state == IDLE) num <= 16'h0000;
@@ -119,41 +115,16 @@ module com_rx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_init <= RAM_ADDR_INIT;
-        else if(state == IDLE) ram_init <= RAM_ADDR_INIT;
-        else if(state == WAIT) ram_init <= RAM_ADDR_INIT;
-        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) ram_init <= RAM_DEVICE_IDX_ADDR;
-        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) ram_init <= RAM_DATA_IDX_ADDR;
-        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) ram_init <= RAM_DPARAM_ADDR;
-        else ram_init <= ram_init;
+        if(rst) data_cmd <= DATA_CMD_INIT;
+        else if(state == IDLE) data_cmd <= DATA_CMD_INIT; 
+        else if(state == WAIT) data_cmd <= DATA_CMD_INIT;
+        else if(state == WORK && com_rxd[7:4] == HEAD_DIDX && num == 16'h0000) data_cmd[31:28] <= com_rxd[3:0];  
+        else if(state == WORK && com_rxd[7:4] == HEAD_DDIDX && num == 16'h0000) data_cmd[27:24] <= com_rxd[3:0];  
+        else if(state == WORK && com_rxd[7:4] == HEAD_DPARAM && num == 16'h0000) data_cmd[23:20] <= com_rxd[3:0];  
+        else if(state == WORK && btype == BAG_DPARAM && num == 16'h0001) data_cmd[19:12] <= com_rxd;  
+        else data_cmd <= data_cmd;
     end
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) ram_txa <= RAM_ADDR_INIT; 
-        else if(state == IDLE) ram_txa <= RAM_ADDR_INIT;
-        else if(state == WAIT) ram_txa <= RAM_ADDR_INIT;
-        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) ram_txa <= RAM_DEVICE_IDX_ADDR;
-        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) ram_txa <= RAM_DATA_IDX_ADDR;
-        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) ram_txa <= RAM_DPARAM_ADDR;
-        else if(state == WORK && num > 16'h0000) ram_txa <= ram_txa + 1'b1;
-        else ram_txa <= ram_txa;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) ram_txd <= 8'h00;
-        else if(state == IDLE) ram_txd <= 8'h00;
-        else if(state == WAIT) ram_txd <= 8'h00;
-        else if(state == WORK) ram_txd <= com_rxd;
-        else ram_txd <= 8'h00;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) ram_txen <= 1'b0;
-        else if(state == IDLE) ram_txen <= 1'b0;
-        else if(state == WAIT) ram_txen <= 1'b0;
-        else if(state == WORK) ram_txen <= 1'b1;
-        else ram_txen <= 1'b0;
-    end
 
     crc5
     crc5_dut(

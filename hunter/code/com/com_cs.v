@@ -8,8 +8,6 @@ module com_cs(
     input fd_read,
 
     output reg [3:0] read_btype,
-    output reg [7:0] read_dlen,
-    output reg [7:0] read_ram_init,
 
     input [3:0] send_btype,
     input [11:0] send_dlen,
@@ -24,9 +22,7 @@ module com_cs(
     output reg [11:0] tx_ram_init,
     output reg [11:0] tx_ram_rlen,
 
-    input [3:0] rx_btype,
-    input [3:0] rx_ram_tlen
-    input [7:0] rx_ram_init,
+    input [3:0] rx_btype
 );
 
     localparam TIMEOUT = 8'h80;
@@ -49,7 +45,6 @@ module com_cs(
     localparam WANS_PREP = 8'h50, WANS_DONE = 8'h51;
 
     reg [7:0] time_cnt, num_cnt;
-    reg didx;
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_DONE);
@@ -127,18 +122,9 @@ module com_cs(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) read_dlen <= 8'h00;
-        else if(state == MAIN_IDLE) read_dlen <= 8'h00;
-        else if(state == MAIN_WAIT) read_dlen <= 8'h00;
-        else if(state == READ_PREP) read_dlen <= {4'h0, rx_ram_tlen};
-        else ram_dlen <= ram_dlen;
-    end
-
-    always@(posedge clk or posedge rst) begin
         if(rst) tx_btype <= BAG_INIT;
         else if(state == MAIN_IDLE) tx_btype <= BAG_INIT;
         else if(state == MAIN_WAIT) tx_btype <= BAG_INIT;
-        else if(state == SEND_PREP && tx_btype == BAG_DATA0 && didx == 1'b1) tx_btype <= BAG_DATA1;
         else if(state == SEND_PREP) tx_btype <= send_btype;
         else if(state == WANS_PREP && num_cnt >= NUMOUT - 1'b1) tx_btype <= BAG_ACK;
         else if(state == WANS_PREP && rx_btype == BAG_ERROR) tx_btype <= BAG_NAK;
@@ -160,13 +146,6 @@ module com_cs(
         else if(state == MAIN_WAIT) tx_ram_rlen <= 12'h000;
         else if(state == SEND_PREP) tx_ram_rlen <= send_dlen;
         else tx_ram_rlen <= tx_ram_rlen;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) didx <= 1'b0;
-        else if(state == MAIN_IDLE) didx <= 1'b0;
-        else if(state == SEND_DONE && next_state == MAIN_WAIT) didx <= ~didx;
-        else didx <= didx;
     end
 
     always@(posedge clk or posedge rst) begin

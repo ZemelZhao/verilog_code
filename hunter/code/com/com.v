@@ -21,16 +21,12 @@ module com(
 
     output fs_read,
     output [3:0] read_btype,
-    output [7:0] read_dlen,
-    output [7:0] read_ram_init,
     input fd_read,
 
     input [7:0] send_ram_rxd,
     output [11:0] send_ram_rxa,
 
-    output [7:0] read_ram_txd,
-    output [7:0] read_ram_txa,
-    output read_ram_txen
+    output [31:0] data_cmd
 );
 
     wire fs_tx, fd_tx;
@@ -83,12 +79,8 @@ module com(
 
         .com_rxd(com_rxd),
         .btype(rx_btype),
-        .ram_tlen(rx_dlen),
-        .ram_init(read_ram_init),
+        .data_cmd(data_cmd)
 
-        .ram_txa(read_ram_txa),
-        .ram_txd(read_ram_txd),
-        .ram_txen(read_ram_txen)
     );
 
     com_tx

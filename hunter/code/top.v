@@ -34,44 +34,63 @@ module top(
     wire clk_80, clk_50, clk_25;
 
     // Control Section
-    wire fs_init, fd_init;
-    wire fs_type, fd_type;
-    wire fs_conf, fd_conf;
-    wire fs_conv, fd_conv;
-    wire fs_send, fd_send;
-    wire fs_read, fd_read;
+    wire fs_adc_init, fd_adc_init;
+    wire fs_type, fd_adc_type;
+    wire fs_adc_conf, fd_adc_conf;
+    wire fs_adc_conv, fd_adc_conv;
 
-    wire fs_tran, fd_tran;
-    wire [3:0] tran_btype;
+    wire fs_adc_tran, fd_adc_tran;
+
+    wire fs_com_send, fd_com_send;
+    wire fs_com_read, fd_com_read;
     
-    // ADC Section
-    wire [3:0] device_freq;
-    wire [3:0] filt_up, filt_low;
-    wire [7:0] device_type;
-    wire [15:0] device_temp;
+    wire [31:0] data_cmd, data_stat;
 
+    // ADC Section
     wire [63:0] fifo_adc_rxd;
     wire [7:0] fifo_adc_rxen;
 
     // COM Section
     wire [3:0] send_btype, read_btype;
     wire [11:0] send_dlen;
-    wire [7:0] read_dlen;
     wire [11:0] send_ram_init;
-    wire [7:0] read_ram_init;
 
     // RAM Section
     wire [7:0] send_ram_txd, send_ram_rxd;
     wire [11:0] send_ram_txa, send_ram_rxa;
     wire send_ram_txen;
 
-    wire [7:0] read_ram_txd, read_ram_rxd;
-    wire [7:0] read_ram_txa, read_ram_rxa;
-    wire read_ram_txen;
-
     assign rst = ~rst_n;
 
     // Function Section
+
+    console
+    console_dut(
+        .clk(clk_50),
+        .rst(rst),
+
+        .fs_adc_init(fs_adc_init),
+        .fs_adc_init(fd_adc_init),
+        .fs_adc_type(fs_adc_type),
+        .fd_adc_type(fd_adc_type),
+        .fs_adc_conf(fs_adc_conf),
+        .fd_adc_conf(fd_adc_conf),
+        .fs_adc_conv(fs_adc_conv),
+        .fd_adc_conv(fd_adc_conv),
+
+        .fs_adc_tran(fs_adc_tran),
+        .fd_adc_tran(fd_adc_tran),
+        .fs_com_send(fs_com_send),
+        .fd_com_send(fd_com_send),
+        .fs_com_read(fs_com_read),
+        .fd_com_read(fd_com_read),
+
+        .read_btype(read_btype),
+        .send_btype(send_btype),
+
+        .ram_dlen(send_dlen),
+        .ram_addr_init(send_ram_init)
+    );
 
     adc
     adc_dut(
@@ -92,11 +111,8 @@ module top(
         .fd_conf(fd_conf),
         .fd_conv(fd_conv),
 
-        .freq(device_freq),
-        .filt_up(filt_up),
-        .filt_low(filt_low),
-        .device_type(device_type),
-        .device_temp(device_temp),
+        .data_cmd(data_cmd),
+        .data_stat(data_stat),
 
         .spi_miso(miso),
         .spi_mosi(mosi),
@@ -132,15 +148,10 @@ module top(
         .fs_read(fs_read),
         .fd_read(fd_read),
         .read_btype(read_btype),
-        .read_dlen(read_dlen),
-        .read_ram_init(read_ram_init),
 
         .send_ram_rxd(send_ram_rxd),
         .send_ram_rxa(send_ram_rxa),
-
-        .read_ram_txd(read_ram_txd),
-        .read_ram_txa(read_ram_txa),
-        .read_ram_txen(read_ram_txen)
+        .data_cmd(data_cmd)
     );
 
 
@@ -178,39 +189,27 @@ module top(
 
     data_make
     data_make_dut(
-        .clk(),
-        .rst(),
+        .clk(clk_100),
+        .rst(rst),
 
-        .fs(),
-        .fd(),
+        .fs(fs_adc_tran),
+        .fd(fd_adc_tran),
 
-        .btype(),
-        .ram_data_init(),
+        .btype(send_btype),
+        .ram_data_init(send_ram_init),
 
-        .fifo_rxen(),
-        .fifo_rxd(),
+        .fifo_adc_rxen(fifo_adc_rxen),
+        .fifo_adc_rxd(fifo_adc_rxd),
 
-        .ram_cmd_rxa(),
-        .ram_cmd_rxd(),
+        .data_cmd(data_cmd),
+        .data_stat(data_stat),
 
-        .ram_data_txa(),
-        .ram_data_txd(),
-        .ram_txen()
+        .ram_data_txa(send_ram_txa),
+        .ram_data_txd(send_tram_txd),
+        .ram_txen(send_ram_txen)
     );
 
     // IP Section
-
-    ram_cmd
-    ram_cmd_dut(
-        .clka(clk_25),
-        .addra(read_ram_txa),
-        .dina(read_ram_txd),
-        .wea(read_ram_txen),
-
-        .clkb(clk_50),
-        .addrb(read_ram_rxa),
-        .doutb(read_ram_rxd)
-    );
 
     ram_data
     ram_data_dut(

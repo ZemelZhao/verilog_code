@@ -16,11 +16,8 @@ module adc(
     output fd_conf,
     output fd_conv,
 
-    input [2:0] freq,
-    input [3:0] filt_up,
-    input [3:0] filt_low,
-    output [7:0] device_type,
-    output [15:0] device_temp,
+    input [31:0] data_cmd,
+    output [31:0] data_stat,
 
     input [3:0] spi_miso,
     output [3:0] spi_mosi,
@@ -33,15 +30,26 @@ module adc(
 
     wire [3:0] fdc_init, fdc_type, fdc_conf, fdc_conv;
     wire [15:0] tempa, tempb, tempc, tempd;
-    wire [17:0] temp;
+    wire [17:0] temp_all;
 
-    assign temp = tempa + tempb + tempc + tempd;
+    wire [15:0] device_temp;
+    wire [7:0] device_type;
+    wire [3:0] device_stat;
+    wire [3:0] freq_samp, filt_up, filt_low;
+
+    assign temp_all = tempa + tempb + tempc + tempd;
     assign device_temp = temp[17:2];
+
+    assign data_stat = {device_temp, device_type, device_stat, 4'h0};
 
     assign fd_init = &fdc_init;
     assign fd_type = &fdc_type;
     assign fd_conf = &fdc_conf;
     assign fd_conv = &fdc_conv;
+
+    assign freq_samp = data_cmd[23:20];
+    assign filt_up = data_cmd[19:16];
+    assign filt_low = data_cmd[15:12];
 
     intan
     intan_duta(
@@ -62,7 +70,7 @@ module adc(
         .fd_conf(fdc_conf[3]),
         .fd_conv(fdc_conv[3]),
 
-        .fs(freq[2:0]),
+        .fs(freq_samp[2:0]),
         .type(device_type[7:6]),
         .chip_temp(tempa),
 
@@ -75,7 +83,9 @@ module adc(
         .spi_cs(spi_cs[3]),
         
         .fifo_rxen(fifo_rxen[3]),
-        .fifo_rxd(fifo_rxd[63:48])
+        .fifo_rxd(fifo_rxd[63:48]),
+
+        .stat(device_stat[3])
     );
 
     intan
@@ -97,7 +107,7 @@ module adc(
         .fd_conf(fdc_conf[2]),
         .fd_conv(fdc_conv[2]),
 
-        .fs(freq[2:0]),
+        .fs(freq_samp[2:0]),
         .type(device_type[5:4]),
         .chip_temp(tempb),
 
@@ -110,7 +120,9 @@ module adc(
         .spi_cs(spi_cs[2]),
         
         .fifo_rxen(fifo_rxen[2]),
-        .fifo_rxd(fifo_rxd[47:32])
+        .fifo_rxd(fifo_rxd[47:32]),
+
+        .stat(device_stat[2])
     );
 
     intan
@@ -132,7 +144,7 @@ module adc(
         .fd_conf(fdc_conf[1]),
         .fd_conv(fdc_conv[1]),
 
-        .fs(freq[2:0]),
+        .fs(freq_samp[2:0]),
         .type(device_type[3:2]),
         .chip_temp(tempc),
 
@@ -145,7 +157,9 @@ module adc(
         .spi_cs(spi_cs[1]),
         
         .fifo_rxen(fifo_rxen[1]),
-        .fifo_rxd(fifo_rxd[31:16])
+        .fifo_rxd(fifo_rxd[31:16]),
+
+        .stat(device_stat[1])
     );
 
     intan
@@ -167,7 +181,7 @@ module adc(
         .fd_conf(fdc_conf[0]),
         .fd_conv(fdc_conv[0]),
 
-        .fs(freq[2:0]),
+        .fs(freq_samp[2:0]),
         .type(device_type[1:0]),
         .chip_temp(tempd),
 
@@ -180,7 +194,9 @@ module adc(
         .spi_cs(spi_cs[0]),
         
         .fifo_rxen(fifo_rxen[0]),
-        .fifo_rxd(fifo_rxd[15:0])
+        .fifo_rxd(fifo_rxd[15:0]),
+
+        .stat(device_stat[0])
     );
 
 

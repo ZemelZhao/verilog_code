@@ -11,7 +11,7 @@ module data_make(
     output reg [7:0] fifo_adc_rxen,
     input [63:0] fifo_adc_rxd,
 
-    input [31:0] data_reg,
+    input [31:0] data_cmd,
     input [31:0] data_stat,
 
     output reg [11:0] ram_data_txa,
@@ -24,8 +24,8 @@ module data_make(
 
     localparam DATA_LEN = 8'h40, CHIP_NUM = 4'h8;
 
-    localparam ADDR_REG_DEVICE_IDX = 8'h1F, DLEN_REG_DEVICE_IDX = 8'h04;
-    localparam ADDR_REG_DATA_IDX = 8'h1B, DLEN_REG_DATA_IDX = 8'h04;
+    localparam ADDR_CMD_DEVICE_IDX = 8'h1F, DLEN_CMD_DEVICE_IDX = 8'h04;
+    localparam ADDR_CMD_DATA_IDX = 8'h1B, DLEN_CMD_DATA_IDX = 8'h04;
     localparam ADDR_INT_DEVICE_TEMP = 8'h1E, DLEN_INT_DEVICE_TEMP = 8'h08;
     localparam ADDR_INT_DEVICE_TYPE = 8'h0F, DLEN_INT_DEVICE_TYPE = 8'h08;
     localparam ADDR_INT_DEVICE_STAT = 8'h07, DLEN_INT_DEVICE_STAT = 8'h04;
@@ -36,8 +36,8 @@ module data_make(
     wire [DLEN_INT_DEVICE_TYPE - 1'b1 : 0] device_type;
     wire [DLEN_INT_DEVICE_STAT - 1'b1 : 0] device_stat;
 
-    assign device_idx = data_reg[ADDR_REG_DEVICE_IDX -: DLEN_REG_DEVICE_IDX];
-    assign data_idx = data_reg[ADDR_REG_DATA_IDX -: DLEN_REG_DATA_IDX];
+    assign device_idx = data_cmd[ADDR_REG_DEVICE_IDX -: DLEN_REG_DEVICE_IDX];
+    assign data_idx = data_cmd[ADDR_REG_DATA_IDX -: DLEN_REG_DATA_IDX];
     assign device_temp = data_stat[ADDR_INT_DEVICE_TEMP -: DLEN_INT_DEVICE_TEMP];
     assign device_type = data_stat[ADDR_INT_DEVICE_TYPE -: DLEN_INT_DEVICE_TYPE];
     assign device_stat = data_stat[ADDR_INT_DEVICE_STAT -: DLEN_INT_DEVICE_STAT];

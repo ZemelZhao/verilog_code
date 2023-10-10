@@ -11,8 +11,8 @@ module console(
 
     output fs_adc_conv,
     input fd_adc_conv,
-    output fs_adc_send,
-    input fd_adc_send,
+    output fs_adc_tran,
+    input fd_adc_tran,
 
     output fs_com_send,
     input fd_com_send,
@@ -21,24 +21,20 @@ module console(
 
     input [3:0] read_btype,
     output reg [3:0] send_btype,
-    input [3:0] read_bdata,
 
-    output reg [11:0] ram_addr_init,
-
-    input [7:0] adc_type,
-    input [15:0] adc_temp,
-    input [3:0] adc_stat,
-    output reg [3:0] adc_freq,
-
-    output reg [7:0] com_type,
-    output reg [7:0] com_temp,
-    output reg [3:0] com_stat
+    output reg [11:0] ram_dlen,
+    output reg [11:0] ram_addr_init
 );
 
     localparam BAG_INIT = 4'b0000;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DHEAD = 4'b1100, BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
+
+    localparam RAM_ADDR_INIT = 12'hFE0;
+    localparam RAM_ADDR_DLINK = 12'hFCC, RAM_ADDR_DTYPE = 12'hFC0, RAM_ADDR_DTEMP = 12'hFC4;
+    localparam RAM_ADDR_DATA0 = 12'h000, RAM_ADDR_DATA1 = 12'h240, RAM_ADDR_DATA2 = 12'h480;
+    localparam RAM_ADDR_DATA3 = 12'h6C0, RAM_ADDR_DATA4 = 12'h900, RAM_ADDR_DATA5 = 12'hB40;
 
     reg [7:0] state, next_state;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
@@ -50,12 +46,15 @@ module console(
     localparam CONF_SEND = 8'h33, CONF_DONE = 8'h34;
     localparam CONV_IDLE = 8'h40, CONV_WORK = 8'h41, CONV_TAKE = 8'h42;
     localparam CONV_SEND = 8'h43, CONV_DONE = 8'h44;
+
+    localparam NUM = 4'h6;
+    reg [3:0] num;
     
     assign fs_adc_init = (state == LINK_WORK);
     assign fs_adc_type = (state == TYPE_WORK);
     assign fs_adc_conf = (state == CONF_WORK);
     assign fs_adc_conv = (state == CONV_WORK);
-    assign fs_adc_send = (state == CONV_SEND);
+    assign fs_adc_tran = (state == CONV_SEND);
 
     assign fs_com_send = (state == LINK_SEND) || (state == TYPE_SEND) || (state == CONF_SEND) || (state == CONV_SEND);
     assign fd_com_read = (state == TYPE_IDLE) || (state == CONF_IDLE) || (state == CONV_IDLE);
@@ -132,7 +131,7 @@ module console(
             end
             CONV_TAKE: next_state <= CONV_SEND;
             CONV_SEND: begin
-                if(fd_adc_send && fd_com_send) next_state <= CONV_DONE;
+                if(fd_adc_tran && fd_com_send) next_state <= CONV_DONE;
                 else next_state <= CONV_DONE;
             end
             CONV_DONE: next_state <= MAIN_WAIT;
@@ -142,49 +141,50 @@ module console(
     end
 
     always@(posedge clk or posedge rst) begin
+        if(rst) num <= 4'h0;
+        else if(state == MAIN_IDLE) num <= 4'h0;
+        else if(state == CONV_TAKE && num >= NUM - 1'b1) num <= 4'h0;
+        else if(state == CONV_TAKE) num <= num + 1'b1;
+        else num <= num;
+    end
+
+    always@(posedge clk or posedge rst) begin
         if(rst) send_btype <= BAG_INIT;
         else if(state == MAIN_IDLE) send_btype <= BAG_INIT;
         else if(State == MAIN_WAIT) send_btype <= BAG_INIT;
         else if(state == LINK_TAKE) send_btype <= BAG_DLINK;
         else if(state == TYPE_TAKE) send_btype <= BAG_DTYPE;
         else if(state == CONF_TAKE) send_btype <= BAG_DTEMP;
+        else if(state == CONV_TAKE && num[0]) send_btype <= BAG_DATA1;
         else if(state == CONV_TAKE) send_btype <= BAG_DATA0;
         else send_btype <= send_btype;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) adc_freq <= 4'h0;
-        else if(state == MAIN_IDLE) adc_freq <= 4'h0;
-        else if(state == CONF_IDLE) adc_freq <= read_bdata;
-        else adc_freq <= adc_freq;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) com_type <= 8'h00;
-        else if(state == MAIN_IDLE) com_type <= 8'h00;
-        else if(state == TYPE_TAKE) com_type <= adc_type;
-        else com_type <= com_type;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) com_temp <= 8'h00;
-        else if(state == MAIN_IDLE) com_temp <= 8'h00;
-        else if(state == CONF_TAKE) com_temp <= adc_temp[7:0];
-        else com_temp <= com_temp;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) com_stat <= 4'h0;
-        else if(state == MAIN_IDLE) com_stat <= 4'h0;
-        else if(state == CONV_TAKE) com_stat <= adc_stat;
-        else com_stat <= com_stat;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) ram_addr_init <= 12'h000;
-        else if(state == MAIN_IDLE) ram_addr_init >= 12'h000;
-        else if(state == MAIN_TAKE && read_btype == BAG_DDIDX) ram_addr_init <= ram_addr_init + 12'h400;
+        if(rst) ram_addr_init <= RAM_ADDR_INIT;
+        else if(state == MAIN_IDLE) ram_addr_init <= RAM_ADDR_INIT;
+        else if(state == MAIN_WAIT) ram_addr_init <= RAM_ADDR_INIT;
+        else if(state == LINK_TAKE) ram_addr_init <= RAM_ADDR_DLINK;
+        else if(state == TYPE_TAKE) ram_addr_init <= RAM_ADDR_DTYPE;
+        else if(state == CONF_TAKE) ram_addr_init <= RAM_ADDR_DTEMP;
+        else if(state == CONV_TAKE && num == 4'h0) ram_addr_init <= RAM_ADDR_DATA0;
+        else if(state == CONV_TAKE && num == 4'h1) ram_addr_init <= RAM_ADDR_DATA1;
+        else if(state == CONV_TAKE && num == 4'h2) ram_addr_init <= RAM_ADDR_DATA2;
+        else if(state == CONV_TAKE && num == 4'h3) ram_addr_init <= RAM_ADDR_DATA3;
+        else if(state == CONV_TAKE && num == 4'h4) ram_addr_init <= RAM_ADDR_DATA4;
+        else if(state == CONV_TAKE && num == 4'h5) ram_addr_init <= RAM_ADDR_DATA5;
         else ram_addr_init  <= ram_addr_init;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) ram_dlen <= 12'h000;
+        else if(state == MAIN_IDLE) ram_dlen <= 12'h000;
+        else if(state == MAIN_WAIT) ram_dlen <= 12'h000; 
+        else if(state == LINK_TAKE) ram_dlen <= 12'h002;
+        else if(state == TYPE_TAKE) ram_dlen <= 12'h002;
+        else if(state == CONF_TAKE) ram_dlen <= 12'h002;
+        else if(state == CONV_TAKE) ram_dlen <= 12'h202;
+        else ram_dlen <= ram_dlen;
     end
 
 

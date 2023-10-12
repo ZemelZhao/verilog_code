@@ -1,4 +1,4 @@
-module com_cs(
+module usb_cs(
     input clk,
     input rst,
 

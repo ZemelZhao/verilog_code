@@ -8,7 +8,7 @@ module usb_tx(
     input [3:0] btype,
     input [31:0] data_cmd,
 
-    output reg [7:0] com_txd
+    output reg [7:0] usb_txd
 );
 
     localparam BAG_INIT = 4'b0000;
@@ -16,7 +16,7 @@ module usb_tx(
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
 
     localparam PID_INIT = 8'h00, PID_SYNC = 8'h01;
-    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STALL = 8'hE1;
+    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
     localparam PID_CMD = 8'h1E;
 
     localparam HEAD_DDIDX = 4'h1, HEAD_DPARAM = 4'h5, HEAD_DIDX = 4'h9;
@@ -25,11 +25,14 @@ module usb_tx(
     reg [7:0] dlen;
 
     reg [7:0] state, next_state;
+    localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
+    localparam DNUM0 = 8'h04, DNUM1 = 8'h05;
+    localparam SYNC = 8'h08, WPID = 8'h09, WCMD = 8'h0A, CRC5 = 8'h0B;
 
     reg [7:0] pid, txd;
 
     wire [7:0] cin, cout;
-    wire cen;
+    reg cen;
 
     wire [3:0] data_idx, device_idx;
     wire [3:0] freq_samp, filt_up, filt_low;
@@ -42,7 +45,6 @@ module usb_tx(
 
     assign fd = (state == DONE);
     assign cin = txd;
-    assign cen = (state == WCMD) && (state == CRC5);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -82,6 +84,15 @@ module usb_tx(
     end
 
     always@(posedge clk or posedge rst) begin
+        if(rst) cen <= 1'b0;
+        else if(state == IDLE) cen <= 1'b0;
+        else if(state == WAIT) cen <= 1'b0;
+        else if(state == DNUM1) cen <= 1'b1;
+        else if(state == WCMD) cen <= 1'b1;
+        else cen <= 1'b0;
+    end
+
+    always@(posedge clk or posedge rst) begin
         if(rst) num <= 4'h0;
         else if(state == IDLE) num <= 4'h0;
         else if(state == WAIT) num <= 4'h0;
@@ -113,9 +124,9 @@ module usb_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) com_txd <= 8'h00;
-        else if(state == WORK) com_txd <= cout;
-        else com_txd <= txd;
+        if(rst) usb_txd <= 8'h00;
+        else if(state == WORK) usb_txd <= cout;
+        else usb_txd <= txd;
     end
 
     always@(posedge clk or posedge rst) begin
@@ -125,8 +136,8 @@ module usb_tx(
         else if(state == DNUM0) txd <= 8'h00;
         else if(state == DNUM1) txd <= dlen;
         else if(state == WCMD && btype == BAG_DIDX) txd <= {HEAD_DIDX, device_idx};
-        else if(state == WCMD && btype == BAG_DDIDX) txd <= {HEAD_DIDX, data_idx};
-        else if(state == WCMD && btype == BAG_DPARAM && num == 4'h0) txd <= {HEAD_DIDX, freq_samp};
+        else if(state == WCMD && btype == BAG_DDIDX) txd <= {HEAD_DDIDX, data_idx};
+        else if(state == WCMD && btype == BAG_DPARAM && num == 4'h0) txd <= {HEAD_DPARAM, freq_samp};
         else if(state == WCMD && btype == BAG_DPARAM && num == 4'h1) txd <= {filt_up, filt_low};
         else txd <= 8'h00;
     end

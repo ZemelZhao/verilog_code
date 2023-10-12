@@ -32,6 +32,7 @@ module com_rx(
     localparam DATA_CMD_INIT = 32'h00000000;
 
     reg [15:0] num;
+    reg [7:0] ram_tlen;
 
     reg [3:0] data_idx, device_idx;
     reg [3:0] freq_samp, filt_up, filt_low;
@@ -118,7 +119,6 @@ module com_rx(
     always@(posedge clk or posedge rst) begin
         if(rst) device_idx <= 4'h0;
         else if(state == IDLE) device_idx <= 4'h0;
-        else if(state == WAIT) device_idx <= 4'h0;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) device_idx <= com_rxd[3:0];  
         else device_idx <= device_idx;
     end
@@ -126,7 +126,6 @@ module com_rx(
     always@(posedge clk or posedge rst) begin
         if(rst) data_idx <= 4'h0;
         else if(state == IDLE) data_idx <= 4'h0;
-        else if(state == WAIT) data_idx <= 4'h0;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) data_idx <= com_rxd[3:0];  
         else data_idx <= data_idx;
     end
@@ -134,7 +133,6 @@ module com_rx(
     always@(posedge clk or posedge rst) begin
         if(rst) freq_samp <= 4'h0;
         else if(state == IDLE) freq_samp <= 4'h0;
-        else if(state == WAIT) freq_samp <= 4'h0;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) freq_samp <= com_rxd[3:0];  
         else freq_samp <= freq_samp;
     end
@@ -142,7 +140,6 @@ module com_rx(
     always@(posedge clk or posedge rst) begin
         if(rst) filt_up <= 4'h0;
         else if(state == IDLE) filt_up <= 4'h0;
-        else if(state == WAIT) filt_up <= 4'h0;
         else if(state == WORK && num == 16'h0001 && btype == BAG_DPARAM) filt_up <= com_rxd[7:4];  
         else filt_up <= filt_up;
     end
@@ -150,7 +147,6 @@ module com_rx(
     always@(posedge clk or posedge rst) begin
         if(rst) filt_low <= 4'h0;
         else if(state == IDLE) filt_low <= 4'h0;
-        else if(state == WAIT) filt_low <= 4'h0;
         else if(state == WORK && num == 16'h0001 && btype == BAG_DPARAM) filt_low <= com_rxd[3:0];  
         else filt_low <= filt_low;
     end

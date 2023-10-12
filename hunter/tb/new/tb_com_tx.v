@@ -65,6 +65,9 @@ module tb_com_tx(
     wire [7:0] fifo_rxen;
     wire [63:0] fifo_rxd;
 
+    wire fire;
+    wire [3:0] pin_txd, pin_rxd;
+
     assign clk = clk_50;
     assign fs_tran = (state[3:0] == ACK_WORK[3:0]);
     assign fs_com_tx = (state[3:0] == ACK_WORK[3:0]);
@@ -77,7 +80,7 @@ module tb_com_tx(
 
     assign ram_tinit = 12'h000;
     assign ram_tlen = 12'h800;
-    assign usb_rxd = com_txd;
+    assign pin_rxd = pin_txd;
     assign com_data_cmd = 32'h7E213000;
 
     always@(posedge clk or posedge rst) begin
@@ -274,6 +277,28 @@ module tb_com_tx(
         else if(state == DATA1_IDLE) ram_dlen <= 12'h202;
         else ram_dlen <= ram_dlen;
     end
+
+    com_txf
+    com_txf_dut(
+        .clk(clk_100),
+        .rst(rst),
+
+        .fs(fs_com_tx),
+
+        .din(com_txd),
+        .dout(pin_txd),
+        .fire(fire)
+    );
+
+    usb_rxf
+    usb_rxf_dut(
+        .clk(clk_100),
+        .rst(rst),
+
+        .din(pin_rxd),
+        .dout(usb_rxd),
+        .fire(fire)
+    );
 
 
     usb_rx

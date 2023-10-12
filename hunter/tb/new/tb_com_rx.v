@@ -34,8 +34,10 @@ module tb_com_rx(
     wire [7:0] usb_txd, com_rxd;
     reg [3:0] tx_btype;
     wire [3:0] rx_btype;
+    wire pin_txd, pin_rxd;
+    wire fire;
 
-    assign com_rxd = usb_txd;
+    assign pin_rxd = pin_txd;
     assign usb_data_cmd = 32'h2E213000;
     assign fs_usb_tx = (state[3:0] == ACK_WORK[3:0]);
     assign fd_com_rx = (state[3:0] == ACK_READ[3:0]);
@@ -159,11 +161,32 @@ module tb_com_rx(
         else tx_btype <= tx_btype;
     end
 
+    usb_txf
+    usb_txf_dut(
+        .clk(clk_200),
+        .rst(rst),
+
+        .fs(fs_usb_tx),
+
+        .fire(fire),
+        .din(usb_txd),
+        .dout(pin_txd)
+    );
+
+    com_rxf
+    com_rxf_dut(
+        .clk(clk_200),
+        .rst(rst),
+
+        .din(pin_rxd),
+        .dout(com_rxd),
+        .fire(fire)
+    );
 
 
     usb_tx
     usb_tx_dut(
-        .clk(clk_50),
+        .clk(clk_25),
         .rst(rst),
 
         .fs(fs_usb_tx),
@@ -179,7 +202,7 @@ module tb_com_rx(
 
     com_rx
     com_rx_dut(
-        .clk(clk_50),
+        .clk(clk_25),
         .rst(rst),
 
         .fs(fs_com_rx),

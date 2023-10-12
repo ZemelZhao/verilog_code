@@ -17,9 +17,9 @@ module intan(
     output fd_conf,
     output fd_conv,
 
-    input [2:0] fs, 
-    output reg [1:0] type,
-    output reg [15:0] chip_temp,
+    input [2:0] freq_samp, 
+    output reg [1:0] device_type,
+    output reg [15:0] device_temp,
 
     input [3:0] filt_up,
     input [3:0] filt_low,
@@ -193,7 +193,7 @@ module intan(
 
     reg [15:0] num, num_wait;
 
-    reg [15:0] temp_measure;
+    reg [15:0] temp;
 
     reg [7:0] data_reg08, data_reg09, data_reg10, data_reg11;
     reg [7:0] data_reg12, data_reg13;
@@ -777,33 +777,33 @@ module intan(
         else chip_rxdb_res_d1 <= chip_rxdb_res_d1;
     end
 
-    always@(posedge clk or posedge rst) begin // type
-        if(rst) type <= 2'b00;
-        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2116})) type <= 2'b01;
-        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2132})) type <= 2'b10;
-        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2164})) type <= 2'b11;
-        else type <= type;
+    always@(posedge clk or posedge rst) begin // device_type
+        if(rst) device_type <= 2'b00;
+        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2116})) device_type <= 2'b01;
+        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2132})) device_type <= 2'b10;
+        else if((state == TREG_WORK) && (chip_rxda == {RHEAD_RX, DATA_REG63_RHD2164})) device_type <= 2'b11;
+        else device_type <= device_type;
     end
 
     always@(posedge clk or posedge rst) begin // data_reg01
         if(rst) data_reg01 <= 8'h00;
         else if(state == MAIN_IDLE) data_reg01  <=  8'h00;
-        else if((state == CONF_REG01) && (fs == FS_1KHZ)) data_reg01 <= DATA_REG01_12KHZ;
-        else if((state == CONF_REG01) && (fs == FS_2KHZ)) data_reg01 <= DATA_REG01_12KHZ;
-        else if((state == CONF_REG01) && (fs == FS_4KHZ)) data_reg01 <= DATA_REG01_4KHZ;
-        else if((state == CONF_REG01) && (fs == FS_8KHZ)) data_reg01 <= DATA_REG01_8KHZ;
-        else if((state == CONF_REG01) && (fs == FS_16KHZ)) data_reg01 <= DATA_REG01_16KHZ;
+        else if((state == CONF_REG01) && (freq_samp == FS_1KHZ)) data_reg01 <= DATA_REG01_12KHZ;
+        else if((state == CONF_REG01) && (freq_samp == FS_2KHZ)) data_reg01 <= DATA_REG01_12KHZ;
+        else if((state == CONF_REG01) && (freq_samp == FS_4KHZ)) data_reg01 <= DATA_REG01_4KHZ;
+        else if((state == CONF_REG01) && (freq_samp == FS_8KHZ)) data_reg01 <= DATA_REG01_8KHZ;
+        else if((state == CONF_REG01) && (freq_samp == FS_16KHZ)) data_reg01 <= DATA_REG01_16KHZ;
         else data_reg01 <= data_reg01;
     end 
 
     always@(posedge clk or posedge rst) begin // data_reg02
         if(rst) data_reg02 <= 8'h00;
         else if(state == MAIN_IDLE) data_reg02  <=  8'h00;
-        else if((state == CONF_REG02) && (fs == FS_1KHZ)) data_reg02 <= DATA_REG02_12KHZ;
-        else if((state == CONF_REG02) && (fs == FS_2KHZ)) data_reg02 <= DATA_REG02_12KHZ;
-        else if((state == CONF_REG02) && (fs == FS_4KHZ)) data_reg02 <= DATA_REG02_4KHZ;
-        else if((state == CONF_REG02) && (fs == FS_8KHZ)) data_reg02 <= DATA_REG02_8KHZ;
-        else if((state == CONF_REG02) && (fs == FS_16KHZ)) data_reg02 <= DATA_REG02_16KHZ;
+        else if((state == CONF_REG02) && (freq_samp == FS_1KHZ)) data_reg02 <= DATA_REG02_12KHZ;
+        else if((state == CONF_REG02) && (freq_samp == FS_2KHZ)) data_reg02 <= DATA_REG02_12KHZ;
+        else if((state == CONF_REG02) && (freq_samp == FS_4KHZ)) data_reg02 <= DATA_REG02_4KHZ;
+        else if((state == CONF_REG02) && (freq_samp == FS_8KHZ)) data_reg02 <= DATA_REG02_8KHZ;
+        else if((state == CONF_REG02) && (freq_samp == FS_16KHZ)) data_reg02 <= DATA_REG02_16KHZ;
         else data_reg02 <= data_reg02;
     end 
 
@@ -827,20 +827,20 @@ module intan(
         else num <= 16'h0000;
     end
 
-    always@(posedge clk or posedge rst) begin // temp_measure
-        if(rst) temp_measure <= 16'h00000;
-        else if(state == MAIN_IDLE) temp_measure <= 16'h0000;
-        else if(state == MAIN_WAIT) temp_measure <= 16'h0000;
-        else if(state == TEMP_RRESA) temp_measure <= 16'h0000;
-        else if(state == RTMP_WORK) temp_measure <= chip_rxda - temp_measure;
-        else temp_measure <= temp_measure;
+    always@(posedge clk or posedge rst) begin // temp
+        if(rst) temp <= 16'h00000;
+        else if(state == MAIN_IDLE) temp <= 16'h0000;
+        else if(state == MAIN_WAIT) temp <= 16'h0000;
+        else if(state == TEMP_RRESA) temp <= 16'h0000;
+        else if(state == RTMP_WORK) temp <= chip_rxda - temp;
+        else temp <= temp;
     end
 
-    always@(posedge clk or posedge rst) begin // chip_temp
-        if(rst) chip_temp <= 16'h0000;
-        else if(state == MAIN_IDLE) chip_temp <= 16'h0000;
-        else if(state == TEMP_DONE) chip_temp <= temp_measure;
-        else chip_temp <= chip_temp;
+    always@(posedge clk or posedge rst) begin // device_temp
+        if(rst) device_temp <= 16'h0000;
+        else if(state == MAIN_IDLE) device_temp <= 16'h0000;
+        else if(state == TEMP_DONE) device_temp <= temp;
+        else device_temp <= device_temp;
     end
 
     always@(posedge clk or posedge rst) begin

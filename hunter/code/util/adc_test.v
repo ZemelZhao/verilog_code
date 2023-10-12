@@ -17,12 +17,11 @@ module adc_test(
     output fd_conf,
     output fd_conv,
 
+    input [31:0] data_cmd,
+    output [31:0] data_stat,
+
     output reg [7:0] device_type,
     output reg [15:0] device_temp,
-
-    input [2:0] fs, 
-    input [3:0] filt_up,
-    input [3:0] filt_low,
 
     input [3:0] spi_miso,
     output [3:0] spi_mosi,
@@ -43,6 +42,18 @@ module adc_test(
     wire fs_fifo, fd_fifo;
     wire [63:0] fifo_txd;
     wire [7:0] full, fifo_txen;
+
+    wire [3:0] freq_samp, filt_up, filt_low;
+    reg [15:0] device_temp; 
+    reg [7:0] device_type;
+    wire [3:0] device_stat;
+
+    assign device_stat = 4'hF;
+
+    assign data_stat = {device_temp, device_type, device_stat, 4'h0};
+    assign freq_samp = data_cmd[23:20];
+    assign filt_up = data_cmd[19:16];
+    assign filt_low = data_cmd[15:12];
 
     reg [11:0] num;
     localparam NUM_INIT = 12'h10, NUM_TYPE = 12'h10, NUM_CONF = 12'h20;

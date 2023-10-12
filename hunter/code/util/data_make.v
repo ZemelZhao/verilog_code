@@ -8,15 +8,15 @@ module data_make(
     input [3:0] btype,
     input [11:0] ram_data_init,
 
-    output reg [7:0] fifo_adc_rxen,
-    input [63:0] fifo_adc_rxd,
+    output reg [7:0] fifo_rxen,
+    input [63:0] fifo_rxd,
 
     input [31:0] data_cmd,
     input [31:0] data_stat,
 
-    output reg [11:0] ram_data_txa,
-    output reg [7:0] ram_data_txd,
-    output reg ram_data_txen
+    output reg [11:0] ram_txa,
+    output reg [7:0] ram_txd,
+    output reg ram_txen
 );
 
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
@@ -30,14 +30,14 @@ module data_make(
     localparam ADDR_INT_DEVICE_TYPE = 8'h0F, DLEN_INT_DEVICE_TYPE = 8'h08;
     localparam ADDR_INT_DEVICE_STAT = 8'h07, DLEN_INT_DEVICE_STAT = 8'h04;
 
-    wire [DLEN_REG_DEVICE_IDX - 1'b1 : 0] device_idx;
-    wire [DLEN_REG_DATA_IDX - 1'b1 : 0] data_idx;
+    wire [DLEN_CMD_DEVICE_IDX - 1'b1 : 0] device_idx;
+    wire [DLEN_CMD_DATA_IDX - 1'b1 : 0] data_idx;
     wire [DLEN_INT_DEVICE_TEMP - 1'b1 : 0] device_temp;
     wire [DLEN_INT_DEVICE_TYPE - 1'b1 : 0] device_type;
     wire [DLEN_INT_DEVICE_STAT - 1'b1 : 0] device_stat;
 
-    assign device_idx = data_cmd[ADDR_REG_DEVICE_IDX -: DLEN_REG_DEVICE_IDX];
-    assign data_idx = data_cmd[ADDR_REG_DATA_IDX -: DLEN_REG_DATA_IDX];
+    assign device_idx = data_cmd[ADDR_CMD_DEVICE_IDX -: DLEN_CMD_DEVICE_IDX];
+    assign data_idx = data_cmd[ADDR_CMD_DATA_IDX -: DLEN_CMD_DATA_IDX];
     assign device_temp = data_stat[ADDR_INT_DEVICE_TEMP -: DLEN_INT_DEVICE_TEMP];
     assign device_type = data_stat[ADDR_INT_DEVICE_TYPE -: DLEN_INT_DEVICE_TYPE];
     assign device_stat = data_stat[ADDR_INT_DEVICE_STAT -: DLEN_INT_DEVICE_STAT];
@@ -109,70 +109,70 @@ module data_make(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_data_txa <= DATA_ADDR_INIT;
-        else if(state == MAIN_IDLE) ram_data_txa <= DATA_ADDR_INIT;
-        else if(state == MAIN_WAIT) ram_data_txa <= DATA_ADDR_INIT;
-        else if(state == MAIN_DONE) ram_data_txa <= DATA_ADDR_INIT;
+        if(rst) ram_txa <= DATA_ADDR_INIT;
+        else if(state == MAIN_IDLE) ram_txa <= DATA_ADDR_INIT;
+        else if(state == MAIN_WAIT) ram_txa <= DATA_ADDR_INIT;
+        else if(state == MAIN_DONE) ram_txa <= DATA_ADDR_INIT;
 
-        else if(state == DLINK_IDLE) ram_data_txa <= ram_data_init; 
-        else if(state == DLINK_WORK) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == DLINK_IDLE) ram_txa <= ram_data_init; 
+        else if(state == DLINK_WORK) ram_txa <= ram_txa + 1'b1;
 
-        else if(state == DTYPE_IDLE) ram_data_txa <= ram_data_init;
-        else if(state == DTYPE_WORK) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == DTYPE_IDLE) ram_txa <= ram_data_init;
+        else if(state == DTYPE_WORK) ram_txa <= ram_txa + 1'b1;
 
-        else if(state == DTEMP_IDLE) ram_data_txa <= ram_data_init;
-        else if(state == DTEMP_WORK) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == DTEMP_IDLE) ram_txa <= ram_data_init;
+        else if(state == DTEMP_WORK) ram_txa <= ram_txa + 1'b1;
 
-        else if(state == DATA_IDLE) ram_data_txa <= ram_data_init;
-        else if(state == DATA_HEAD) ram_data_txa <= ram_data_txa + 1'b1;
-        else if(state == DATA_WORK) ram_data_txa <= ram_data_txa + 1'b1;
-        else if(state == DATA_REST) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == DATA_IDLE) ram_txa <= ram_data_init;
+        else if(state == DATA_HEAD) ram_txa <= ram_txa + 1'b1;
+        else if(state == DATA_WORK) ram_txa <= ram_txa + 1'b1;
+        else if(state == DATA_REST) ram_txa <= ram_txa + 1'b1;
 
-        else ram_data_txa <= ram_data_txa;
+        else ram_txa <= ram_txa;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_data_txd <= 8'h00;
-        else if(state == MAIN_IDLE) ram_data_txd <= 8'h00;
-        else if(state == MAIN_WAIT) ram_data_txd <= 8'h00;
-        else if(state == MAIN_DONE) ram_data_txd <= 8'h00;
-        else if(state == DLINK_IDLE) ram_data_txd <= {HEAD_DLINK, DATA_DLINK[11:8]};
-        else if(state == DLINK_WORK) ram_data_txd <= DATA_DLINK[7:0];
-        else if(state == DTYPE_IDLE) ram_data_txd <= {HEAD_DTYPE, device_idx};
-        else if(state == DTYPE_WORK) ram_data_txd <= device_type;
-        else if(state == DTEMP_IDLE) ram_data_txd <= {HEAD_DTEMP, device_idx};
-        else if(state == DTEMP_WORK) ram_data_txd <= device_temp;
-        else if(state == DATA_IDLE) ram_data_txd <= {HEAD_DATA, device_idx};
-        else if(state == DATA_HEAD) ram_data_txd <= {data_idx, device_stat};
-        else if(state == DATA_WORK) ram_data_txd <= adc_rxd;
-        else if(state == DATA_REST) ram_data_txd <= adc_rxd;
-        else ram_data_txd <= 8'h00;
+        if(rst) ram_txd <= 8'h00;
+        else if(state == MAIN_IDLE) ram_txd <= 8'h00;
+        else if(state == MAIN_WAIT) ram_txd <= 8'h00;
+        else if(state == MAIN_DONE) ram_txd <= 8'h00;
+        else if(state == DLINK_IDLE) ram_txd <= {HEAD_DLINK, DATA_DLINK[11:8]};
+        else if(state == DLINK_WORK) ram_txd <= DATA_DLINK[7:0];
+        else if(state == DTYPE_IDLE) ram_txd <= {HEAD_DTYPE, device_idx};
+        else if(state == DTYPE_WORK) ram_txd <= device_type;
+        else if(state == DTEMP_IDLE) ram_txd <= {HEAD_DTEMP, device_idx};
+        else if(state == DTEMP_WORK) ram_txd <= device_temp;
+        else if(state == DATA_IDLE) ram_txd <= {HEAD_DATA, device_idx};
+        else if(state == DATA_HEAD) ram_txd <= {data_idx, device_stat};
+        else if(state == DATA_WORK) ram_txd <= adc_rxd;
+        else if(state == DATA_REST) ram_txd <= adc_rxd;
+        else ram_txd <= 8'h00;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_data_txen <= 1'b0;
-        else if(state == MAIN_IDLE) ram_data_txen <= 1'b0;
-        else if(state == MAIN_WAIT) ram_data_txen <= 1'b0;
-        else if(state == DLINK_IDLE) ram_data_txen <= 1'b1;
-        else if(state == DLINK_WORK) ram_data_txen <= 1'b1;
-        else if(state == DTYPE_IDLE) ram_data_txen <= 1'b1;
-        else if(state == DTYPE_WORK) ram_data_txen <= 1'b1;
-        else if(state == DTEMP_IDLE) ram_data_txen <= 1'b1;
-        else if(state == DTEMP_WORK) ram_data_txen <= 1'b1;
-        else if(state == DATA_IDLE) ram_data_txen <= 1'b1;
-        else if(state == DATA_HEAD) ram_data_txen <= 1'b1;
-        else if(state == DATA_WORK) ram_data_txen <= 1'b1;
-        else if(state == DATA_REST) ram_data_txen <= 1'b1;
-        else ram_data_txen <= 1'b0;
+        if(rst) ram_txen <= 1'b0;
+        else if(state == MAIN_IDLE) ram_txen <= 1'b0;
+        else if(state == MAIN_WAIT) ram_txen <= 1'b0;
+        else if(state == DLINK_IDLE) ram_txen <= 1'b1;
+        else if(state == DLINK_WORK) ram_txen <= 1'b1;
+        else if(state == DTYPE_IDLE) ram_txen <= 1'b1;
+        else if(state == DTYPE_WORK) ram_txen <= 1'b1;
+        else if(state == DTEMP_IDLE) ram_txen <= 1'b1;
+        else if(state == DTEMP_WORK) ram_txen <= 1'b1;
+        else if(state == DATA_IDLE) ram_txen <= 1'b1;
+        else if(state == DATA_HEAD) ram_txen <= 1'b1;
+        else if(state == DATA_WORK) ram_txen <= 1'b1;
+        else if(state == DATA_REST) ram_txen <= 1'b1;
+        else ram_txen <= 1'b0;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) fifo_adc_rxen <= 8'h00;
-        else if(state == MAIN_IDLE) fifo_adc_rxen <= 8'h00;
-        else if(state == MAIN_WAIT) fifo_adc_rxen <= 8'h00;
-        else if(state == DATA_WORK) fifo_adc_rxen <= adc_rxen; 
-        else if(state == DATA_GAP) fifo_adc_rxen <= adc_rxen;
-        else fifo_adc_rxen <= 8'h00;
+        if(rst) fifo_rxen <= 8'h00;
+        else if(state == MAIN_IDLE) fifo_rxen <= 8'h00;
+        else if(state == MAIN_WAIT) fifo_rxen <= 8'h00;
+        else if(state == DATA_WORK) fifo_rxen <= adc_rxen; 
+        else if(state == DATA_GAP) fifo_rxen <= adc_rxen;
+        else fifo_rxen <= 8'h00;
     end
 
     always@(posedge clk or posedge rst) begin
@@ -196,14 +196,14 @@ module data_make(
 
     always@(*) begin
         case(cnum) 
-            4'h1: adc_rxd <= fifo_adc_rxd[63:56];
-            4'h2: adc_rxd <= fifo_adc_rxd[55:48];
-            4'h3: adc_rxd <= fifo_adc_rxd[47:40];
-            4'h4: adc_rxd <= fifo_adc_rxd[39:32];
-            4'h5: adc_rxd <= fifo_adc_rxd[31:24];
-            4'h6: adc_rxd <= fifo_adc_rxd[23:16];
-            4'h7: adc_rxd <= fifo_adc_rxd[15:8];
-            4'h8: adc_rxd <= fifo_adc_rxd[7:0];
+            4'h1: adc_rxd <= fifo_rxd[63:56];
+            4'h2: adc_rxd <= fifo_rxd[55:48];
+            4'h3: adc_rxd <= fifo_rxd[47:40];
+            4'h4: adc_rxd <= fifo_rxd[39:32];
+            4'h5: adc_rxd <= fifo_rxd[31:24];
+            4'h6: adc_rxd <= fifo_rxd[23:16];
+            4'h7: adc_rxd <= fifo_rxd[15:8];
+            4'h8: adc_rxd <= fifo_rxd[7:0];
             default: adc_rxd <= 8'h00;
         endcase
     end

@@ -8,7 +8,7 @@ module com_rx(
     input [7:0] com_rxd,
 
     output reg [3:0] btype,
-    output reg [31:0] data_cmd
+    output [31:0] data_cmd
 );
 
     localparam BAG_INIT = 4'b0000;
@@ -18,9 +18,6 @@ module com_rx(
 
     localparam PID_SYNC = 8'h01, PID_CMD = 8'h1E; 
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
-
-    localparam RAM_DEVICE_IDX_ADDR = 8'h10, RAM_DATA_IDX_ADDR = 8'h20, RAM_DPARAM_ADDR = 8'h80;
-    localparam RAM_ADDR_INIT = 8'h00;
 
     localparam HEAD_DDIDX = 4'h1, HEAD_DPARAM = 4'h5, HEAD_DIDX = 4'h9;
 
@@ -36,12 +33,16 @@ module com_rx(
 
     reg [15:0] num;
 
+    reg [3:0] data_idx, device_idx;
+    reg [3:0] freq_samp, filt_up, filt_low;
+
     wire cen;
     wire [7:0] cin, cout;
 
     assign fs = (state == DONE);
     assign cen = (state == WORK) || ((state == DNUM) && (num >= NLEN - 1'b1));
     assign cin = com_rxd;
+    assign data_cmd = {device_idx, data_idx, freq_samp, filt_up, filt_low, 12'h000};
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -115,16 +116,44 @@ module com_rx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_cmd <= DATA_CMD_INIT;
-        else if(state == IDLE) data_cmd <= DATA_CMD_INIT; 
-        else if(state == WAIT) data_cmd <= DATA_CMD_INIT;
-        else if(state == WORK && com_rxd[7:4] == HEAD_DIDX && num == 16'h0000) data_cmd[31:28] <= com_rxd[3:0];  
-        else if(state == WORK && com_rxd[7:4] == HEAD_DDIDX && num == 16'h0000) data_cmd[27:24] <= com_rxd[3:0];  
-        else if(state == WORK && com_rxd[7:4] == HEAD_DPARAM && num == 16'h0000) data_cmd[23:20] <= com_rxd[3:0];  
-        else if(state == WORK && btype == BAG_DPARAM && num == 16'h0001) data_cmd[19:12] <= com_rxd;  
-        else data_cmd <= data_cmd;
+        if(rst) device_idx <= 4'h0;
+        else if(state == IDLE) device_idx <= 4'h0;
+        else if(state == WAIT) device_idx <= 4'h0;
+        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) device_idx <= com_rxd[3:0];  
+        else device_idx <= device_idx;
     end
 
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_idx <= 4'h0;
+        else if(state == IDLE) data_idx <= 4'h0;
+        else if(state == WAIT) data_idx <= 4'h0;
+        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) data_idx <= com_rxd[3:0];  
+        else data_idx <= data_idx;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) freq_samp <= 4'h0;
+        else if(state == IDLE) freq_samp <= 4'h0;
+        else if(state == WAIT) freq_samp <= 4'h0;
+        else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) freq_samp <= com_rxd[3:0];  
+        else freq_samp <= freq_samp;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) filt_up <= 4'h0;
+        else if(state == IDLE) filt_up <= 4'h0;
+        else if(state == WAIT) filt_up <= 4'h0;
+        else if(state == WORK && num == 16'h0001 && btype == BAG_DPARAM) filt_up <= com_rxd[7:4];  
+        else filt_up <= filt_up;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) filt_low <= 4'h0;
+        else if(state == IDLE) filt_low <= 4'h0;
+        else if(state == WAIT) filt_low <= 4'h0;
+        else if(state == WORK && num == 16'h0001 && btype == BAG_DPARAM) filt_low <= com_rxd[3:0];  
+        else filt_low <= filt_low;
+    end
 
     crc5
     crc5_dut(

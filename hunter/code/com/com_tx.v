@@ -28,8 +28,6 @@ module com_tx(
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
     localparam PID_STAT = 8'hD2, PID_DATA0 = 8'h96, PID_DATA1 = 8'h5A;
 
-
-
     reg [7:0] state, next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam SYNC = 8'h10, WPID = 8'h11, DNUM = 8'h12;

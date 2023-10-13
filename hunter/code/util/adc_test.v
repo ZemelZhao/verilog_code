@@ -17,8 +17,8 @@ module adc_test(
     output fd_conf,
     output fd_conv,
 
-    input [31:0] data_cmd,
-    output [31:0] data_stat,
+    input [31:0] cache_cmd,
+    output [31:0] cache_stat,
 
     output reg [7:0] device_type,
     output reg [15:0] device_temp,
@@ -50,10 +50,10 @@ module adc_test(
 
     assign device_stat = 4'hF;
 
-    assign data_stat = {device_temp, device_type, device_stat, 4'h0};
-    assign freq_samp = data_cmd[23:20];
-    assign filt_up = data_cmd[19:16];
-    assign filt_low = data_cmd[15:12];
+    assign cache_stat = {device_temp, device_type, device_stat, 4'h0};
+    assign freq_samp = cache_cmd[23:20];
+    assign filt_up = cache_cmd[19:16];
+    assign filt_low = cache_cmd[15:12];
 
     reg [11:0] num;
     localparam NUM_INIT = 12'h10, NUM_TYPE = 12'h10, NUM_CONF = 12'h20;

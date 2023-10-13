@@ -54,7 +54,7 @@ module console(
     assign fs_adc_type = (state == TYPE_WORK);
     assign fs_adc_conf = (state == CONF_WORK);
     assign fs_adc_conv = (state == CONV_WORK);
-    assign fs_adc_tran = (state == CONV_SEND);
+    assign fs_adc_tran = (state[3:0] == CONV_SEND[3:0]);
 
     assign fs_com_send = (state == LINK_SEND) || (state == TYPE_SEND) || (state == CONF_SEND) || (state == CONV_SEND);
     assign fd_com_read = (state == TYPE_IDLE) || (state == CONF_IDLE) || (state == CONV_IDLE);
@@ -68,10 +68,10 @@ module console(
         case(state)
             MAIN_IDLE: next_state <= LINK_IDLE;
 
-            LINK_IDLE: next_state <= LINK_ADC;
+            LINK_IDLE: next_state <= LINK_WORK;
             LINK_WORK: begin
                 if(fd_adc_init) next_state <= LINK_TAKE;
-                else next_state <= LINL_WORK;
+                else next_state <= LINK_WORK;
             end
             LINK_TAKE: next_state <= LINK_SEND;
             LINK_SEND: begin
@@ -97,7 +97,7 @@ module console(
             end
             TYPE_WORK: begin
                 if(fd_adc_type) next_state <= TYPE_TAKE;
-                else next_state <= TYPE_DONE;
+                else next_state <= TYPE_WORK;
             end
             TYPE_TAKE: next_state <= TYPE_SEND;
             TYPE_SEND: begin
@@ -151,7 +151,7 @@ module console(
     always@(posedge clk or posedge rst) begin
         if(rst) send_btype <= BAG_INIT;
         else if(state == MAIN_IDLE) send_btype <= BAG_INIT;
-        else if(State == MAIN_WAIT) send_btype <= BAG_INIT;
+        else if(state == MAIN_WAIT) send_btype <= BAG_INIT;
         else if(state == LINK_TAKE) send_btype <= BAG_DLINK;
         else if(state == TYPE_TAKE) send_btype <= BAG_DTYPE;
         else if(state == CONF_TAKE) send_btype <= BAG_DTEMP;

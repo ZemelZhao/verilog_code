@@ -3,7 +3,7 @@ module usb_tx(
     input rst,
 
     input fs,
-    input fd,
+    output fd,
 
     input [3:0] btype,
     input [31:0] data_cmd,

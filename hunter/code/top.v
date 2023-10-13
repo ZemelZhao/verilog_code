@@ -56,9 +56,9 @@ module top(
     wire [11:0] send_ram_init;
 
     // RAM Section
-    wire [7:0] send_ram_txd, send_ram_rxd;
-    wire [11:0] send_ram_txa, send_ram_rxa;
-    wire send_ram_txen;
+    wire [7:0] ram_txd, ram_rxd;
+    wire [11:0] ram_txa, ram_rxa;
+    wire ram_txen;
 
     assign rst = ~rst_n;
 
@@ -149,8 +149,8 @@ module top(
         .fd_read(fd_read),
         .read_btype(read_btype),
 
-        .send_ram_rxd(send_ram_rxd),
-        .send_ram_rxa(send_ram_rxa),
+        .ram_rxd(ram_rxd),
+        .ram_rxa(ram_rxa),
         .data_cmd(data_cmd)
     );
 
@@ -204,9 +204,9 @@ module top(
         .data_cmd(data_cmd),
         .data_stat(data_stat),
 
-        .ram_data_txa(send_ram_txa),
-        .ram_data_txd(send_tram_txd),
-        .ram_txen(send_ram_txen)
+        .ram_data_txa(ram_txa),
+        .ram_data_txd(tram_txd),
+        .ram_txen(ram_txen)
     );
 
     // IP Section
@@ -214,13 +214,13 @@ module top(
     ram_data
     ram_data_dut(
         .clka(clk_100),
-        .addra(send_ram_txa),
-        .dina(send_ram_txd),
-        .wea(send_ram_txen),
+        .addra(ram_txa),
+        .dina(ram_txd),
+        .wea(ram_txen),
 
         .clkb(clk_50),
-        .addrb(send_ram_rxa),
-        .doutb(send_ram_rxd)
+        .addrb(ram_rxa),
+        .doutb(ram_rxd)
     );
 
 

@@ -4,7 +4,7 @@ module com_cs(
 
     input fs_send,
     output fd_send,
-    output rs_read,
+    output fs_read,
     input fd_read,
 
     output reg [3:0] read_btype,
@@ -52,7 +52,7 @@ module com_cs(
     assign fd_rx = (state == RANS_DONE) || (state == READ_DATA);
 
     always@(posedge clk or posedge rst) begin
-        if(rst) state <= IDLE;
+        if(rst) state <= MAIN_IDLE;
         else state <= next_state;
     end
     
@@ -82,7 +82,7 @@ module com_cs(
             end
             SEND_DONE: begin
                 if(~fs_send) next_state <= MAIN_WAIT;
-                eles next_state <= SEND_DONE;
+                else next_state <= SEND_DONE;
             end
 
             READ_PREP: next_state <= READ_DATA;

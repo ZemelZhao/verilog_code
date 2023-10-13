@@ -1,4 +1,4 @@
-module com_rxf(
+module usb_rxf(
     input clk,
     input rst,
 

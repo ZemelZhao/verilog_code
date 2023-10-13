@@ -23,10 +23,10 @@ module com(
     output [3:0] read_btype,
     input fd_read,
 
-    input [7:0] send_ram_rxd,
-    output [11:0] send_ram_rxa,
+    input [7:0] ram_rxd,
+    output [11:0] ram_rxa,
 
-    output [31:0] data_cmd
+    output [31:0] cache_cmd
 );
 
     wire fs_tx, fd_tx;
@@ -52,21 +52,17 @@ module com(
 
         .fs_read(fs_read),
         .fd_read(fd_read),
-        .read_dlen(read_dlen),
         .read_btype(read_btype),
-        .read_ram_init(read_ram_init),
 
         .fs_tx(fs_tx),
         .fd_tx(fd_tx),
         .tx_btype(tx_btype),
         .tx_ram_rlen(tx_dlen),
-        .tx_ram_init(tx_ram_init)
+        .tx_ram_init(tx_ram_init),
 
         .fs_rx(fs_rx),
         .fd_rx(fd_rx),
-        .rx_btype(rx_btype),
-        .rx_ram_tlen(rx_dlen),
-        .rx_ram_init(rx_ram_init)
+        .rx_btype(rx_btype)
     );
 
     com_rx
@@ -79,7 +75,7 @@ module com(
 
         .com_rxd(com_rxd),
         .btype(rx_btype),
-        .data_cmd(data_cmd)
+        .data_cmd(cache_cmd)
 
     );
 
@@ -89,15 +85,15 @@ module com(
         .rst(rst),
 
         .fs(fs_tx),
-        .fd(fd_txj),
+        .fd(fd_tx),
 
         .com_txd(com_txd),
         .btype(tx_btype),
         .ram_rlen(tx_dlen),
         .ram_init(send_ram_init),
         
-        .ram_rxa(send_ram_rxa),
-        .ram_rxd(send_ram_rxd)
+        .ram_rxa(ram_rxa),
+        .ram_rxd(ram_rxd)
     );
 
     com_rxf

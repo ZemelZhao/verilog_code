@@ -4,14 +4,13 @@ module usb_cs(
 
     input fs_send,
     output fd_send,
-    output rs_read,
+    output fs_read,
     input fd_read,
 
     output reg [3:0] read_btype,
-    output reg [11:0] read_ram_init,
+    input [11:0] read_ram_init,
 
     input [3:0] send_btype,
-    input [31:0] data_stat,
 
     output fs_tx,
     input fd_tx,
@@ -21,7 +20,7 @@ module usb_cs(
     output reg [3:0] tx_btype,
 
     input [3:0] rx_btype,
-    output reg [11:0] ram_rxa_init
+    output reg [11:0] rx_ram_init
 );
 
     localparam TIMEOUT = 8'h80;
@@ -51,7 +50,7 @@ module usb_cs(
     assign fd_rx = (state == RANS_DONE) || (state == READ_DATA);
 
     always@(posedge clk or posedge rst) begin
-        if(rst) state <= IDLE;
+        if(rst) state <= MAIN_IDLE;
         else state <= next_state;
     end
     
@@ -81,7 +80,7 @@ module usb_cs(
             end
             SEND_DONE: begin
                 if(~fs_send) next_state <= MAIN_WAIT;
-                eles next_state <= SEND_DONE;
+                else next_state <= SEND_DONE;
             end
 
             READ_PREP: next_state <= READ_DATA;
@@ -115,7 +114,6 @@ module usb_cs(
     always@(posedge clk or posedge rst) begin
         if(rst) read_btype <= BAG_INIT;
         else if(state == MAIN_IDLE) read_btype <= BAG_INIT;
-        else if(state == MAIN_WAIT) read_btype <= BAG_INIT;
         else if(state == WANS_PREP) read_btype <= rx_btype;
         else read_btype <= read_btype;
     end
@@ -146,6 +144,14 @@ module usb_cs(
         else if(state == RANS_TAKE) num_cnt <= num_cnt + 1'b1;
         else if(state == WANS_PREP) num_cnt <= num_cnt + 1'b1;
         else num_cnt <= num_cnt;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) rx_ram_init <= 12'h000;
+        else if(state == MAIN_IDLE) rx_ram_init <= 12'h000;
+        else if(state == MAIN_WAIT) rx_ram_init <= 12'h000;
+        else if(state == READ_PREP) rx_ram_init <= read_ram_init;
+        else rx_ram_init <= rx_ram_init;
     end
 
 

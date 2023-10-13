@@ -1,51 +1,59 @@
 module sim();
 
-    reg clk_25, clk_50, clk_100, clk_200;
+    reg clk_25, clk_50, clk_100, clk_200, clk_400;
 
     reg rst;
 
     initial begin
         rst <= 1'b0;
-        #12;
+        #24;
         rst <= 1'b1;
-        #30;
+        #60;
         rst <= 1'b0;
     end
 
     always begin
         clk_25 <= 1'b0;
-        #40;
+        #80;
         clk_25 <= 1'b1;
-        #40;
+        #80;
     end
 
     always begin
         clk_50 <= 1'b0;
-        #20;
+        #40;
         clk_50 <= 1'b1;
-        #20;
+        #40;
     end
 
     always begin
         clk_100 <= 1'b0;
-        #10;
+        #20;
         clk_100 <= 1'b1;
-        #10;
+        #20;
     end
 
     always begin
         clk_200 <= 1'b0;
-        #5;
+        #10;
         clk_200 <= 1'b1;
+        #10;
+    end
+
+    always begin
+        clk_400 <= 1'b0;
+        #5;
+        clk_400 <= 1'b1;
         #5;
     end
 
-    tb_com_rx
-    tb_com_rx_dut(
+    tb_com
+    tb_com_dut(
         .clk_25(clk_25),
         .clk_50(clk_50),
         .clk_100(clk_100),
         .clk_200(clk_200),
+        .clk_400(clk_400),
         .rst(rst)
     );
 

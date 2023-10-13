@@ -167,6 +167,7 @@ module usb_rx(
         else if(state == RPID && usb_rxd == PID_DATA0) btype <= BAG_DATA0; 
         else if(state == RPID && usb_rxd == PID_DATA1) btype <= BAG_DATA1; 
         else if(state == EROR) btype <= BAG_ERROR;
+        else btype <= btype;
     end
 
     always@(posedge clk or posedge rst) begin

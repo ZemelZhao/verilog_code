@@ -11,8 +11,8 @@ module data_make(
     output reg [7:0] fifo_rxen,
     input [63:0] fifo_rxd,
 
-    input [31:0] data_cmd,
-    input [31:0] data_stat,
+    input [31:0] cache_cmd,
+    input [31:0] cache_stat,
 
     output reg [11:0] ram_txa,
     output reg [7:0] ram_txd,
@@ -36,11 +36,11 @@ module data_make(
     wire [DLEN_INT_DEVICE_TYPE - 1'b1 : 0] device_type;
     wire [DLEN_INT_DEVICE_STAT - 1'b1 : 0] device_stat;
 
-    assign device_idx = data_cmd[ADDR_CMD_DEVICE_IDX -: DLEN_CMD_DEVICE_IDX];
-    assign data_idx = data_cmd[ADDR_CMD_DATA_IDX -: DLEN_CMD_DATA_IDX];
-    assign device_temp = data_stat[ADDR_INT_DEVICE_TEMP -: DLEN_INT_DEVICE_TEMP];
-    assign device_type = data_stat[ADDR_INT_DEVICE_TYPE -: DLEN_INT_DEVICE_TYPE];
-    assign device_stat = data_stat[ADDR_INT_DEVICE_STAT -: DLEN_INT_DEVICE_STAT];
+    assign device_idx = cache_cmd[ADDR_CMD_DEVICE_IDX -: DLEN_CMD_DEVICE_IDX];
+    assign data_idx = cache_cmd[ADDR_CMD_DATA_IDX -: DLEN_CMD_DATA_IDX];
+    assign device_temp = cache_stat[ADDR_INT_DEVICE_TEMP -: DLEN_INT_DEVICE_TEMP];
+    assign device_type = cache_stat[ADDR_INT_DEVICE_TYPE -: DLEN_INT_DEVICE_TYPE];
+    assign device_stat = cache_stat[ADDR_INT_DEVICE_STAT -: DLEN_INT_DEVICE_STAT];
 
     localparam HEAD_DTYPE = 4'h1, HEAD_DTEMP = 4'h9, HEAD_DATA = 4'h3;
     localparam HEAD_DLINK = 4'hD, DATA_DLINK = 12'h123;

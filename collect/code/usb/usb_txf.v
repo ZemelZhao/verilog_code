@@ -11,7 +11,7 @@ module usb_txf(
 
     localparam SYNC_DATA = 8'h01;
 
-    reg [3:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam W0 = 8'h04, W1 = 8'h05, W2 = 8'h06, W3 = 8'h07;
@@ -70,6 +70,14 @@ module usb_txf(
         else if(state == W5) dout <= din[2];
         else if(state == W6) dout <= din[1];
         else if(state == W7) dout <= din[0];
+        else if(state == G0) dout <= din[7];
+        else if(state == G1) dout <= din[6];
+        else if(state == G2) dout <= din[5];
+        else if(state == G3) dout <= din[4];
+        else if(state == G4) dout <= din[3];
+        else if(state == G5) dout <= din[2];
+        else if(state == G6) dout <= din[1];
+        else if(state == G7) dout <= din[0];
         else dout <=  1'b0;
     end 
 

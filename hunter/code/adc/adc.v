@@ -19,10 +19,10 @@ module adc(
     input [31:0] data_cmd,
     output [31:0] data_stat,
 
-    input [3:0] spi_miso,
-    output [3:0] spi_mosi,
-    output [3:0] spi_sclk,
-    output [3:0] spi_cs,
+    input [3:0] miso,
+    output [3:0] mosi,
+    output [3:0] sclk,
+    output [3:0] cs,
 
     input [7:0] fifo_rxen,
     output [63:0] fifo_rxd
@@ -77,10 +77,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .spi_miso(spi_miso[3]),
-        .spi_mosi(spi_mosi[3]),
-        .spi_sclk(spi_sclk[3]),
-        .spi_cs(spi_cs[3]),
+        .miso(miso[3]),
+        .mosi(mosi[3]),
+        .sclk(sclk[3]),
+        .cs(cs[3]),
         
         .fifo_rxen(fifo_rxen[3]),
         .fifo_rxd(fifo_rxd[63:48]),
@@ -114,10 +114,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .spi_miso(spi_miso[2]),
-        .spi_mosi(spi_mosi[2]),
-        .spi_sclk(spi_sclk[2]),
-        .spi_cs(spi_cs[2]),
+        .miso(miso[2]),
+        .mosi(mosi[2]),
+        .sclk(sclk[2]),
+        .cs(cs[2]),
         
         .fifo_rxen(fifo_rxen[2]),
         .fifo_rxd(fifo_rxd[47:32]),
@@ -151,10 +151,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .spi_miso(spi_miso[1]),
-        .spi_mosi(spi_mosi[1]),
-        .spi_sclk(spi_sclk[1]),
-        .spi_cs(spi_cs[1]),
+        .miso(miso[1]),
+        .mosi(mosi[1]),
+        .sclk(sclk[1]),
+        .cs(cs[1]),
         
         .fifo_rxen(fifo_rxen[1]),
         .fifo_rxd(fifo_rxd[31:16]),
@@ -188,10 +188,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .spi_miso(spi_miso[0]),
-        .spi_mosi(spi_mosi[0]),
-        .spi_sclk(spi_sclk[0]),
-        .spi_cs(spi_cs[0]),
+        .miso(miso[0]),
+        .mosi(mosi[0]),
+        .sclk(sclk[0]),
+        .cs(cs[0]),
         
         .fifo_rxen(fifo_rxen[0]),
         .fifo_rxd(fifo_rxd[15:0]),

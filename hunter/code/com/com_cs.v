@@ -11,7 +11,7 @@ module com_cs(
 
     input [3:0] send_btype,
     input [11:0] send_dlen,
-    input [11:0] send_ram_init,
+    input [11:0] ram_addr_init,
 
     output fs_tx,
     input fd_tx,
@@ -136,7 +136,7 @@ module com_cs(
         if(rst) tx_ram_init <= 12'h000;
         else if(state == MAIN_IDLE) tx_ram_init <= 12'h000;
         else if(state == MAIN_WAIT) tx_ram_init <= 12'h000;
-        else if(state == SEND_PREP) tx_ram_init <= send_ram_init;
+        else if(state == SEND_PREP) tx_ram_init <= ram_addr_init;
         else tx_ram_init <= tx_ram_init;
     end
 

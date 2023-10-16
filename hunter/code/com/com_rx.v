@@ -8,7 +8,7 @@ module com_rx(
     input [7:0] com_rxd,
 
     output reg [3:0] btype,
-    output [31:0] data_cmd
+    output [31:0] cache_cmd
 );
 
     localparam BAG_INIT = 4'b0000;
@@ -43,7 +43,7 @@ module com_rx(
     assign fs = (state == DONE);
     assign cen = (state == WORK) || ((state == DNUM) && (num >= NLEN - 1'b1));
     assign cin = com_rxd;
-    assign data_cmd = {device_idx, data_idx, freq_samp, filt_up, filt_low, 12'h000};
+    assign cache_cmd = {device_idx, data_idx, freq_samp, filt_up, filt_low, 12'h000};
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;

@@ -36,16 +36,28 @@ module console(
     localparam RAM_ADDR_DATA0 = 12'h000, RAM_ADDR_DATA1 = 12'h240, RAM_ADDR_DATA2 = 12'h480;
     localparam RAM_ADDR_DATA3 = 12'h6C0, RAM_ADDR_DATA4 = 12'h900, RAM_ADDR_DATA5 = 12'hB40;
 
-    reg [7:0] state, next_state;
-    localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
-    localparam LINK_IDLE = 8'h10, LINK_WORK = 8'h11, LINK_TAKE = 8'h12;
-    localparam LINK_SEND = 8'h13, LINK_DONE = 8'h14;
-    localparam TYPE_IDLE = 8'h20, TYPE_WORK = 8'h21, TYPE_TAKE = 8'h22;
-    localparam TYPE_SEND = 8'h23, TYPE_DONE = 8'h24;
-    localparam CONF_IDLE = 8'h30, CONF_WORK = 8'h31, CONF_TAKE = 8'h32;
-    localparam CONF_SEND = 8'h33, CONF_DONE = 8'h34;
-    localparam CONV_IDLE = 8'h40, CONV_WORK = 8'h41, CONV_TAKE = 8'h42;
-    localparam CONV_SEND = 8'h43, CONV_DONE = 8'h44;
+    // (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
+    // localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
+    // localparam LINK_IDLE = 8'h10, LINK_WORK = 8'h11, LINK_TAKE = 8'h12;
+    // localparam LINK_SEND = 8'h13, LINK_DONE = 8'h14;
+    // localparam TYPE_IDLE = 8'h20, TYPE_WORK = 8'h21, TYPE_TAKE = 8'h22;
+    // localparam TYPE_SEND = 8'h23, TYPE_DONE = 8'h24;
+    // localparam CONF_IDLE = 8'h30, CONF_WORK = 8'h31, CONF_TAKE = 8'h32;
+    // localparam CONF_SEND = 8'h33, CONF_DONE = 8'h34;
+    // localparam CONV_IDLE = 8'h40, CONV_WORK = 8'h41, CONV_TAKE = 8'h42;
+    // localparam CONV_SEND = 8'h43, CONV_DONE = 8'h44;
+
+    (*MARK_DEBUG = "true"*)reg [23:0] state; 
+    reg [23:0] next_state;
+    localparam MAIN_IDLE = 24'h000001, MAIN_WAIT = 24'h000002, MAIN_TAKE = 24'h000004;
+    localparam LINK_IDLE = 24'h000008, LINK_WORK = 24'h000010, LINK_TAKE = 24'h000020;
+    localparam LINK_SEND = 24'h000040, LINK_DONE = 24'h000080;
+    localparam TYPE_IDLE = 24'h000100, TYPE_WORK = 24'h000200, TYPE_TAKE = 24'h000400;
+    localparam TYPE_SEND = 24'h000800, TYPE_DONE = 24'h001000;
+    localparam CONF_IDLE = 24'h002000, CONF_WORK = 24'h004000, CONF_TAKE = 24'h008000;
+    localparam CONF_SEND = 24'h010000, CONF_DONE = 24'h020000;
+    localparam CONV_IDLE = 24'h040000, CONV_WORK = 24'h080000, CONV_TAKE = 24'h100000;
+    localparam CONV_SEND = 24'h200000, CONV_DONE = 24'h400000;
 
     localparam NUM = 4'h6;
     reg [3:0] num;
@@ -132,7 +144,7 @@ module console(
             CONV_TAKE: next_state <= CONV_SEND;
             CONV_SEND: begin
                 if(fd_adc_tran && fd_com_send) next_state <= CONV_DONE;
-                else next_state <= CONV_DONE;
+                else next_state <= CONV_SEND;
             end
             CONV_DONE: next_state <= MAIN_WAIT;
 

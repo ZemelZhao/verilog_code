@@ -70,7 +70,7 @@ module top(
         .rst(rst),
 
         .fs_adc_init(fs_adc_init),
-        .fs_adc_init(fd_adc_init),
+        .fd_adc_init(fd_adc_init),
         .fs_adc_type(fs_adc_type),
         .fd_adc_type(fd_adc_type),
         .fs_adc_conf(fs_adc_conf),
@@ -89,38 +89,36 @@ module top(
         .send_btype(send_btype),
 
         .ram_dlen(send_dlen),
-        .ram_addr_init(send_ram_init)
+        .ram_addr_init(ram_addr_init)
     );
 
-    adc
-    adc_dut(
+    adc_test
+    adc_test_dut(
         .clk(clk_50),
-        .spi_clk(clk_80),
-        .fifo_txc(clk_100),
+        .fifo_txc(clk_50),
         .fifo_rxc(clk_100),
 
         .rst(rst),
 
-        .fs_init(fs_init),
-        .fs_type(fs_type),
-        .fs_conf(fs_conf),
-        .fs_conv(fs_conv),
+        .fs_init(fs_adc_init),
+        .fs_type(fs_adc_type),
+        .fs_conf(fs_adc_conf),
+        .fs_conv(fs_adc_conv),
+        .fd_init(fd_adc_init),
+        .fd_type(fd_adc_type),
+        .fd_conf(fd_adc_conf),
+        .fd_conv(fd_adc_conv),
 
-        .fd_init(fd_init),
-        .fd_type(fd_type),
-        .fd_conf(fd_conf),
-        .fd_conv(fd_conv),
+        .cache_cmd(cache_cmd),
+        .cache_stat(cache_stat),
 
-        .data_cmd(data_cmd),
-        .data_stat(data_stat),
+        .miso(miso),
+        .mosi(mosi),
+        .sclk(sclk),
+        .cs(cs),
 
-        .spi_miso(miso),
-        .spi_mosi(mosi),
-        .spi_sclk(sclk),
-        .spi_cs(cs),
-
-        .fifo_rxen(fifo_adc_rxen),
-        .fifo_rxd(fifo_adc_rxd)
+        .fifo_rxen(fifo_rxen),
+        .fifo_rxd(fifo_rxd)
     );
 
     com
@@ -139,19 +137,19 @@ module top(
         .fire_txd(fire_send),
         .fire_rxd(fire_read),
 
-        .fs_send(fs_send),
-        .fd_send(fd_send),
+        .fs_send(fs_com_send),
+        .fd_send(fd_com_send),
         .send_btype(send_btype),
         .send_dlen(send_dlen),
-        .send_ram_init(send_ram_init),
+        .ram_addr_init(ram_addr_init),
 
-        .fs_read(fs_read),
-        .fd_read(fd_read),
+        .fs_read(fs_com_read),
+        .fd_read(fd_com_read),
         .read_btype(read_btype),
 
         .ram_rxd(ram_rxd),
         .ram_rxa(ram_rxa),
-        .data_cmd(data_cmd)
+        .cache_cmd(cache_cmd)
     );
 
 
@@ -196,16 +194,16 @@ module top(
         .fd(fd_adc_tran),
 
         .btype(send_btype),
-        .ram_data_init(send_ram_init),
+        .ram_addr_init(ram_addr_init),
 
-        .fifo_adc_rxen(fifo_adc_rxen),
-        .fifo_adc_rxd(fifo_adc_rxd),
+        .cache_cmd(cache_cmd),
+        .cache_stat(cache_stat),
 
-        .data_cmd(data_cmd),
-        .data_stat(data_stat),
+        .fifo_rxen(fifo_rxen),
+        .fifo_rxd(fifo_rxd),
 
-        .ram_data_txa(ram_txa),
-        .ram_data_txd(tram_txd),
+        .ram_txa(ram_txa),
+        .ram_txd(ram_txd),
         .ram_txen(ram_txen)
     );
 

@@ -19,10 +19,10 @@ module usb(
     input [31:0] data_cmd,
 
     output fs_read,
-    input [3:0] read_btype,
+    output [3:0] read_btype,
     input [11:0] read_ram_init,
     input fd_read,
-    input [31:0] data_stat,
+    output [31:0] data_stat,
 
     output [7:0] ram_txd,
     output [11:0] ram_txa,

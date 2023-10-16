@@ -52,10 +52,12 @@ module top(
     (*MARK_DEBUG = "true"*)reg [3:0] res_rxd;
     (*MARK_DEBUG = "true"*)reg res_txd;
 
-    wire [3:0] usb_rxd0, usb_rxd1; 
+    (*MARK_DEBUG = "true"*)wire [3:0] usb_rxd0; 
+    wire [3:0] usb_rxd1; 
     wire [3:0] usb_rxd2, usb_rxd3; 
     wire [3:0] usb_rxd4, usb_rxd5, usb_rxd6, usb_rxd7; 
-    wire usb_txd0, usb_txd1, udb_txd2, usb_txd3;
+    (*MARK_DEBUG = "true"*)wire usb_txd0; 
+    wire usb_txd1, udb_txd2, usb_txd3;
     wire usb_txd4, usb_txd5, udb_txd6, usb_txd7;
 
     wire clk_in;
@@ -66,9 +68,7 @@ module top(
 
     assign rst = ~rst_n;
     assign fan_n = 1'b0;
-    assign led = 8'hFE;
-    assign usb_rxd0 = txd;
-    assign usb_txd0 = 1'b0;
+    assign usb_txd0 = res_txd;
     assign usb_txd1 = 1'b0;
     assign usb_txd2 = 1'b0;
     assign usb_txd3 = 1'b0;
@@ -78,6 +78,7 @@ module top(
     assign usb_txd7 = 1'b0;
     assign usb_txf = {8{num[3]}};
     assign usb_rxf = {8{num[4]}};
+    assign usb_rxd0 = txd;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -108,18 +109,18 @@ module top(
         else if(state == WORK) res_txd <= ~res_txd;
     end
 
-    always@(posedge clk) begin
-        res_rxd <= usb_rxd4;
-    end
-
-    // always@(posedge clk or posedge rst) begin
-    //     if(rst) txd <= 4'h0;
-    //     else if(state == IDLE) txd <= 4'h0;
-    //     else if(state == WAIT) txd <= 4'h0;
-    //     else if(state == WORK) txd <= txd + 1'b1;
-    //     else if(state == DONE) txd <= 4'h0;
-    //     else txd <= txd;
+    // always@(posedge clk) begin
+    //     res_rxd <= usb_rxd4;
     // end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) txd <= 4'h0;
+        else if(state == IDLE) txd <= 4'h0;
+        else if(state == WAIT) txd <= 4'h0;
+        else if(state == WORK) txd <= txd + 1'b1;
+        else if(state == DONE) txd <= 4'h0;
+        else txd <= txd;
+    end
 
     // always@(posedge clk or posedge rst) begin
     //     if(rst) num <= 32'h00;
@@ -136,9 +137,7 @@ module top(
         .clk_out_100(),
         .clk_out_50(),
         .clk_out_80(),
-        .clk_out_40(),
-        .clk_out_20(),
-        .clk_out_10()
+        .clk_out_25()
     );
 
     IBUFGDS 

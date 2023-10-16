@@ -16,7 +16,7 @@ module com(
     input fs_send,
     input [3:0] send_btype,
     input [11:0] send_dlen,
-    input [11:0] send_ram_init,
+    input [11:0] ram_addr_init,
     output fd_send,
 
     output fs_read,
@@ -48,7 +48,7 @@ module com(
         .fd_send(fd_send),
         .send_dlen(send_dlen),
         .send_btype(send_btype),
-        .send_ram_init(send_ram_init),
+        .ram_addr_init(ram_addr_init),
 
         .fs_read(fs_read),
         .fd_read(fd_read),
@@ -75,7 +75,7 @@ module com(
 
         .com_rxd(com_rxd),
         .btype(rx_btype),
-        .data_cmd(cache_cmd)
+        .cache_cmd(cache_cmd)
 
     );
 
@@ -89,8 +89,8 @@ module com(
 
         .com_txd(com_txd),
         .btype(tx_btype),
-        .ram_rlen(tx_dlen),
-        .ram_init(send_ram_init),
+        .tx_dlen(tx_dlen),
+        .ram_addr_init(ram_addr_init),
         
         .ram_rxa(ram_rxa),
         .ram_rxd(ram_rxd)

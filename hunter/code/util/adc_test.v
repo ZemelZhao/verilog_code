@@ -20,9 +20,6 @@ module adc_test(
     input [31:0] cache_cmd,
     output [31:0] cache_stat,
 
-    output reg [7:0] device_type,
-    output reg [15:0] device_temp,
-
     input [3:0] spi_miso,
     output [3:0] spi_mosi,
     output [3:0] spi_sclk,

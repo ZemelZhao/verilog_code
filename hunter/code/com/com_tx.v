@@ -7,8 +7,8 @@ module com_tx(
 
     output reg [7:0] com_txd,
 
-    input [11:0] ram_init,
-    input [11:0] ram_rlen,
+    input [11:0] ram_addr_init,
+    input [11:0] tx_dlen,
 
     input [3:0] btype,
 
@@ -71,11 +71,11 @@ module com_tx(
                 else next_state <= DNUM;
             end
             WORK: begin
-                if(num >= ram_rlen - 1'b1 && btype == BAG_DLINK) next_state <= CRC5;
-                else if(num >= ram_rlen - 1'b1 && btype == BAG_DTYPE) next_state <= CRC5;
-                else if(num >= ram_rlen - 1'b1 && btype == BAG_DTEMP) next_state <= CRC5;
-                else if(num >= ram_rlen - 1'b1 && btype == BAG_DATA0) next_state <= CRC16;
-                else if(num >= ram_rlen - 1'b1 && btype == BAG_DATA1) next_state <= CRC16;
+                if(num >= tx_dlen - 1'b1 && btype == BAG_DLINK) next_state <= CRC5;
+                else if(num >= tx_dlen - 1'b1 && btype == BAG_DTYPE) next_state <= CRC5;
+                else if(num >= tx_dlen - 1'b1 && btype == BAG_DTEMP) next_state <= CRC5;
+                else if(num >= tx_dlen - 1'b1 && btype == BAG_DATA0) next_state <= CRC16;
+                else if(num >= tx_dlen - 1'b1 && btype == BAG_DATA1) next_state <= CRC16;
                 else next_state <= WORK;
             end
             CRC5: next_state <= GAP0;
@@ -99,7 +99,7 @@ module com_tx(
         else if(state == IDLE) num <= 12'h000;
         else if(state == WAIT) num <= 12'h000;
         else if(state == DNUM && num < NLEN - 1'b1) num <= num + 1'b1;
-        else if(state == WORK && num < ram_rlen - 1'b1) num <= num + 1'b1;
+        else if(state == WORK && num < tx_dlen - 1'b1) num <= num + 1'b1;
         else if(state == CRC16 && num < CLEN - 1'b1) num <= num + 1'b1;
         else num <= 12'h000;
     end
@@ -110,8 +110,8 @@ module com_tx(
         else if(state == WAIT) txd <= 8'h00;
         else if(state == SYNC) txd <= PID_SYNC;
         else if(state == WPID) txd <= pid;
-        else if(state == DNUM && num == 12'h000) txd <= {4'h0, ram_rlen[11:8]};
-        else if(state == DNUM && num == 12'h001) txd <= ram_rlen[7:0];
+        else if(state == DNUM && num == 12'h000) txd <= {4'h0, tx_dlen[11:8]};
+        else if(state == DNUM && num == 12'h001) txd <= tx_dlen[7:0];
         else if(state == WORK) txd <= ram_rxd;
         else if(state == CRC5) txd <= cout5;
         else if(state == CRC16 && num == 12'h000) txd <= cout16[15:8];
@@ -135,10 +135,10 @@ module com_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_rxa <= ram_init;
-        else if(state == IDLE) ram_rxa <= ram_init;
-        else if(state == WAIT) ram_rxa <= ram_init;
-        else if(state == SYNC && RAM_LATANECY >= 4'h3) ram_rxa <= ram_init + 1'b1;
+        if(rst) ram_rxa <= ram_addr_init;
+        else if(state == IDLE) ram_rxa <= ram_addr_init;
+        else if(state == WAIT) ram_rxa <= ram_addr_init;
+        else if(state == SYNC && RAM_LATANECY >= 4'h3) ram_rxa <= ram_addr_init + 1'b1;
         else if(state == DNUM && RAM_LATANECY >= 4'h2 && num == 12'h000) ram_rxa <= ram_rxa + 1'b1;
         else if(state == DNUM && RAM_LATANECY >= 4'h1 && num == 12'h001) ram_rxa <= ram_rxa + 1'b1;
         else if(state == WORK) ram_rxa <= ram_rxa + 1'b1;

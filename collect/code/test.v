@@ -1,18 +1,37 @@
-module test_collect(
-    input clk_25,
-    input clk_50,
-    input clk_100,
-    input clk_200,
-    input clk_400,
-    input rst,
+module test(
+    input clk_p,
+    input clk_n,
+    input rst_n,
 
-    input [3:0] pin_rxd,
-    output pin_txd,
+    output led_n,
+    output fan_n,
 
-    output fire_send,
-    input fire_read,
-    output reg link
+    input [3:0] usb_rxd0p,
+    input [3:0] usb_rxd0n,
+    output usb_txd0p,
+    output usb_txd0n,
+
+    input usb_rxf,
+    output usb_txf
 );
+
+    wire clk_in;
+    wire clk;
+    wire clk_25, clk_50, clk_100, clk_200;
+    wire rst;
+
+    assign clk = clk_50;
+    assign rst = ~rst_n;
+
+    reg link;
+    assign led_n = ~link;
+    assign fan_n = 1'b0;
+
+    (*MARK_DEBUG = "true"*)wire [3:0] pin_rxd;
+    (*MARK_DEBUG = "true"*)wire pin_txd;
+    (*MARK_DEBUG = "true"*)wire fire_send, fire_read;
+    assign fire_read = usb_rxf;
+    assign usb_txf = fire_send;
 
     wire fs_send, fd_send;
     wire fs_read, fd_read;
@@ -25,9 +44,6 @@ module test_collect(
     wire [11:0] ram_txa, ram_rxa;
     wire ram_txen;
 
-    wire clk;
-    assign clk = clk_50;
-
     localparam BAG_INIT = 4'b0000;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
@@ -36,7 +52,8 @@ module test_collect(
 
     localparam CNUM = 16'h30_000, DNUM = 16'd50_000;
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] next_state;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_WORK = 8'h07, MAIN_GAP = 8'h08;
     localparam LINK_IDLE = 8'h10;
@@ -132,14 +149,6 @@ module test_collect(
         else num <= 8'h00;
     end
 
-
-
-
-
-    
-
-
-
     usb
     usb_dut(
         .sys_clk(clk_50),
@@ -147,7 +156,7 @@ module test_collect(
         .usb_rxc(clk_50),
         .pin_txc(clk_200),
         .pin_rxc(clk_100),
-        .pin_cc(clk_400),
+        .pin_cc(clk_200),
 
         .rst(rst),
 
@@ -172,6 +181,51 @@ module test_collect(
         .ram_txen(ram_txen)
     );
 
+    clk_wiz
+    clk_wiz_dut(
+        .clk_in(clk_in),
+        .clk_out_25(clk_25),
+        .clk_out_50(clk_50),
+        .clk_out_100(clk_100),
+        .clk_out_200(clk_200)
+    );
+
+    IBUFGDS 
+    u_ibufg_clk(
+        .I(clk_p),
+        .IB(clk_n),
+        .O(clk_in)
+    );
+    IBUFDS
+    ibufds_usb_rxd00(
+        .I(usb_rxd0p[0]),
+        .IB(usb_rxd0n[0]),
+        .O(pin_rxd[0])
+    );
+    IBUFDS
+    ibufds_usb_rxd01(
+        .I(usb_rxd0p[1]),
+        .IB(usb_rxd0n[1]),
+        .O(pin_rxd[1])
+    );
+    IBUFDS
+    ibufds_usb_rxd02(
+        .I(usb_rxd0p[2]),
+        .IB(usb_rxd0n[2]),
+        .O(pin_rxd[2])
+    );
+    IBUFDS
+    ibufds_usb_rxd03(
+        .I(usb_rxd0p[3]),
+        .IB(usb_rxd0n[3]),
+        .O(pin_rxd[3])
+    );
+    OBUFDS
+    obufds_usb_txd0(
+        .I(pin_txd),
+        .O(usb_txd0p),
+        .OB(usb_txd0n)
+    );
 
 
 endmodule

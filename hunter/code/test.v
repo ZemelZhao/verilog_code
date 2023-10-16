@@ -1,17 +1,22 @@
-module test_hunter(
-    input clk_25,
-    input clk_50,
-    input clk_100,
-    input clk_200,
-    input clk_400, 
-    input rst,
+module test(
+    input clk,
+    input rst_n,
 
-    output [3:0] pin_txd,
-    input pin_rxd,
+    output [3:0] com_txd_p,
+    output [3:0] com_txd_n,
+    input [1:0] com_rxd_p,
+    input [1:0] com_rxd_n,
 
-    output fire_send,
-    input fire_read
+    input com_rxf,
+    output com_txf
 );
+
+    wire clk_25, clk_50, clk_80;
+    wire clk_100, clk_200, clk_400;
+
+    (*MARK_DEBUG = "true"*)wire [3:0] pin_txd;
+    (*MARK_DEBUG = "true"*)wire pin_rxd;
+    (*MARK_DEBUG = "true"*)wire fire_read, fire_send;
 
     // Control Section
     wire fs_adc_init, fd_adc_init;
@@ -75,7 +80,7 @@ module test_hunter(
         .com_rxc(clk_25),
         .pin_txc(clk_100),
         .pin_rxc(clk_200),
-        .pin_cc(clk_400),
+        .pin_cc(clk_200),
 
         .rst(rst),
 
@@ -145,6 +150,36 @@ module test_hunter(
         .ram_txen(ram_txen)
     );
 
+    pin_test
+    pin_test_dut(
+        .com_txd_p(com_txd_p),
+        .com_txd_n(com_txd_n),
+        .com_rxd_p(com_rxd_p),
+        .com_rxd_n(com_rxd_n),
+
+        .pin_txd(pin_txd),
+        .pin_rxd(pin_rxd),
+
+        .com_rxf(com_rxf),
+        .com_txf(com_txf),
+
+        .fire_send(fire_send),
+        .fire_read(fire_read)
+    );
+
+
+
+    clk_wiz
+    clk_wiz_dut(
+        .clk_in(clk),
+        .clk_25(clk_25),
+        .clk_50(clk_50),
+        .clk_80(clk_80),
+        .clk_100(clk_100),
+        .clk_200(clk_200),
+        .clk_400(clk_400)
+    );
+
     ram_data
     ram_data_dut(
         .clka(clk_100),
@@ -156,5 +191,6 @@ module test_hunter(
         .addrb(ram_rxa),
         .doutb(ram_rxd)
     );
+
 
 endmodule

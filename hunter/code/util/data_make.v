@@ -6,7 +6,7 @@ module data_make(
     output fd,
 
     input [3:0] btype,
-    input [11:0] ram_data_init,
+    input [11:0] ram_addr_init,
 
     output reg [7:0] fifo_rxen,
     input [63:0] fifo_rxd,
@@ -114,16 +114,16 @@ module data_make(
         else if(state == MAIN_WAIT) ram_txa <= DATA_ADDR_INIT;
         else if(state == MAIN_DONE) ram_txa <= DATA_ADDR_INIT;
 
-        else if(state == DLINK_IDLE) ram_txa <= ram_data_init; 
+        else if(state == DLINK_IDLE) ram_txa <= ram_addr_init; 
         else if(state == DLINK_WORK) ram_txa <= ram_txa + 1'b1;
 
-        else if(state == DTYPE_IDLE) ram_txa <= ram_data_init;
+        else if(state == DTYPE_IDLE) ram_txa <= ram_addr_init;
         else if(state == DTYPE_WORK) ram_txa <= ram_txa + 1'b1;
 
-        else if(state == DTEMP_IDLE) ram_txa <= ram_data_init;
+        else if(state == DTEMP_IDLE) ram_txa <= ram_addr_init;
         else if(state == DTEMP_WORK) ram_txa <= ram_txa + 1'b1;
 
-        else if(state == DATA_IDLE) ram_txa <= ram_data_init;
+        else if(state == DATA_IDLE) ram_txa <= ram_addr_init;
         else if(state == DATA_HEAD) ram_txa <= ram_txa + 1'b1;
         else if(state == DATA_WORK) ram_txa <= ram_txa + 1'b1;
         else if(state == DATA_REST) ram_txa <= ram_txa + 1'b1;

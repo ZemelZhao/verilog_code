@@ -24,10 +24,10 @@ module intan(
     input [3:0] filt_up,
     input [3:0] filt_low,
 
-    input spi_miso,
-    output spi_mosi,
-    output spi_sclk,
-    output spi_cs,
+    input miso,
+    output mosi,
+    output sclk,
+    output cs,
 
     input [1:0] fifo_rxen,
     output [15:0] fifo_rxd,
@@ -979,10 +979,10 @@ module intan(
         .fd_spi(fd_spi),
         .fd_prd(fd_prd),
 
-        .miso(spi_miso),
-        .sclk(spi_sclk),
-        .mosi(spi_mosi),
-        .cs(spi_cs),
+        .miso(miso),
+        .sclk(sclk),
+        .mosi(mosi),
+        .cs(cs),
 
         .chip_txd(chip_txd),
         .chip_rxda(chip_rxda),

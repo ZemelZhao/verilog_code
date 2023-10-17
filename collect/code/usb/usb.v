@@ -16,13 +16,13 @@ module usb(
     input fs_send,
     input [3:0] send_btype,
     output fd_send,
-    input [31:0] data_cmd,
+    input [31:0] cache_cmd,
 
     output fs_read,
     output [3:0] read_btype,
     input [11:0] read_ram_init,
     input fd_read,
-    output [31:0] data_stat,
+    output [31:0] cache_stat,
 
     output [7:0] ram_txd,
     output [11:0] ram_txa,
@@ -31,12 +31,13 @@ module usb(
 
     wire [3:0] usb_rxd;
     wire usb_txd;
-    wire [7:0] com_rxd, com_txd;
+    (*MARK_DEBUG = "true"*)wire [7:0] com_rxd, com_txd;
 
     wire fs_tx, fd_tx;
     wire fs_rx, fd_rx;
 
     wire [3:0] tx_btype, rx_btype;
+    wire [11:0] rx_ram_init;
 
     usb_cs
     usb_cs_dut(
@@ -72,11 +73,11 @@ module usb(
 
         .usb_rxd(com_rxd),
         .btype(rx_btype),
-        .data_stat(data_stat),
+        .cache_stat(cache_stat),
 
         .ram_txa_init(rx_ram_init),
-        .ram_txa(ram_txaj),
-        .ram_txd(ram_txa),
+        .ram_txa(ram_txa),
+        .ram_txd(ram_txd),
         .ram_txen(ram_txen)
     );
 
@@ -89,7 +90,7 @@ module usb(
         .fd(fd_tx),
 
         .btype(tx_btype),
-        .data_cmd(data_cmd),
+        .cache_cmd(cache_cmd),
         .usb_txd(com_txd)
     );
 

@@ -33,11 +33,11 @@ module com(
     wire fs_rx, fd_rx;
 
     wire [11:0] tx_dlen;
-    wire [3:0] rx_dlen;
     wire [3:0] rx_btype, tx_btype;
-    wire [7:0] com_rxd, com_txd;
+    (*MARK_DEBUG = "true"*)wire [7:0] com_rxd, com_txd;
     wire [3:0] usb_txd;
     wire usb_rxd;
+    wire [11:0] tx_ram_init;
 
     com_cs
     com_cs_dut(
@@ -90,7 +90,7 @@ module com(
         .com_txd(com_txd),
         .btype(tx_btype),
         .tx_dlen(tx_dlen),
-        .ram_addr_init(ram_addr_init),
+        .ram_addr_init(tx_ram_init),
         
         .ram_rxa(ram_rxa),
         .ram_rxd(ram_rxd)

@@ -29,7 +29,7 @@ module adc_test(
     output [63:0] fifo_rxd
 );
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01;
     localparam INIT_IDLE = 8'h10, INIT_WORK = 8'h11, INIT_DONE = 8'h12;
     localparam TYPE_IDLE = 8'h20, TYPE_WORK = 8'h21, TYPE_DONE = 8'h22;

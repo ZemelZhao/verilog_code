@@ -7,7 +7,7 @@ module usb_rx(
 
     input [7:0] usb_rxd,
     output reg [3:0] btype, 
-    output [31:0] data_stat,
+    output [31:0] cache_stat,
 
     input [11:0] ram_txa_init,
 
@@ -52,7 +52,7 @@ module usb_rx(
     reg [11:0] num;
 
     assign fs = (state == DONE);
-    assign data_stat = {device_temp, device_type, device_stat, device_idx, data_idx, 4'h0};
+    assign cache_stat = {device_temp, device_type, device_stat, device_idx, data_idx, 4'h0};
     assign cin = usb_rxd;
 
 

@@ -6,7 +6,7 @@ module usb_tx(
     output fd,
 
     input [3:0] btype,
-    input [31:0] data_cmd,
+    input [31:0] cache_cmd,
 
     output reg [7:0] usb_txd
 );
@@ -37,11 +37,11 @@ module usb_tx(
     wire [3:0] data_idx, device_idx;
     wire [3:0] freq_samp, filt_up, filt_low;
 
-    assign device_idx = data_cmd[31:28];
-    assign data_idx = data_cmd[27:24];
-    assign freq_samp = data_cmd[23:20];
-    assign filt_up = data_cmd[19:16];
-    assign filt_low = data_cmd[15:12];
+    assign device_idx = cache_cmd[31:28];
+    assign data_idx = cache_cmd[27:24];
+    assign freq_samp = cache_cmd[23:20];
+    assign filt_up = cache_cmd[19:16];
+    assign filt_low = cache_cmd[15:12];
 
     assign fd = (state == DONE);
     assign cin = txd;

@@ -1,8 +1,8 @@
 module pin_test(
     output [3:0] com_txd_p,
     output [3:0] com_txd_n,
-    input [1:0] com_rxd_p,
-    input [1:0] com_rxd_n,
+    input com_rxd_p,
+    input com_rxd_n,
 
     input [3:0] pin_txd,
     output pin_rxd,
@@ -15,10 +15,10 @@ module pin_test(
 );
 
     wire [3:0] com_txd;
-    wire [1:0] com_rxd;
+    wire com_rxd;
 
     assign com_txd = pin_txd;
-    assign pin_rxd = com_rxd[1];
+    assign pin_rxd = com_rxd;
     assign com_txf = fire_send;
     assign fire_read = com_rxf;
 
@@ -52,17 +52,9 @@ module pin_test(
 
     IBUFDS
     ibufds_rxd0(
-        .O(com_rxd[0]),
-        .I(com_rxd_p[0]),
-        .IB(com_rxd_n[0])
+        .O(com_rxd),
+        .I(com_rxd_p),
+        .IB(com_rxd_n)
     );
-
-    IBUFDS
-    ibufds_rxd1(
-        .O(com_rxd[1]),
-        .I(com_rxd_p[1]),
-        .IB(com_rxd_n[1])
-    );
-
 
 endmodule

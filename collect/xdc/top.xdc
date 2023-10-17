@@ -14,10 +14,11 @@ set_property PACKAGE_PIN AE10 [get_ports clk_p]
 set_property IOSTANDARD DIFF_SSTL15 [get_ports clk_p]
 
 ##############UTIL define##################
-set_property PACKAGE_PIN AF21 [get_ports rst_n]
+# set_property PACKAGE_PIN F26 [get_ports rst_n]
+set_property PACKAGE_PIN M23 [get_ports rst_n]
 set_property IOSTANDARD LVCMOS33 [get_ports rst_n]
 
-set_property PACKAGE_PIN AB30 [get_ports fan_n]
+set_property PACKAGE_PIN E26 [get_ports fan_n]
 set_property IOSTANDARD LVCMOS33 [get_ports fan_n]
 
 set_property PACKAGE_PIN G27 [get_ports led_n]
@@ -77,20 +78,29 @@ set_property IOSTANDARD LVCMOS33 [get_ports led_n]
 # set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets e_grxc_IBUF]
 
 ##############ETH define##################
-set_property IOSTANDARD LVDS_25 [get_ports {usb_rxd0p[*]}]
-set_property IOSTANDARD LVDS_25 [get_ports usb_txd0p]
-set_property IOSTANDARD LVCMOS33 [get_ports usb_rxf]
-set_property IOSTANDARD LVCMOS33 [get_ports usb_txf]
+set_property IOSTANDARD LVDS_25 [get_ports {usb0_rxd_p[*]}]
+set_property IOSTANDARD LVDS_25 [get_ports usb0_txd_p]
+set_property IOSTANDARD LVCMOS33 [get_ports usb0_rxf]
+set_property IOSTANDARD LVCMOS33 [get_ports usb0_txf]
 
-set_property PACKAGE_PIN K14 [get_ports {usb_rxd0p[0]}]
-set_property PACKAGE_PIN L11 [get_ports {usb_rxd0p[1]}]
-set_property PACKAGE_PIN L12 [get_ports {usb_rxd0p[2]}]
-set_property PACKAGE_PIN L15 [get_ports {usb_rxd0p[3]}]
+set_property PACKAGE_PIN K14 [get_ports {usb0_rxd_p[0]}]
+set_property PACKAGE_PIN L11 [get_ports {usb0_rxd_p[1]}]
+set_property PACKAGE_PIN L12 [get_ports {usb0_rxd_p[2]}]
+set_property PACKAGE_PIN L15 [get_ports {usb0_rxd_p[3]}]
+set_property PACKAGE_PIN C15 [get_ports usb0_txd_p]
+set_property PACKAGE_PIN B25 [get_ports usb0_rxf]
+set_property PACKAGE_PIN C26 [get_ports usb0_txf]
 
-set_property PACKAGE_PIN C15 [get_ports usb_txd0p]
+set_property IOSTANDARD LVDS_25 [get_ports {usb1_rxd_p[*]}]
+set_property IOSTANDARD LVDS_25 [get_ports usb1_txd_p]
+set_property IOSTANDARD LVCMOS33 [get_ports usb1_rxf]
+set_property IOSTANDARD LVCMOS33 [get_ports usb1_txf]
 
-set_property PACKAGE_PIN B25 [get_ports usb_rxf]
-set_property PACKAGE_PIN C26 [get_ports usb_txf]
+set_property PACKAGE_PIN L16 [get_ports {usb1_rxd_p[0]}]
+set_property PACKAGE_PIN K13 [get_ports {usb1_rxd_p[1]}]
+set_property PACKAGE_PIN H15 [get_ports {usb1_rxd_p[2]}]
+set_property PACKAGE_PIN J11 [get_ports {usb1_rxd_p[3]}]
 
-
-
+set_property PACKAGE_PIN A11 [get_ports usb1_txd_p]
+set_property PACKAGE_PIN C25 [get_ports usb1_rxf]
+set_property PACKAGE_PIN D26 [get_ports usb1_txf]

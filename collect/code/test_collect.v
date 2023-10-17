@@ -1,6 +1,10 @@
-module test(
-    input clk_p,
-    input clk_n,
+module test_collect(
+    // input clk_p,
+    // input clk_n,
+    input clk_25,
+    input clk_50,
+    input clk_100,
+    input clk_200,
     input rst_n,
 
     output led_n,
@@ -15,9 +19,9 @@ module test(
     output usb_txf
 );
 
-    wire clk_in;
+    // wire clk_in;
     wire clk;
-    wire clk_25, clk_50, clk_100, clk_200;
+    // wire clk_25, clk_50, clk_100, clk_200;
     wire rst;
 
     assign clk = clk_50;
@@ -33,11 +37,11 @@ module test(
     assign fire_read = usb_rxf;
     assign usb_txf = fire_send;
 
-    wire fs_send, fd_send;
-    wire fs_read, fd_read;
+    (*MARK_DEBUG = "true"*)wire fs_send, fd_send;
+    (*MARK_DEBUG = "true"*)wire fs_read, fd_read;
     reg [3:0] send_btype;
     wire [3:0] read_btype;
-    wire [31:0] data_cmd, data_stat;
+    (*MARK_DEBUG = "true"*)wire [31:0] cache_cmd, cache_stat;
     wire [11:0] read_ram_init;
 
     wire [7:0] ram_txd, ram_rxd;
@@ -50,7 +54,7 @@ module test(
     localparam BAG_DHEAD = 4'b1100, BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
 
 
-    localparam CNUM = 16'h30_000, DNUM = 16'd50_000;
+    localparam CNUM = 16'h30, DNUM = 16'h50;
 
     (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
@@ -63,7 +67,8 @@ module test(
 
     assign fs_send = (state[3:0] == TYPE_SEND[3:0]);
     assign fd_read = (state == MAIN_GAP);
-    assign data_cmd = 32'h31243000;
+    assign cache_cmd = 32'h31243000;
+    assign read_ram_init = 12'h100;
 
     reg [15:0] num;
 
@@ -168,34 +173,46 @@ module test(
         .fs_send(fs_send),
         .send_btype(send_btype),
         .fd_send(fd_send),
-        .data_cmd(data_cmd),
+        .cache_cmd(cache_cmd),
 
         .fs_read(fs_read),
         .read_btype(read_btype),
         .read_ram_init(read_ram_init),
         .fd_read(fd_read),
-        .data_stat(data_stat),
+        .cache_stat(cache_stat),
 
         .ram_txd(ram_txd),
         .ram_txa(ram_txa),
         .ram_txen(ram_txen)
     );
 
-    clk_wiz
-    clk_wiz_dut(
-        .clk_in(clk_in),
-        .clk_out_25(clk_25),
-        .clk_out_50(clk_50),
-        .clk_out_100(clk_100),
-        .clk_out_200(clk_200)
+    ram_data
+    ram_data_dut(
+        .clka(clk_50),
+        .addra(ram_txa),
+        .dina(ram_txd),
+        .wea(ram_txen),
+
+        .clkb(clk_50),
+        .addrb(ram_rxa),
+        .doutb(ram_rxd)
     );
 
-    IBUFGDS 
-    u_ibufg_clk(
-        .I(clk_p),
-        .IB(clk_n),
-        .O(clk_in)
-    );
+    // clk_wiz
+    // clk_wiz_dut(
+    //     .clk_in(clk_in),
+    //     .clk_out_25(clk_25),
+    //     .clk_out_50(clk_50),
+    //     .clk_out_100(clk_100),
+    //     .clk_out_200(clk_200)
+    // );
+
+    // IBUFGDS 
+    // u_ibufg_clk(
+    //     .I(clk_p),
+    //     .IB(clk_n),
+    //     .O(clk_in)
+    // );
     IBUFDS
     ibufds_usb_rxd00(
         .I(usb_rxd0p[0]),
@@ -226,6 +243,7 @@ module test(
         .O(usb_txd0p),
         .OB(usb_txd0n)
     );
+
 
 
 endmodule

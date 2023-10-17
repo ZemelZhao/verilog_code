@@ -33,7 +33,7 @@ module usb_cs(
     localparam BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
     localparam BAG_ERROR = 4'b1111;
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
     reg [7:0] state_goto;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01;

@@ -34,6 +34,8 @@ module com_tx(
     localparam CRC5 = 8'h20, CRC16 = 8'h21; 
     localparam GAP0 = 8'h30, GAP1 = 8'h31;
 
+    localparam RAM_ADDR_INIT = 12'hFF0;
+
     reg [11:0] num;
     reg [7:0] txd;
     reg [7:0] pid;
@@ -135,7 +137,7 @@ module com_tx(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_rxa <= ram_addr_init;
+        if(rst) ram_rxa <= RAM_ADDR_INIT;
         else if(state == IDLE) ram_rxa <= ram_addr_init;
         else if(state == WAIT) ram_rxa <= ram_addr_init;
         else if(state == SYNC && RAM_LATANECY >= 4'h3) ram_rxa <= ram_addr_init + 1'b1;

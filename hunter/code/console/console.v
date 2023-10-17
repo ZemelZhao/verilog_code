@@ -113,7 +113,7 @@ module console(
             end
             TYPE_TAKE: next_state <= TYPE_SEND;
             TYPE_SEND: begin
-                if(fd_com_send) next_state <= next_state <= TYPE_DONE;
+                if(fd_com_send) next_state <= TYPE_DONE;
                 else next_state <= TYPE_SEND;
             end
             TYPE_DONE: next_state <= MAIN_WAIT;

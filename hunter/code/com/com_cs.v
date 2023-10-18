@@ -110,6 +110,7 @@ module com_cs(
         else if(state == RANS_TAKE && rx_btype == BAG_ACK) state_goto <= SEND_DONE;
         else if(state == RANS_TAKE && rx_btype == BAG_NAK && num_cnt >= NUMOUT - 1'b1) state_goto <= SEND_DONE;
         else if(state == RANS_TAKE && rx_btype == BAG_NAK) state_goto <= SEND_DATA;
+        else if(state == RANS_TAKE) state_goto <= SEND_DONE;
         else state_goto <= state_goto;
     end
 

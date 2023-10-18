@@ -30,6 +30,7 @@ module console(
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DHEAD = 4'b1100, BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
+    localparam BAG_ERROR = 4'b1111;
 
     localparam RAM_ADDR_INIT = 12'hFE0;
     localparam RAM_ADDR_DLINK = 12'hFCC, RAM_ADDR_DTYPE = 12'hFC0, RAM_ADDR_DTEMP = 12'hFC4;
@@ -58,6 +59,7 @@ module console(
     localparam CONF_SEND = 24'h010000, CONF_DONE = 24'h020000;
     localparam CONV_IDLE = 24'h040000, CONV_WORK = 24'h080000, CONV_TAKE = 24'h100000;
     localparam CONV_SEND = 24'h200000, CONV_DONE = 24'h400000;
+    localparam EROR_IDLE = 24'h800000;
 
     localparam NUM = 4'h6;
     reg [3:0] num;
@@ -69,7 +71,7 @@ module console(
     assign fs_adc_tran = (state[3:0] == CONV_SEND[3:0]);
 
     assign fs_com_send = (state == LINK_SEND) || (state == TYPE_SEND) || (state == CONF_SEND) || (state == CONV_SEND);
-    assign fd_com_read = (state == TYPE_IDLE) || (state == CONF_IDLE) || (state == CONV_IDLE);
+    assign fd_com_read = (state == TYPE_IDLE) || (state == CONF_IDLE) || (state == CONV_IDLE) || (state == EROR_IDLE);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -100,6 +102,7 @@ module console(
                 if(read_btype == BAG_DIDX) next_state <= TYPE_IDLE;
                 else if(read_btype == BAG_DPARAM) next_state <= CONF_IDLE;
                 else if(read_btype == BAG_DDIDX) next_state <= CONV_IDLE;
+                else if(read_btype == BAG_ERROR) next_state <= EROR_IDLE;
                 else next_state <= MAIN_TAKE;
             end
 
@@ -147,6 +150,11 @@ module console(
                 else next_state <= CONV_SEND;
             end
             CONV_DONE: next_state <= MAIN_WAIT;
+
+            EROR_IDLE: begin
+                if(~fs_com_read) next_state <= MAIN_WAIT;
+                else next_state <= EROR_IDLE;
+            end
 
             default: next_state <= MAIN_IDLE;
         endcase

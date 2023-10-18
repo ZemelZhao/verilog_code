@@ -39,6 +39,8 @@ module com(
     wire usb_rxd;
     wire [11:0] tx_ram_init;
 
+
+
     com_cs
     com_cs_dut(
         .clk(sys_clk),
@@ -121,6 +123,7 @@ module com(
     com_cc
     com_cc_dut(
         .clk(pin_cc),
+        .fire(fire_rxd),
 
         .usb_txd(usb_txd),
         .usb_rxd(usb_rxd),

@@ -1,8 +1,8 @@
 module crc5(
     input clk,
-    (*MARK_DEBUG = "true"*)input enable,
-    (*MARK_DEBUG = "true"*)input [7:0] din,
-    (*MARK_DEBUG = "true"*)output [7:0] dout
+    input enable,
+    input [7:0] din,
+    output [7:0] dout
 );
 
     // CRC5 x^5 + x^2 + 1

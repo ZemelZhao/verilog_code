@@ -1,5 +1,5 @@
 module spi2fifo(
-    input fifo_txc,
+    input clk,
     input rst,
     
     input fs,
@@ -13,7 +13,8 @@ module spi2fifo(
     output [15:0] fifo_txd 
 );
 
-    reg [3:0] state, next_state;
+    reg [3:0] state; 
+    reg [3:0] next_state;
     localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
     localparam DAT0 = 4'h4, DAT1 = 4'h5;
 
@@ -21,10 +22,10 @@ module spi2fifo(
 
     assign fd = (state == DONE);
     assign fifo_txen = {txen, txen};
-    assign fifo_txd = (state == DAT1) ?{chip_rxda[7:0],  chip_rxdb[7:0]} :{chip_rxda[15:8], chip_rxdb[15:8]};
+    assign fifo_txd = (state == DAT1) ?{chip_rxda[7:0], chip_rxdb[7:0]} :{chip_rxda[15:8], chip_rxdb[15:8]};
     assign txen = (state == DAT0) || (state == DAT1);
 
-    always@(posedge fifo_txc or posedge rst) begin
+    always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
         else state <= next_state;
     end
@@ -47,6 +48,7 @@ module spi2fifo(
                 if(~fs) next_state <= WAIT;
                 else next_state <= DONE;
             end
+            default: next_state <= IDLE;
         endcase
     end
 

@@ -38,7 +38,7 @@ module adc(
     wire [3:0] freq_samp, filt_up, filt_low;
 
     assign temp_all = tempa + tempb + tempc + tempd;
-    assign device_temp = temp[17:2];
+    assign device_temp = temp_all[17:2];
 
     assign fd_init = &fdc_init;
     assign fd_type = &fdc_type;
@@ -69,9 +69,9 @@ module adc(
         .fd_conf(fdc_conf[3]),
         .fd_conv(fdc_conv[3]),
 
-        .fs(freq_samp[2:0]),
-        .type(device_type[7:6]),
-        .chip_temp(tempa),
+        .freq_samp(freq_samp[2:0]),
+        .device_type(device_type[7:6]),
+        .device_temp(tempa),
 
         .filt_up(filt_up),
         .filt_low(filt_low),
@@ -81,7 +81,7 @@ module adc(
         .sclk(pin_sclk[3]),
         .cs(pin_cs[3]),
         
-        .fifo_rxen(fifo_rxen[3]),
+        .fifo_rxen(fifo_rxen[7:6]),
         .fifo_rxd(fifo_rxd[63:48]),
 
         .stat(device_stat[3])
@@ -106,9 +106,9 @@ module adc(
         .fd_conf(fdc_conf[2]),
         .fd_conv(fdc_conv[2]),
 
-        .fs(freq_samp[2:0]),
-        .type(device_type[5:4]),
-        .chip_temp(tempb),
+        .freq_samp(freq_samp[2:0]),
+        .device_type(device_type[5:4]),
+        .device_temp(tempb),
 
         .filt_up(filt_up),
         .filt_low(filt_low),
@@ -118,7 +118,7 @@ module adc(
         .sclk(pin_sclk[2]),
         .cs(pin_cs[2]),
         
-        .fifo_rxen(fifo_rxen[2]),
+        .fifo_rxen(fifo_rxen[5:4]),
         .fifo_rxd(fifo_rxd[47:32]),
 
         .stat(device_stat[2])
@@ -143,9 +143,9 @@ module adc(
         .fd_conf(fdc_conf[1]),
         .fd_conv(fdc_conv[1]),
 
-        .fs(freq_samp[2:0]),
-        .type(device_type[3:2]),
-        .chip_temp(tempc),
+        .freq_samp(freq_samp[2:0]),
+        .device_type(device_type[3:2]),
+        .device_temp(tempc),
 
         .filt_up(filt_up),
         .filt_low(filt_low),
@@ -155,7 +155,7 @@ module adc(
         .sclk(pin_sclk[1]),
         .cs(pin_cs[1]),
         
-        .fifo_rxen(fifo_rxen[1]),
+        .fifo_rxen(fifo_rxen[3:2]),
         .fifo_rxd(fifo_rxd[31:16]),
 
         .stat(device_stat[1])
@@ -180,9 +180,9 @@ module adc(
         .fd_conf(fdc_conf[0]),
         .fd_conv(fdc_conv[0]),
 
-        .fs(freq_samp[2:0]),
-        .type(device_type[1:0]),
-        .chip_temp(tempd),
+        .freq_samp(freq_samp[2:0]),
+        .device_type(device_type[1:0]),
+        .device_temp(tempd),
 
         .filt_up(filt_up),
         .filt_low(filt_low),
@@ -192,7 +192,7 @@ module adc(
         .sclk(pin_sclk[0]),
         .cs(pin_cs[0]),
         
-        .fifo_rxen(fifo_rxen[0]),
+        .fifo_rxen(fifo_rxen[1:0]),
         .fifo_rxd(fifo_rxd[15:0]),
 
         .stat(device_stat[0])

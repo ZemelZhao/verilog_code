@@ -15,7 +15,7 @@ module top(
     output [3:0] adc_sclk_n,
     output [3:0] adc_cs_p,
     output [3:0] adc_cs_n,
-  
+
     input com_rxf,
     output com_txf
 );
@@ -121,6 +121,7 @@ module top(
     adc
     adc_dut(
         .clk(clk_50),
+        .spi_clk(clk_80),
         .fifo_txc(clk_50),
         .fifo_rxc(clk_100),
 
@@ -141,11 +142,12 @@ module top(
         .pin_miso(pin_miso),
         .pin_mosi(pin_mosi),
         .pin_sclk(pin_sclk),
-        .pin_cs(pin_cs)
+        .pin_cs(pin_cs),
 
         .fifo_rxen(fifo_rxen),
         .fifo_rxd(fifo_rxd)
     );
+
 
     data_make
     data_make_dut(
@@ -168,7 +170,6 @@ module top(
         .ram_txd(ram_txd),
         .ram_txen(ram_txen)
     );
-
 
     pin
     pin_dut(

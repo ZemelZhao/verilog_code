@@ -126,8 +126,9 @@ module intan(
     localparam REG59 = 6'h3B; 
     localparam REG60 = 6'h3C, REG61 = 6'h3D, REG62 = 6'h3E, REG63 = 6'h3F;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
-    (*MARK_DEBUG = "true"*)reg [7:0] state_goto, state_back;
+    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] next_state;
+    reg [7:0] state_goto, state_back;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_FAIL = 8'h02;
 
@@ -183,8 +184,8 @@ module intan(
     localparam CONV_CH24 = 8'hD8, CONV_CH25 = 8'hD9, CONV_CH26 = 8'hDA, CONV_CH27 = 8'hDB;
     localparam CONV_CH28 = 8'hDC, CONV_CH29 = 8'hDD, CONV_CH30 = 8'hDE, CONV_CH31 = 8'hDF;
 
-    (*MARK_DEBUG = "true"*)reg [15:0] chip_txd;
-    (*MARK_DEBUG = "true"*)wire [15:0] chip_rxda, chip_rxdb;
+    reg [15:0] chip_txd;
+    wire [15:0] chip_rxda, chip_rxdb;
 
     reg [7:0] data_reg01, data_reg02;
 
@@ -991,7 +992,7 @@ module intan(
 
     spi2fifo
     spi2fifo_dut(
-        .fifo_txc(fifo_txc),
+        .clk(fifo_txc),
         .rst(rst),
 
         .fs(fs_fifo),
@@ -1007,6 +1008,7 @@ module intan(
 
     fifo_intan
     fifo_intan_duta(
+        .rst(rst),
         .wr_clk(fifo_txc),
         .din(fifo_txd[15:8]),
         .wr_en(fifo_txen[1]),
@@ -1019,6 +1021,7 @@ module intan(
 
     fifo_intan
     fifo_intan_dutb(
+        .rst(rst),
         .wr_clk(fifo_txc),
         .din(fifo_txd[7:0]),
         .wr_en(fifo_txen[0]),

@@ -52,7 +52,7 @@ module test(
 
 
     localparam CNUM = 16'h30, DNUM = 16'h50;
-    localparam WNUM = 16'h280;
+    localparam WNUM = 16'd6250;
 
     (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
@@ -66,7 +66,7 @@ module test(
 
     assign fs_send = (state[3:0] == TYPE_SEND[3:0]);
     assign fd_read = (state == MAIN_GAP);
-    assign cache_cmd = 32'h31243000;
+    assign cache_cmd = 32'h31412000;
     assign read_ram_init = 12'h100;
 
     reg [15:0] num;

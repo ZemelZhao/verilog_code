@@ -1,4 +1,4 @@
-module pin_test(
+module pin(
     output [3:0] com_txd_p,
     output [3:0] com_txd_n,
     input [1:0] com_rxd_p,

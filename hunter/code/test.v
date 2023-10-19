@@ -7,6 +7,15 @@ module test(
     input [1:0] com_rxd_p,
     input [1:0] com_rxd_n,
 
+    input [3:0] adc_miso_p,
+    input [3:0] adc_miso_n,
+    output [3:0] adc_mosi_p,
+    output [3:0] adc_mosi_n,
+    output [3:0] adc_sclk_p,
+    output [3:0] adc_sclk_n,
+    output [3:0] adc_cs_p,
+    output [3:0] adc_cs_n,
+
     input com_rxf,
     output com_txf
 );
@@ -14,9 +23,11 @@ module test(
     wire clk_12m5, clk_50, clk_100, clk_400;
     wire clk_80;
 
-    (*MARK_DEBUG = "true"*)wire [3:0] pin_txd;
-    (*MARK_DEBUG = "true"*)wire pin_rxd;
-    (*MARK_DEBUG = "true"*)wire fire_read, fire_send;
+    wire [3:0] pin_txd;
+    wire pin_rxd;
+    wire fire_read, fire_send;
+
+    wire [3:0] pin_cs, pin_sclk, pin_miso, pin_mosi;
 
     wire rst;
 
@@ -42,9 +53,9 @@ module test(
     wire [11:0] ram_addr_init;
 
     // RAM Section
-    wire [7:0] ram_txd, ram_rxd;
-    wire [11:0] ram_txa, ram_rxa;
-    wire ram_txen;
+    (*MARK_DEBUG = "true"*)wire [7:0] ram_txd, ram_rxd;
+    (*MARK_DEBUG = "true"*)wire [11:0] ram_txa, ram_rxa;
+    (*MARK_DEBUG = "true"*)wire ram_txen;
 
     assign rst = ~rst_n;
 
@@ -76,40 +87,27 @@ module test(
         .ram_addr_init(ram_addr_init)
     );
 
-    com
-    com_dut(
+    com_test
+    com_test_dut(
         .sys_clk(clk_50),
-        .com_txc(clk_50),
-        .com_rxc(clk_12m5),
-        .pin_txc(clk_100),
-        .pin_rxc(clk_100),
-        .pin_cc(clk_400),
 
         .rst(rst),
-
-        .pin_txd(pin_txd),
-        .pin_rxd(pin_rxd),
-        .fire_txd(fire_send),
-        .fire_rxd(fire_read),
 
         .fs_send(fs_com_send),
         .fd_send(fd_com_send),
         .send_btype(send_btype),
-        .send_dlen(send_dlen),
-        .ram_addr_init(ram_addr_init),
 
         .fs_read(fs_com_read),
         .fd_read(fd_com_read),
         .read_btype(read_btype),
 
-        .ram_rxd(ram_rxd),
-        .ram_rxa(ram_rxa),
         .cache_cmd(cache_cmd)
     );
 
-    adc_test
-    adc_test_dut(
+    adc
+    adc_dut(
         .clk(clk_50),
+        .spi_clk(clk_80),
         .fifo_txc(clk_50),
         .fifo_rxc(clk_100),
 
@@ -127,9 +125,15 @@ module test(
         .cache_cmd(cache_cmd),
         .cache_stat(cache_stat),
 
+        .pin_miso(pin_miso),
+        .pin_mosi(pin_mosi),
+        .pin_sclk(pin_sclk),
+        .pin_cs(pin_cs),
+
         .fifo_rxen(fifo_rxen),
         .fifo_rxd(fifo_rxd)
     );
+
 
     data_make
     data_make_dut(
@@ -153,21 +157,33 @@ module test(
         .ram_txen(ram_txen)
     );
 
-    pin_test
-    pin_test_dut(
+    pin
+    pin_dut(
         .com_txd_p(com_txd_p),
         .com_txd_n(com_txd_n),
         .com_rxd_p(com_rxd_p),
         .com_rxd_n(com_rxd_n),
-
-        .pin_txd(pin_txd),
-        .pin_rxd(pin_rxd),
-
         .com_rxf(com_rxf),
         .com_txf(com_txf),
 
+        .adc_miso_p(adc_miso_p),
+        .adc_miso_n(adc_miso_n),
+        .adc_cs_p(adc_cs_p),
+        .adc_cs_n(adc_cs_n),
+        .adc_mosi_p(adc_mosi_p),
+        .adc_mosi_n(adc_mosi_n),
+        .adc_sclk_p(adc_sclk_p),
+        .adc_sclk_n(adc_sclk_n),
+
+        .pin_txd(pin_txd),
+        .pin_rxd(pin_rxd),
         .fire_send(fire_send),
-        .fire_read(fire_read)
+        .fire_read(fire_read),
+
+        .pin_cs(pin_cs),
+        .pin_sclk(pin_sclk),
+        .pin_mosi(pin_mosi),
+        .pin_miso(pin_miso)
     );
 
     clk_wiz

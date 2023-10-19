@@ -118,7 +118,7 @@ module usb(
     usb_cc
     usb_cc_dut(
         .clk(pin_cc),
-        .rst(rst),
+        .fire(fire_read),
 
         .usb_txd(usb_txd),
         .pin_txd(pin_txd),

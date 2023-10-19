@@ -35,6 +35,8 @@ module com_cs(
     localparam BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
     localparam BAG_ERROR = 4'b1111;
 
+    localparam DEBUG_NUM = 8'h80;
+
     (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
     reg [7:0] state_goto;
 
@@ -43,6 +45,7 @@ module com_cs(
     localparam READ_PREP = 8'h30, READ_DATA = 8'h31, READ_DONE = 8'h32;
     localparam RANS_WAIT = 8'h40, RANS_TAKE = 8'h41, RANS_DONE = 8'h42;
     localparam WANS_PREP = 8'h50, WANS_DONE = 8'h51;
+    localparam DEBUG = 8'hFF;
 
     reg [7:0] time_cnt, num_cnt;
 
@@ -97,8 +100,11 @@ module com_cs(
             end
             READ_DONE: begin
                 if(fd_read) next_state <= MAIN_WAIT;
+                else if(time_cnt >= DEBUG_NUM - 1'b1) next_state <= DEBUG;
                 else next_state <= READ_DONE;
             end
+
+            DEBUG: next_state <= MAIN_WAIT;
             default: next_state <= MAIN_IDLE;
         endcase
     end
@@ -154,6 +160,7 @@ module com_cs(
         else if(state == MAIN_IDLE) time_cnt <= 8'h00;
         else if(state == MAIN_WAIT) time_cnt <= 8'h00;
         else if(state == RANS_WAIT) time_cnt <= time_cnt + 1'b1;
+        else if(state == READ_DONE) time_cnt <= time_cnt + 1'b1;
         else time_cnt <= 8'h00;
     end
 

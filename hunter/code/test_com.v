@@ -1,4 +1,4 @@
-module test(
+module test_com(
     input clk_in,
     input rst_n,
 

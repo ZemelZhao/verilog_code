@@ -18,7 +18,7 @@ module test(
     wire clk_in;
     wire clk;
     wire clk_12m5, clk_50, clk_100;
-    wire clk_300;
+    wire clk_400;
     wire rst;
 
     assign clk = clk_50;
@@ -93,7 +93,7 @@ module test(
                 else if(read_btype == BAG_DTEMP) next_state <= TEMP_IDLE;
                 else if(read_btype == BAG_DATA0) next_state <= DATA_IDLE;
                 else if(read_btype == BAG_DATA1) next_state <= DATA_IDLE;
-                else next_state <= MAIN_WAIT;
+                else next_state <= REST_WAIT;
             end
             REST_WAIT: begin
                 if(fs_read) next_state <= MAIN_GAP;
@@ -166,7 +166,7 @@ module test(
         .usb_rxc(clk_50),
         .pin_txc(clk_100),
         .pin_rxc(clk_100),
-        .pin_cc(clk_300),
+        .pin_cc(clk_400),
 
         .rst(rst),
 
@@ -209,7 +209,7 @@ module test(
         .clk_12m5(clk_12m5),
         .clk_50(clk_50),
         .clk_100(clk_100),
-        .clk_300(clk_300)
+        .clk_400(clk_400)
     );
 
     IBUFGDS 

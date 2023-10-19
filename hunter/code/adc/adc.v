@@ -16,13 +16,13 @@ module adc(
     output fd_conf,
     output fd_conv,
 
-    input [31:0] data_cmd,
-    output [31:0] data_stat,
+    input [31:0] cache_cmd,
+    output [31:0] cache_stat,
 
-    input [3:0] miso,
-    output [3:0] mosi,
-    output [3:0] sclk,
-    output [3:0] cs,
+    input [3:0] pin_miso,
+    output [3:0] pin_mosi,
+    output [3:0] pin_sclk,
+    output [3:0] pin_cs,
 
     input [7:0] fifo_rxen,
     output [63:0] fifo_rxd
@@ -40,16 +40,15 @@ module adc(
     assign temp_all = tempa + tempb + tempc + tempd;
     assign device_temp = temp[17:2];
 
-    assign data_stat = {device_temp, device_type, device_stat, 4'h0};
-
     assign fd_init = &fdc_init;
     assign fd_type = &fdc_type;
     assign fd_conf = &fdc_conf;
     assign fd_conv = &fdc_conv;
 
-    assign freq_samp = data_cmd[23:20];
-    assign filt_up = data_cmd[19:16];
-    assign filt_low = data_cmd[15:12];
+    assign cache_stat = {device_temp, device_type, device_stat, 4'h0};
+    assign freq_samp = cache_cmd[23:20];
+    assign filt_up = cache_cmd[19:16];
+    assign filt_low = cache_cmd[15:12];
 
     intan
     intan_duta(
@@ -77,10 +76,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .miso(miso[3]),
-        .mosi(mosi[3]),
-        .sclk(sclk[3]),
-        .cs(cs[3]),
+        .miso(pin_miso[3]),
+        .mosi(pin_mosi[3]),
+        .sclk(pin_sclk[3]),
+        .cs(pin_cs[3]),
         
         .fifo_rxen(fifo_rxen[3]),
         .fifo_rxd(fifo_rxd[63:48]),
@@ -114,10 +113,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .miso(miso[2]),
-        .mosi(mosi[2]),
-        .sclk(sclk[2]),
-        .cs(cs[2]),
+        .miso(pin_miso[2]),
+        .mosi(pin_mosi[2]),
+        .sclk(pin_sclk[2]),
+        .cs(pin_cs[2]),
         
         .fifo_rxen(fifo_rxen[2]),
         .fifo_rxd(fifo_rxd[47:32]),
@@ -151,10 +150,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .miso(miso[1]),
-        .mosi(mosi[1]),
-        .sclk(sclk[1]),
-        .cs(cs[1]),
+        .miso(pin_miso[1]),
+        .mosi(pin_mosi[1]),
+        .sclk(pin_sclk[1]),
+        .cs(pin_cs[1]),
         
         .fifo_rxen(fifo_rxen[1]),
         .fifo_rxd(fifo_rxd[31:16]),
@@ -188,10 +187,10 @@ module adc(
         .filt_up(filt_up),
         .filt_low(filt_low),
 
-        .miso(miso[0]),
-        .mosi(mosi[0]),
-        .sclk(sclk[0]),
-        .cs(cs[0]),
+        .miso(pin_miso[0]),
+        .mosi(pin_mosi[0]),
+        .sclk(pin_sclk[0]),
+        .cs(pin_cs[0]),
         
         .fifo_rxen(fifo_rxen[0]),
         .fifo_rxd(fifo_rxd[15:0]),

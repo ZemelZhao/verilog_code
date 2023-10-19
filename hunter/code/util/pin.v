@@ -1,194 +1,197 @@
-module pin(
-    input [3:0] miso_p,
-    input [3:0] miso_n,
-    output [3:0] mosi_p,
-    output [3:0] mosi_n,
-    output [3:0] cs_p,
-    output [3:0] cs_n,
-    output [3:0] sclk_p,
-    output [3:0] sclk_n,
-
-    input [1:0] com_cc,
-    inout [1:0] com_sbu,
+module pin_test(
     output [3:0] com_txd_p,
     output [3:0] com_txd_n,
     input [1:0] com_rxd_p,
     input [1:0] com_rxd_n,
+    input com_rxf,
+    output com_txf,
 
-    output [3:0] miso,
-    input [3:0] mosi,
-    input [3:0] cs,
-    input [3:0] sclk,
+    input [3:0] adc_miso_p,
+    input [3:0] adc_miso_n,
+    output [3:0] adc_cs_p,
+    output [3:0] adc_cs_n,
+    output [3:0] adc_mosi_p,
+    output [3:0] adc_mosi_n,
+    output [3:0] adc_sclk_p,
+    output [3:0] adc_sclk_n,
 
     input [3:0] pin_txd,
     output pin_rxd,
-
     input fire_send,
-    output fire_read
-);
+    output fire_read,
 
+    input [3:0] pin_cs,
+    input [3:0] pin_sclk,
+    input [3:0] pin_mosi,
+    output [3:0] pin_miso
+);
 
     wire [3:0] com_txd;
     wire [1:0] com_rxd;
 
     assign com_txd = pin_txd;
     assign pin_rxd = com_rxd[0];
-    
-
-
-    IBUFDS
-    ibufds_miso0(
-        .I(miso_p[0]),
-        .IB(miso_n[0]),
-        .O(miso[0])
-    );
-
-    IBUFDS
-    ibufds_miso1(
-        .I(miso_p[1]),
-        .IB(miso_n[1]),
-        .O(miso[1])
-    );
-
-    IBUFDS
-    ibufds_miso2(
-        .I(miso_p[2]),
-        .IB(miso_n[2]),
-        .O(miso[2])
-    );
-
-    IBUFDS
-    ibufds_miso3(
-        .I(miso_p[3]),
-        .IB(miso_n[3]),
-        .O(miso[3])
-    );
+    assign com_txf = fire_send;
+    assign fire_read = com_rxf;
 
     OBUFDS
-    obufds_mosi0(
-        .I(mosi[0]),
-        .O(mosi_p[0]),
-        .OB(mosi_n[0])
-    );
-
-    OBUFDS
-    obufds_mosi1(
-        .I(mosi[1]),
-        .O(mosi_p[1]),
-        .OB(mosi_n[1])
-    );
-
-    OBUFDS
-    obufds_mosi2(
-        .I(mosi[2]),
-        .O(mosi_p[2]),
-        .OB(mosi_n[2])
-    );
-
-    OBUFDS
-    obufds_mosi3(
-        .I(mosi[3]),
-        .O(mosi_p[3]),
-        .OB(mosi_n[3])
-    );
-
-    OBUFDS
-    obufds_cs0(
-        .I(cs[0]),
-        .O(cs_p[0]),
-        .OB(cs_n[0])
-    );
-
-    OBUFDS
-    obufds_cs1(
-        .I(cs[1]),
-        .O(cs_p[1]),
-        .OB(cs_n[1])
-    );
-
-    OBUFDS
-    obufds_cs2(
-        .I(cs[2]),
-        .O(cs_p[2]),
-        .OB(cs_n[2])
-    );
-
-    OBUFDS
-    obufds_cs3(
-        .I(cs[3]),
-        .O(cs_p[3]),
-        .OB(cs_n[3])
-    );
-
-    OBUFDS
-    obufds_sclk0(
-        .I(sclk[0]),
-        .O(sclk_p[0]),
-        .OB(sclk_n[0])
-    );
-
-    OBUFDS
-    obufds_sclk1(
-        .I(sclk[1]),
-        .O(sclk_p[1]),
-        .OB(sclk_n[1])
-    );
-
-    OBUFDS
-    obufds_sclk2(
-        .I(sclk[2]),
-        .O(sclk_p[2]),
-        .OB(sclk_n[2])
-    );
-
-    OBUFDS
-    obufds_sclk3(
-        .I(sclk[3]),
-        .O(sclk_p[3]),
-        .OB(sclk_n[3])
-    );
-
-    OBUFDS
-    obufds_txd0(
+    obufds_com_txd0(
         .I(com_txd[0]),
         .O(com_txd_p[0]),
         .OB(com_txd_n[0])
     );
 
     OBUFDS
-    obufds_txd1(
+    obufds_com_txd1(
         .I(com_txd[1]),
         .O(com_txd_p[1]),
         .OB(com_txd_n[1])
     );
 
     OBUFDS
-    obufds_txd2(
+    obufds_com_txd2(
         .I(com_txd[2]),
         .O(com_txd_p[2]),
         .OB(com_txd_n[2])
     );
     
     OBUFDS
-    obufds_txd3(
+    obufds_com_txd3(
         .I(com_txd[3]),
         .O(com_txd_p[3]),
         .OB(com_txd_n[3])
     );
 
     IBUFDS
-    ibufds_rxd0(
+    ibufds_com_rxd0(
         .O(com_rxd[0]),
         .I(com_rxd_p[0]),
         .IB(com_rxd_n[0])
     );
 
     IBUFDS
-    ibufds_rxd1(
+    ibufds_com_rxd1(
         .O(com_rxd[1]),
         .I(com_rxd_p[1]),
         .IB(com_rxd_n[1])
     );
+
+    IBUFDS
+    ibufds_adc_miso0(
+        .O(pin_miso[0]),
+        .I(adc_miso_p[0]),
+        .IB(adc_miso_n[0])
+    );
+
+    IBUFDS
+    ibufds_adc_miso1(
+        .O(pin_miso[1]),
+        .I(adc_miso_p[1]),
+        .IB(adc_miso_n[1])
+    );
+
+    IBUFDS
+    ibufds_adc_miso2(
+        .O(pin_miso[2]),
+        .I(adc_miso_p[2]),
+        .IB(adc_miso_n[2])
+    );
+
+    IBUFDS
+    ibufds_adc_miso3(
+        .O(pin_miso[3]),
+        .I(adc_miso_p[3]),
+        .IB(adc_miso_n[3])
+    );
+
+    OBUFDS
+    obufds_adc_mosi0(
+        .I(pin_mosi[0]),
+        .O(adc_mosi_p[0]),
+        .OB(adc_mosi_n[0])
+    );
+
+    OBUFDS
+    obufds_adc_mosi1(
+        .I(pin_mosi[1]),
+        .O(adc_mosi_p[1]),
+        .OB(adc_mosi_n[1])
+    );
+
+    OBUFDS
+    obufds_adc_mosi2(
+        .I(pin_mosi[2]),
+        .O(adc_mosi_p[2]),
+        .OB(adc_mosi_n[2])
+    );
+
+    OBUFDS
+    obufds_adc_mosi3(
+        .I(pin_mosi[3]),
+        .O(adc_mosi_p[3]),
+        .OB(adc_mosi_n[3])
+    );
+
+    OBUFDS
+    obufds_adc_sclk0(
+        .I(pin_sclk[0]),
+        .O(adc_sclk_p[0]),
+        .OB(adc_sclk_n[0])
+    );
+
+
+    OBUFDS
+    obufds_adc_sclk1(
+        .I(pin_sclk[1]),
+        .O(adc_sclk_p[1]),
+        .OB(adc_sclk_n[1])
+    );
+
+
+    OBUFDS
+    obufds_adc_sclk2(
+        .I(pin_sclk[2]),
+        .O(adc_sclk_p[2]),
+        .OB(adc_sclk_n[2])
+    );
+
+
+    OBUFDS
+    obufds_adc_sclk3(
+        .I(pin_sclk[3]),
+        .O(adc_sclk_p[3]),
+        .OB(adc_sclk_n[3])
+    );
+
+    OBUFDS
+    obufds_adc_cs0(
+        .I(pin_cs[0]),
+        .O(adc_cs_p[0]),
+        .OB(adc_cs_n[0])
+    );
+
+    OBUFDS
+    obufds_adc_cs1(
+        .I(pin_cs[1]),
+        .O(adc_cs_p[1]),
+        .OB(adc_cs_n[1])
+    );
+
+    OBUFDS
+    obufds_adc_cs2(
+        .I(pin_cs[2]),
+        .O(adc_cs_p[2]),
+        .OB(adc_cs_n[2])
+    );
+
+    OBUFDS
+    obufds_adc_cs3(
+        .I(pin_cs[3]),
+        .O(adc_cs_p[3]),
+        .OB(adc_cs_n[3])
+    );
+
+
 
 
 

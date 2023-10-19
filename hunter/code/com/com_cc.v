@@ -13,7 +13,7 @@ module com_cc(
 
     reg [3:0] state, next_state;
     localparam IDLE = 4'h0, WAIT = 4'h1;
-    localparam W0 = 4'h4, W1 = 4'h5, W2 = 4'h6;
+    localparam W0 = 4'h4, W1 = 4'h5, W2 = 4'h6, W3 = 4'h7;
 
     wire rst;
 
@@ -34,7 +34,8 @@ module com_cc(
             end
             W0: next_state <= W1;
             W1: next_state <= W2;
-            W2: next_state <= W0;
+            W2: next_state <= W3;
+            W3: next_state <= W0;
             default: next_state <= IDLE;
         endcase
     end
@@ -45,20 +46,21 @@ module com_cc(
         else if(state == W0) lut[0] <= pin_rxd; 
         else if(state == W1) lut[1] <= pin_rxd; 
         else if(state == W2) lut[2] <= pin_rxd; 
+        else if(state == W3) lut[3] <= 3'h0;
         else lut <= 3'h0;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) usb_rxd <= 1'b0;
         else if(state == IDLE) usb_rxd <= 1'b0;
-        else if(state == W0 && lut == 3'h0) usb_rxd <= 1'b0; 
-        else if(state == W0 && lut == 3'h1) usb_rxd <= 1'b0; 
-        else if(state == W0 && lut == 3'h2) usb_rxd <= 1'b0; 
-        else if(state == W0 && lut == 3'h3) usb_rxd <= 1'b1; 
-        else if(state == W0 && lut == 3'h4) usb_rxd <= 1'b0; 
-        else if(state == W0 && lut == 3'h5) usb_rxd <= 1'b1; 
-        else if(state == W0 && lut == 3'h6) usb_rxd <= 1'b1; 
-        else if(state == W0 && lut == 3'h7) usb_rxd <= 1'b1; 
+        else if(state == W3 && lut == 3'h0) usb_rxd <= 1'b0; 
+        else if(state == W3 && lut == 3'h1) usb_rxd <= 1'b0; 
+        else if(state == W3 && lut == 3'h2) usb_rxd <= 1'b0; 
+        else if(state == W3 && lut == 3'h3) usb_rxd <= 1'b1; 
+        else if(state == W3 && lut == 3'h4) usb_rxd <= 1'b0; 
+        else if(state == W3 && lut == 3'h5) usb_rxd <= 1'b1; 
+        else if(state == W3 && lut == 3'h6) usb_rxd <= 1'b1; 
+        else if(state == W3 && lut == 3'h7) usb_rxd <= 1'b1; 
         else usb_rxd <= usb_rxd;
     end
 

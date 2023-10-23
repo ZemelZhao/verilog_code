@@ -4,6 +4,7 @@ module com_cs(
 
     input fs_send,
     output fd_send,
+    output fd_txer,
     output fs_read,
     input fd_read,
 
@@ -43,6 +44,7 @@ module com_cs(
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01;
     localparam SEND_PREP = 8'h20, SEND_DATA = 8'h21, SEND_DONE = 8'h22;
+    localparam SEND_EROR = 8'h23;
     localparam READ_PREP = 8'h30, READ_DATA = 8'h31, READ_DONE = 8'h32;
     localparam RANS_WAIT = 8'h40, RANS_TAKE = 8'h41, RANS_DONE = 8'h42;
     localparam WANS_PREP = 8'h50, WANS_DONE = 8'h51;
@@ -52,6 +54,7 @@ module com_cs(
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_DONE);
+    assign fd_txer = (state == SEND_EROR);
     assign fs_tx = (state == SEND_DATA) || (state == WANS_DONE);
     assign fd_rx = (state == RANS_DONE) || (state == READ_DATA);
 
@@ -88,6 +91,10 @@ module com_cs(
                 if(~fs_send) next_state <= MAIN_WAIT;
                 else next_state <= SEND_DONE;
             end
+            SEND_EROR: begin
+                if(~fs_send) next_state <= MAIN_WAIT;
+                else next_state <= SEND_EROR;
+            end
 
             READ_PREP: next_state <= READ_DATA;
             READ_DATA: begin
@@ -101,11 +108,9 @@ module com_cs(
             end
             READ_DONE: begin
                 if(fd_read) next_state <= MAIN_WAIT;
-                else if(time_cnt >= DEBUG_NUM - 1'b1) next_state <= DEBUG;
+                else if(time_cnt >= TIMEOUT - 1'b1) next_state <= MAIN_WAIT;
                 else next_state <= READ_DONE;
             end
-
-            DEBUG: next_state <= MAIN_WAIT;
             default: next_state <= MAIN_IDLE;
         endcase
     end

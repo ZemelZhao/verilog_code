@@ -16,6 +16,7 @@ module console(
 
     output fs_com_send,
     input fd_com_send,
+    input fd_com_txer,
     input fs_com_read,
     output fd_com_read,
 
@@ -41,7 +42,7 @@ module console(
     reg [7:0] next_state;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
     localparam LINK_IDLE = 8'h10, LINK_WORK = 8'h11, LINK_TAKE = 8'h12;
-    localparam LINK_SEND = 8'h13, LINK_DONE = 8'h14;
+    localparam LINK_SEND = 8'h13, LINK_DONE = 8'h14, LINK_WAIT = 8'h15;
     localparam TYPE_IDLE = 8'h20, TYPE_WORK = 8'h21, TYPE_TAKE = 8'h22;
     localparam TYPE_SEND = 8'h23, TYPE_DONE = 8'h24;
     localparam CONF_IDLE = 8'h30, CONF_WORK = 8'h31, CONF_TAKE = 8'h32;
@@ -64,6 +65,7 @@ module console(
     // localparam EROR_IDLE = 24'h800000;
 
     localparam NUM = 4'h6;
+    localparam LNUM = 4'hC;
     reg [3:0] num;
     
     assign fs_adc_init = (state == LINK_WORK);
@@ -86,12 +88,17 @@ module console(
 
             LINK_IDLE: next_state <= LINK_WORK;
             LINK_WORK: begin
-                if(fd_adc_init) next_state <= LINK_TAKE;
+                if(fd_adc_init) next_state <= LINK_WAIT;
                 else next_state <= LINK_WORK;
+            end
+            LINK_WAIT: begin
+                if(num >= LNUM - 1'b1) next_state <= LINK_TAKE;
+                else next_state <= LINK_WAIT;
             end
             LINK_TAKE: next_state <= LINK_SEND;
             LINK_SEND: begin
                 if(fd_com_send) next_state <= LINK_DONE;
+                else if(fd_com_txer) next_state <= LINK_WAIT;
                 else next_state <= LINK_SEND;
             end
             LINK_DONE: next_state <= MAIN_WAIT;
@@ -165,6 +172,9 @@ module console(
     always@(posedge clk or posedge rst) begin
         if(rst) num <= 4'h0;
         else if(state == MAIN_IDLE) num <= 4'h0;
+        else if(state == LINK_WAIT) num <= num + 1'b1;
+        else if(state == LINK_IDLE) num <= 4'h0;
+        else if(state == LINK_DONE) num <= 4'h0;
         else if(state == CONV_TAKE && num >= NUM - 1'b1) num <= 4'h0;
         else if(state == CONV_TAKE) num <= num + 1'b1;
         else num <= num;

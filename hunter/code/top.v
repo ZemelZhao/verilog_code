@@ -105,6 +105,7 @@ module top(
 
         .fs_send(fs_com_send),
         .fd_send(fd_com_send),
+        .fd_txer(fd_com_txer),
         .send_btype(send_btype),
         .send_dlen(send_dlen),
         .ram_addr_init(ram_addr_init),

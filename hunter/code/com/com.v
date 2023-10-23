@@ -18,6 +18,7 @@ module com(
     input [11:0] send_dlen,
     input [11:0] ram_addr_init,
     output fd_send,
+    output fd_txer,
 
     output fs_read,
     output [3:0] read_btype,
@@ -48,6 +49,7 @@ module com(
 
         .fs_send(fs_send),
         .fd_send(fd_send),
+        .fd_txer(fd_txer),
         .send_dlen(send_dlen),
         .send_btype(send_btype),
         .ram_addr_init(ram_addr_init),

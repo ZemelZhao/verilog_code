@@ -20,8 +20,8 @@ module top(
     output com_txf
 );
 
-    wire clk_12m5, clk_50, clk_100, clk_400;
-    wire clk_80;
+    wire clk_slow, clk_norm, clk_fast, clk_ulta;
+    wire clk_chip;
 
     wire [3:0] pin_txd;
     wire pin_rxd;
@@ -39,6 +39,7 @@ module top(
     wire fs_adc_tran, fd_adc_tran;
     wire fs_com_send, fd_com_send;
     wire fs_com_read, fd_com_read;
+    wire fd_com_txer;
 
     // DATA Section
     wire [31:0] cache_cmd, cache_stat;
@@ -61,7 +62,7 @@ module top(
 
     console
     console_dut(
-        .clk(clk_50),
+        .clk(clk_norm),
         .rst(rst),
 
         .fs_adc_init(fs_adc_init),
@@ -79,6 +80,7 @@ module top(
         .fd_com_send(fd_com_send),
         .fs_com_read(fs_com_read),
         .fd_com_read(fd_com_read),
+        .fd_com_txer(fd_com_txer),
 
         .read_btype(read_btype),
         .send_btype(send_btype),
@@ -89,12 +91,12 @@ module top(
 
     com
     com_dut(
-        .sys_clk(clk_50),
-        .com_txc(clk_50),
-        .com_rxc(clk_12m5),
-        .pin_txc(clk_100),
-        .pin_rxc(clk_100),
-        .pin_cc(clk_400),
+        .sys_clk(clk_norm),
+        .com_txc(clk_norm),
+        .com_rxc(clk_slow),
+        .pin_txc(clk_fast),
+        .pin_rxc(clk_fast),
+        .pin_cc(clk_ulta),
 
         .rst(rst),
 
@@ -121,10 +123,10 @@ module top(
 
     adc
     adc_dut(
-        .clk(clk_50),
-        .spi_clk(clk_80),
-        .fifo_txc(clk_50),
-        .fifo_rxc(clk_100),
+        .clk(clk_norm),
+        .spi_clk(clk_norm),
+        .fifo_txc(clk_norm),
+        .fifo_rxc(clk_fast),
 
         .rst(rst),
 
@@ -152,7 +154,7 @@ module top(
 
     data_make
     data_make_dut(
-        .clk(clk_100),
+        .clk(clk_fast),
         .rst(rst),
 
         .fs(fs_adc_tran),
@@ -204,21 +206,21 @@ module top(
     clk_wiz
     clk_wiz_dut(
         .clk_in(clk_in),
-        .clk_12m5(clk_12m5),
-        .clk_50(clk_50),
-        .clk_80(clk_80),
-        .clk_100(clk_100),
-        .clk_400(clk_400)
+        .clk_slow(clk_slow),
+        .clk_norm(clk_norm),
+        .clk_chip(clk_chip),
+        .clk_fast(clk_fast),
+        .clk_ulta(clk_ulta)
     );
 
     ram_data
     ram_data_dut(
-        .clka(clk_100),
+        .clka(clk_fast),
         .addra(ram_txa),
         .dina(ram_txd),
         .wea(ram_txen),
 
-        .clkb(clk_50),
+        .clkb(clk_norm),
         .addrb(ram_rxa),
         .doutb(ram_rxd)
     );

@@ -4,7 +4,7 @@ module spi(
 
     input fs,
     output reg fd_spi,
-    output fd_prd,
+    output reg fd_prd,
 
     input miso,
     output reg sclk,
@@ -12,15 +12,17 @@ module spi(
     output reg cs,
 
     input [15:0] chip_txd,
-    output reg [15:0] chip_rxda,
-    output reg [15:0] chip_rxdb
+    output reg [31:0] chip_rxd,
+    output reg chip_txen,
+    output reg chip_rxen
 );
 
     reg [7:0] state, next_state;
     reg [15:0] chip_rxd0, chip_rxd1;
+    reg [15:0] txd;
 
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
-    localparam SPIPD = 8'h04;
+    localparam TAKE = 8'h04, SPIPD = 8'h05;
     localparam SPI00 = 8'h10, SPI10 = 8'h11, SPI20 = 8'h12, SPI30 = 8'h13;
     localparam SPI01 = 8'h14, SPI11 = 8'h15, SPI21 = 8'h16, SPI31 = 8'h17;
     localparam SPI02 = 8'h18, SPI12 = 8'h19, SPI22 = 8'h1A, SPI32 = 8'h1B;
@@ -42,8 +44,6 @@ module spi(
     localparam WAIT4 = 8'h64, WAIT5 = 8'h65, WAIT6 = 8'h66, WAIT7 = 8'h67;
     localparam WAIT8 = 8'h68, WAIT9 = 8'h69; 
 
-    assign fd_prd = (state == DONE);
-
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
         else state <= next_state;
@@ -56,7 +56,8 @@ module spi(
                 if(fs) next_state <= WORK;
                 else next_state <= WAIT;
             end
-            WORK: next_state <= SPI00;
+            WORK: next_state <= TAKE;
+            TAKE: next_state <= SPI00;
             SPI00: next_state <= SPI10;
             SPI10: next_state <= SPI20;
             SPI20: next_state <= SPI30;
@@ -157,22 +158,22 @@ module spi(
         else if(state == IDLE) mosi <= 1'b0;
         else if(state == SPIPD) mosi <= 1'b0;
         else if(state == WORK) mosi <= 1'b0;
-        else if(state == SPI00) mosi <= chip_txd[15];
-        else if(state == SPI01) mosi <= chip_txd[14];
-        else if(state == SPI02) mosi <= chip_txd[13];
-        else if(state == SPI03) mosi <= chip_txd[12];
-        else if(state == SPI04) mosi <= chip_txd[11];
-        else if(state == SPI05) mosi <= chip_txd[10];
-        else if(state == SPI06) mosi <= chip_txd[9];
-        else if(state == SPI07) mosi <= chip_txd[8];
-        else if(state == SPI08) mosi <= chip_txd[7];
-        else if(state == SPI09) mosi <= chip_txd[6];
-        else if(state == SPI0A) mosi <= chip_txd[5];
-        else if(state == SPI0B) mosi <= chip_txd[4];
-        else if(state == SPI0C) mosi <= chip_txd[3];
-        else if(state == SPI0D) mosi <= chip_txd[2];
-        else if(state == SPI0E) mosi <= chip_txd[1];
-        else if(state == SPI0F) mosi <= chip_txd[0];
+        else if(state == SPI00) mosi <= txd[15];
+        else if(state == SPI01) mosi <= txd[14];
+        else if(state == SPI02) mosi <= txd[13];
+        else if(state == SPI03) mosi <= txd[12];
+        else if(state == SPI04) mosi <= txd[11];
+        else if(state == SPI05) mosi <= txd[10];
+        else if(state == SPI06) mosi <= txd[9];
+        else if(state == SPI07) mosi <= txd[8];
+        else if(state == SPI08) mosi <= txd[7];
+        else if(state == SPI09) mosi <= txd[6];
+        else if(state == SPI0A) mosi <= txd[5];
+        else if(state == SPI0B) mosi <= txd[4];
+        else if(state == SPI0C) mosi <= txd[3];
+        else if(state == SPI0D) mosi <= txd[2];
+        else if(state == SPI0E) mosi <= txd[1];
+        else if(state == SPI0F) mosi <= txd[0];
         else mosi <= mosi;
     end
 
@@ -272,17 +273,37 @@ module spi(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) chip_rxda <= 16'h0000;
-        else if(state == IDLE) chip_rxda <= 16'h0000;
-        else if(state == LAST3) chip_rxda <= chip_rxd0;
-        else chip_rxda <= chip_rxda;
+        if(rst) fd_prd <= 1'b0;
+        else if(state == DONE) fd_prd <= 1'b1;
+        else fd_prd <= 1'b0;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) chip_rxdb <= 16'h0000;
-        else if(state == IDLE) chip_rxdb <= 16'h0000;
-        else if(state == LAST3) chip_rxdb <= chip_rxd1;
-        else chip_rxdb <= chip_rxdb;
+        if(rst) chip_rxd <= 32'h00000000;
+        else if(state == IDLE) chip_rxd <= 32'h00000000;
+        else if(state == LAST3) chip_rxd <= {chip_rxd0, chip_rxd1};
+        else chip_rxd <= chip_rxd;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) chip_txen <= 1'b0;
+        else if(state == IDLE) chip_txen <= 1'b0;
+        else if(state == LAST3) chip_txen <= 1'b1;
+        else chip_txen <= 1'b0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) chip_rxen <= 1'b0;
+        else if(state == IDLE) chip_rxen <= 1'b0;
+        else if(state == WORK) chip_rxen <= 1'b1;
+        else chip_rxen <= 1'b0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) txd <= 16'h0000;
+        else if(state == IDLE) txd <= 16'h0000;
+        else if(state == TAKE) txd <= chip_txd;
+        else txd <= txd;
     end
 
 endmodule

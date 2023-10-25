@@ -35,9 +35,9 @@ module com(
 
     wire [11:0] tx_dlen;
     wire [3:0] rx_btype, tx_btype;
-    wire [7:0] com_rxd, com_txd;
-    wire [3:0] usb_txd;
-    wire usb_rxd;
+    (*MARK_DEBUG = "true"*)wire [7:0] com_rxd, com_txd;
+    (*MARK_DEBUG = "true"*)wire [3:0] usb_txd;
+    (*MARK_DEBUG = "true"*)wire usb_rxd;
     wire [11:0] tx_ram_init;
 
 
@@ -125,6 +125,7 @@ module com(
     com_cc
     com_cc_dut(
         .clk(pin_cc),
+        .clk_fast(pin_rxc),
         .fire(fire_rxd),
 
         .usb_txd(usb_txd),
@@ -133,12 +134,6 @@ module com(
         .pin_txd(pin_txd),
         .pin_rxd(pin_rxd)
     );
-
-
-
-
-
-
 
 
 endmodule

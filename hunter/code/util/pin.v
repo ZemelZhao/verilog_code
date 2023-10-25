@@ -30,7 +30,7 @@ module pin(
     wire [1:0] com_rxd;
 
     assign com_txd = pin_txd;
-    assign pin_rxd = com_rxd[0];
+    assign pin_rxd = com_rxd[1];
     assign com_txf = fire_send;
     assign fire_read = com_rxf;
 

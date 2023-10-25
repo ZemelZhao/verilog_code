@@ -64,9 +64,8 @@ module main(
         .fd(),
 
         .btype(),
+        .data_idx(),
 
-        .usb_ram_addr_init(),
-        .com_ram_addr_init(),
         .cache_stat(),
 
         .cache_ram_rxa(),

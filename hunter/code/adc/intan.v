@@ -131,34 +131,27 @@ module intan(
     reg [7:0] state_goto, state_back;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_FAIL = 8'h02;
+    localparam REST_IDLE = 8'h08, REST_WAIT = 8'h09, REST_WORK = 8'h0A, REST_DONE = 8'h0B;
 
-    localparam IDLE_WAIT = 8'h04, IDLE_TRAN = 8'h05, IDLE_DONE = 8'h06;
-    localparam WRAM_WAIT = 8'h08, WRAM_WORK = 8'h09, WRAM_TRAN = 8'h0A, WRAM_DONE = 8'h0B;
-    localparam RREG_WAIT = 8'h0C, RREG_WORK = 8'h0D, RREG_TRAN = 8'h0E, RREG_DONE = 8'h0F;
-    localparam RREG_FAIL = 8'h10;
-    localparam TREG_WAIT = 8'h14, TREG_WORK = 8'h15, TREG_TRAN = 8'h16, TREG_DONE = 8'h17;
-    localparam REST_WAIT = 8'h18, REST_WORK = 8'h19, REST_DONE = 8'h1A;
-    localparam RTMP_WAIT = 8'h1C, RTMP_WORK = 8'h1D, RTMP_TRAN = 8'h1E, RTMP_DONE = 8'h1F;
+    localparam IDLE_IDLE = 8'h10, IDLE_WAIT = 8'h11, IDLE_TAKE = 8'h12, IDLE_TRAN = 8'h13; 
+    localparam IDLE_DONE = 8'h14;
+    localparam WRAM_IDLE = 8'h20, WRAM_WAIT = 8'h21, WRAM_TAKE = 8'h22, WRAM_WORK = 8'h23; 
+    localparam WRAM_TRAN = 8'h24, WRAM_DONE = 8'h25;
+    localparam RREG_IDLE = 8'h30, RREG_WAIT = 8'h31, RREG_TAKE = 8'h32, RREG_WORK = 8'h33; 
+    localparam RREG_TRAN = 8'h34, RREG_DONE = 8'h35, RREG_FAIL = 8'h36;
+    localparam TREG_IDLE = 8'h40, TREG_WAIT = 8'h41, TREG_TAKE = 8'h42, TREG_WORK = 8'h43; 
+    localparam TREG_TRAN = 8'h44, TREG_DONE = 8'h45;
+    localparam RTMP_IDLE = 8'h50, RTMP_WAIT = 8'h51, RTMP_TAKE = 8'h52, RTMP_WORK = 8'h53; 
+    localparam RTMP_TRAN = 8'h54, RTMP_DONE = 8'h55;
 
-    localparam INIT_IDLE = 8'h20, INIT_DONE = 8'h21, INIT_RXD0 = 8'h22, INIT_RXD1 = 8'h23;
+    localparam INIT_REG40 = 8'h60, INIT_REG41 = 8'h61, INIT_REG42 = 8'h62, INIT_REG43 = 8'h63;
+    localparam INIT_REG44 = 8'h64; 
+    localparam INIT_IDLE = 8'h68, INIT_DONE = 8'h69, INIT_RXD0 = 8'h6A, INIT_RXD1 = 8'h6B;
 
-    localparam TYPE_IDLE = 8'h24, TYPE_DONE = 8'h25, TYPE_RXD0 = 8'h26, TYPE_RXD1 = 8'h27;
-    localparam TYPE_RXD2 = 8'h28, TYPE_RXD3 = 8'h29;
-
-    localparam CONF_IDLE = 8'h2C, CONF_DONE = 8'h2D, CONF_RXD0 = 8'h2E, CONF_RXD1 = 8'h2F;
-
-    localparam TEMP_IDLE = 8'h30, TEMP_DONE = 8'h31, TEMP_RXD0 = 8'h32, TEMP_RXD1 = 8'h33;
-    localparam TEMP_RXD2 = 8'h34, TEMP_RXD3 = 8'h35;
-
-    localparam CALI_IDLE = 8'h38, CALI_DONE = 8'h39;
-
-    localparam CONV_IDLE = 8'h3C, CONV_DONE = 8'h3D, CONV_RXD0 = 8'h3E, CONV_RXD1 = 8'h3F;
-
-    localparam INIT_REG40 = 8'h40, INIT_REG41 = 8'h41, INIT_REG42 = 8'h42, INIT_REG43 = 8'h43;
-    localparam INIT_REG44 = 8'h44; 
-
-    localparam TYPE_REG59 = 8'h50, TYPE_REG60 = 8'h51, TYPE_REG61 = 8'h52, TYPE_REG62 = 8'h53;
-    localparam TYPE_REG63 = 8'h54;
+    localparam TYPE_REG59 = 8'h70, TYPE_REG60 = 8'h71, TYPE_REG61 = 8'h72, TYPE_REG62 = 8'h73;
+    localparam TYPE_REG63 = 8'h74;
+    localparam TYPE_IDLE = 8'h78, TYPE_DONE = 8'h79, TYPE_RXD0 = 8'h7A, TYPE_RXD1 = 8'h7B;
+    localparam TYPE_RXD2 = 8'h7C, TYPE_RXD3 = 8'h7D;
 
     localparam CONF_REG00 = 8'h80, CONF_REG01 = 8'h81, CONF_REG02 = 8'h82, CONF_REG03 = 8'h83;
     localparam CONF_REG04 = 8'h84, CONF_REG05 = 8'h85, CONF_REG06 = 8'h86, CONF_REG07 = 8'h87;
@@ -166,26 +159,36 @@ module intan(
     localparam CONF_REG12 = 8'h8C, CONF_REG13 = 8'h8D, CONF_REG14 = 8'h8E, CONF_REG15 = 8'h8F;
     localparam CONF_REG16 = 8'h90, CONF_REG17 = 8'h91, CONF_REG18 = 8'h92, CONF_REG19 = 8'h93;
     localparam CONF_REG20 = 8'h94, CONF_REG21 = 8'h95; 
+    localparam CONF_IDLE = 8'h98, CONF_DONE = 8'h99, CONF_RXD0 = 8'h9A, CONF_RXD1 = 8'h9B;
 
     localparam TEMP_WREG0 = 8'hA0, TEMP_REST0 = 8'hA1, TEMP_WREG1 = 8'hA2, TEMP_REST1 = 8'hA3;
     localparam TEMP_WREG2 = 8'hA4, TEMP_REST2 = 8'hA5, TEMP_WREG3 = 8'hA6, TEMP_REST3 = 8'hA7;
     localparam TEMP_RRESA = 8'hA8, TEMP_RRESB = 8'hA9, TEMP_RESET = 8'hAA;
+    localparam TEMP_IDLE = 8'hAC, TEMP_DONE = 8'hAD, TEMP_RXD0 = 8'hAE, TEMP_RXD1 = 8'hAF;
+    localparam TEMP_RXD2 = 8'hB0, TEMP_RXD3 = 8'hB1;
 
-    localparam CALI_WORK = 8'hB0, CALI_RXD0 = 8'hB1, CALI_RXD1 = 8'hB2, CALI_RXD2 = 8'hB3;
-    localparam CALI_RXD3 = 8'hB4, CALI_RXD4 = 8'hB5, CALI_RXD5 = 8'hB6, CALI_RXD6 = 8'hB7;
-    localparam CALI_RXD7 = 8'hB8, CALI_RXD8 = 8'hB9, CALI_RXD9 = 8'hBA; 
+    localparam CALI_WORK = 8'hC0, CALI_RXD0 = 8'hC1, CALI_RXD1 = 8'hC2, CALI_RXD2 = 8'hC3;
+    localparam CALI_RXD3 = 8'hC4, CALI_RXD4 = 8'hC5, CALI_RXD5 = 8'hC6, CALI_RXD6 = 8'hC7;
+    localparam CALI_RXD7 = 8'hC8, CALI_RXD8 = 8'hC9, CALI_RXD9 = 8'hCA; 
+    localparam CALI_IDLE = 8'hCC, CALI_DONE = 8'hCD;
 
-    localparam CONV_CH00 = 8'hC0, CONV_CH01 = 8'hC1, CONV_CH02 = 8'hC2, CONV_CH03 = 8'hC3;
-    localparam CONV_CH04 = 8'hC4, CONV_CH05 = 8'hC5, CONV_CH06 = 8'hC6, CONV_CH07 = 8'hC7;
-    localparam CONV_CH08 = 8'hC8, CONV_CH09 = 8'hC9, CONV_CH10 = 8'hCA, CONV_CH11 = 8'hCB;
-    localparam CONV_CH12 = 8'hCC, CONV_CH13 = 8'hCD, CONV_CH14 = 8'hCE, CONV_CH15 = 8'hCF;
-    localparam CONV_CH16 = 8'hD0, CONV_CH17 = 8'hD1, CONV_CH18 = 8'hD2, CONV_CH19 = 8'hD3;
-    localparam CONV_CH20 = 8'hD4, CONV_CH21 = 8'hD5, CONV_CH22 = 8'hD6, CONV_CH23 = 8'hD7;
-    localparam CONV_CH24 = 8'hD8, CONV_CH25 = 8'hD9, CONV_CH26 = 8'hDA, CONV_CH27 = 8'hDB;
-    localparam CONV_CH28 = 8'hDC, CONV_CH29 = 8'hDD, CONV_CH30 = 8'hDE, CONV_CH31 = 8'hDF;
+    localparam CONV_CH00 = 8'hD0, CONV_CH01 = 8'hD1, CONV_CH02 = 8'hD2, CONV_CH03 = 8'hD3;
+    localparam CONV_CH04 = 8'hD4, CONV_CH05 = 8'hD5, CONV_CH06 = 8'hD6, CONV_CH07 = 8'hD7;
+    localparam CONV_CH08 = 8'hD8, CONV_CH09 = 8'hD9, CONV_CH10 = 8'hDA, CONV_CH11 = 8'hDB;
+    localparam CONV_CH12 = 8'hDC, CONV_CH13 = 8'hDD, CONV_CH14 = 8'hDE, CONV_CH15 = 8'hDF;
+    localparam CONV_CH16 = 8'hE0, CONV_CH17 = 8'hE1, CONV_CH18 = 8'hE2, CONV_CH19 = 8'hE3;
+    localparam CONV_CH20 = 8'hE4, CONV_CH21 = 8'hE5, CONV_CH22 = 8'hE6, CONV_CH23 = 8'hE7;
+    localparam CONV_CH24 = 8'hE8, CONV_CH25 = 8'hE9, CONV_CH26 = 8'hEA, CONV_CH27 = 8'hEB;
+    localparam CONV_CH28 = 8'hEC, CONV_CH29 = 8'hED, CONV_CH30 = 8'hEE, CONV_CH31 = 8'hEF;
+    localparam CONV_IDLE = 8'hF0, CONV_DONE = 8'hF1, CONV_RXD0 = 8'hF2, CONV_RXD1 = 8'hF3;
 
     reg [15:0] chip_txd;
-    wire [15:0] chip_rxda, chip_rxdb;
+    wire [15:0] chip_txd_fifo;
+    reg [15:0] chip_rxda, chip_rxdb;
+    wire [31:0] chip_rxd_fifo;
+    wire [31:0] chip_rxd;
+    reg fsys_txen, fspi_rxen;
+    wire fsys_rxen, fspi_txen;
 
     reg [7:0] data_reg01, data_reg02;
 
@@ -199,12 +202,12 @@ module intan(
     reg [7:0] data_reg08, data_reg09, data_reg10, data_reg11;
     reg [7:0] data_reg12, data_reg13;
 
-    wire fs_spi, fd_spi, fd_prd;
+    reg fs_spi;
+    wire fd_spi, fd_prd;
     wire fs_fifo, fd_fifo;
     wire [15:0] fifo_txd;
     wire [1:0] fifo_txen, fifo_full;
 
-    assign fs_spi = (state >= IDLE_WAIT) && (state <= RTMP_DONE);
     assign fs_fifo = (state == WRAM_WORK);
     assign fd_init = (state == INIT_DONE);
     assign fd_type = (state == TYPE_DONE);
@@ -230,20 +233,24 @@ module intan(
             end
             MAIN_FAIL: next_state <= MAIN_FAIL;
 
+            IDLE_IDLE: next_state <= IDLE_WAIT;
             IDLE_WAIT: begin
-                if(fd_spi) next_state <= IDLE_TRAN;
+                if(fd_spi) next_state <= IDLE_TAKE;
                 else next_state <= IDLE_WAIT;
             end
+            IDLE_TAKE: next_state <= IDLE_TRAN;
             IDLE_TRAN: next_state <= IDLE_DONE;
             IDLE_DONE: begin
                 if(fd_prd) next_state <= state_goto;
                 else next_state <= IDLE_DONE;
             end
 
+            WRAM_IDLE: next_state <= WRAM_WAIT;
             WRAM_WAIT: begin
-                if(fd_spi) next_state <= WRAM_WORK;
+                if(fd_spi) next_state <= WRAM_TAKE;
                 else next_state <= WRAM_WAIT;
             end
+            WRAM_TAKE: next_state <= WRAM_WORK;
             WRAM_WORK: begin
                 if(fd_fifo) next_state <= WRAM_TRAN;
                 else next_state <= WRAM_WORK;
@@ -254,10 +261,12 @@ module intan(
                 else next_state <= WRAM_DONE;
             end
 
+            RREG_IDLE: next_state <= RREG_WAIT;
             RREG_WAIT: begin
-                if(fd_spi) next_state <= RREG_WORK;
+                if(fd_spi) next_state <= RREG_TAKE;
                 else next_state <= RREG_WAIT;
             end
+            RREG_TAKE: next_state <= RREG_WORK;
             RREG_WORK: begin
                 if((chip_rxda == chip_rxda_res_d1) && (chip_rxdb == chip_rxdb_res_d1)) next_state <= RREG_TRAN; 
                 else next_state <= RREG_FAIL;
@@ -272,10 +281,12 @@ module intan(
                 else next_state <= RREG_FAIL;
             end
 
+            TREG_IDLE: next_state <= TREG_WAIT;
             TREG_WAIT: begin
-                if(fd_spi) next_state <= TREG_WORK;
+                if(fd_spi) next_state <= TREG_TAKE;
                 else next_state <= TREG_WAIT;
             end
+            TREG_TAKE: next_state <= TREG_WORK;
             TREG_WORK: next_state <= TREG_TRAN;
             TREG_TRAN: next_state <= TREG_DONE;
             TREG_DONE: begin
@@ -283,6 +294,7 @@ module intan(
                 else next_state <= TREG_DONE;
             end
 
+            REST_IDLE: next_state <= REST_WAIT;
             REST_WAIT: next_state <= REST_WORK;
             REST_WORK: begin
                 if(num >= num_wait) next_state <= REST_DONE;
@@ -290,10 +302,12 @@ module intan(
             end
             REST_DONE: next_state <= state_goto;
 
+            RTMP_IDLE: next_state <= RTMP_WAIT;
             RTMP_WAIT: begin
-                if(fd_spi) next_state <= RTMP_WORK;
+                if(fd_spi) next_state <= RTMP_TAKE;
                 else next_state <= RTMP_WAIT;
             end
+            RTMP_TAKE: next_state <= RTMP_WORK;
             RTMP_WORK: next_state <= RTMP_TRAN;
             RTMP_TRAN: next_state <= RTMP_DONE;
             RTMP_DONE: begin
@@ -302,127 +316,127 @@ module intan(
             end
 
             INIT_IDLE: next_state <= INIT_REG40;
-            INIT_REG40: next_state <= IDLE_WAIT;
-            INIT_REG41: next_state <= IDLE_WAIT;
-            INIT_REG42: next_state <= RREG_WAIT;
-            INIT_REG43: next_state <= RREG_WAIT;
-            INIT_REG44: next_state <= RREG_WAIT;
-            INIT_RXD0: next_state <= RREG_WAIT;
-            INIT_RXD1: next_state <= RREG_WAIT;
+            INIT_REG40: next_state <= IDLE_IDLE;
+            INIT_REG41: next_state <= IDLE_IDLE;
+            INIT_REG42: next_state <= RREG_IDLE;
+            INIT_REG43: next_state <= RREG_IDLE;
+            INIT_REG44: next_state <= RREG_IDLE;
+            INIT_RXD0: next_state <= RREG_IDLE;
+            INIT_RXD1: next_state <= RREG_IDLE;
             INIT_DONE: begin
                 if(~fs_init) next_state <= MAIN_WAIT;
                 else next_state <= INIT_DONE;
             end
 
             TYPE_IDLE: next_state <= TYPE_REG63;
-            TYPE_REG63: next_state <= IDLE_WAIT;
-            TYPE_RXD0: next_state <= IDLE_WAIT;
-            TYPE_RXD1: next_state <= TREG_WAIT;
-            TYPE_REG59: next_state <= IDLE_WAIT;
-            TYPE_RXD2: next_state <= IDLE_WAIT;
-            TYPE_RXD3: next_state <= RREG_WAIT;
+            TYPE_REG63: next_state <= IDLE_IDLE;
+            TYPE_RXD0: next_state <= IDLE_IDLE;
+            TYPE_RXD1: next_state <= TREG_IDLE;
+            TYPE_REG59: next_state <= IDLE_IDLE;
+            TYPE_RXD2: next_state <= IDLE_IDLE;
+            TYPE_RXD3: next_state <= RREG_IDLE;
             TYPE_DONE: begin
                 if(~fs_type) next_state <= MAIN_WAIT;
                 else next_state <= TYPE_DONE;
             end
 
             CONF_IDLE: next_state <= CONF_REG00;
-            CONF_REG00: next_state <= IDLE_WAIT;
-            CONF_REG01: next_state <= IDLE_WAIT;
-            CONF_REG02: next_state <= RREG_WAIT;
-            CONF_REG03: next_state <= RREG_WAIT;
-            CONF_REG04: next_state <= RREG_WAIT;
-            CONF_REG05: next_state <= RREG_WAIT;
-            CONF_REG06: next_state <= RREG_WAIT;
-            CONF_REG07: next_state <= RREG_WAIT;
-            CONF_REG08: next_state <= RREG_WAIT;
-            CONF_REG09: next_state <= RREG_WAIT;
-            CONF_REG10: next_state <= RREG_WAIT;
-            CONF_REG11: next_state <= RREG_WAIT;
-            CONF_REG12: next_state <= RREG_WAIT;
-            CONF_REG13: next_state <= RREG_WAIT;
-            CONF_REG14: next_state <= RREG_WAIT;
-            CONF_REG15: next_state <= RREG_WAIT;
-            CONF_REG16: next_state <= RREG_WAIT;
-            CONF_REG17: next_state <= RREG_WAIT;
-            CONF_REG18: next_state <= RREG_WAIT;
-            CONF_REG19: next_state <= RREG_WAIT;
-            CONF_REG20: next_state <= RREG_WAIT;
-            CONF_REG21: next_state <= RREG_WAIT;
-            CONF_RXD0: next_state <= RREG_WAIT;
-            CONF_RXD1: next_state <= RREG_WAIT;
+            CONF_REG00: next_state <= IDLE_IDLE;
+            CONF_REG01: next_state <= IDLE_IDLE;
+            CONF_REG02: next_state <= RREG_IDLE;
+            CONF_REG03: next_state <= RREG_IDLE;
+            CONF_REG04: next_state <= RREG_IDLE;
+            CONF_REG05: next_state <= RREG_IDLE;
+            CONF_REG06: next_state <= RREG_IDLE;
+            CONF_REG07: next_state <= RREG_IDLE;
+            CONF_REG08: next_state <= RREG_IDLE;
+            CONF_REG09: next_state <= RREG_IDLE;
+            CONF_REG10: next_state <= RREG_IDLE;
+            CONF_REG11: next_state <= RREG_IDLE;
+            CONF_REG12: next_state <= RREG_IDLE;
+            CONF_REG13: next_state <= RREG_IDLE;
+            CONF_REG14: next_state <= RREG_IDLE;
+            CONF_REG15: next_state <= RREG_IDLE;
+            CONF_REG16: next_state <= RREG_IDLE;
+            CONF_REG17: next_state <= RREG_IDLE;
+            CONF_REG18: next_state <= RREG_IDLE;
+            CONF_REG19: next_state <= RREG_IDLE;
+            CONF_REG20: next_state <= RREG_IDLE;
+            CONF_REG21: next_state <= RREG_IDLE;
+            CONF_RXD0: next_state <= RREG_IDLE;
+            CONF_RXD1: next_state <= RREG_IDLE;
             CONF_DONE: next_state <= TEMP_IDLE;
 
             TEMP_IDLE: next_state <= TEMP_WREG0;
-            TEMP_WREG0: next_state <= IDLE_WAIT;
-            TEMP_REST0: next_state <= REST_WAIT;
-            TEMP_WREG1: next_state <= IDLE_WAIT;
-            TEMP_REST1: next_state <= REST_WAIT;
-            TEMP_WREG2: next_state <= IDLE_WAIT;
-            TEMP_REST2: next_state <= REST_WAIT;
-            TEMP_RRESA: next_state <= IDLE_WAIT;
-            TEMP_RXD0: next_state <= IDLE_WAIT;
-            TEMP_RXD1: next_state <= RTMP_WAIT;
-            TEMP_WREG3: next_state <= IDLE_WAIT;
-            TEMP_REST3: next_state <= REST_WAIT;
-            TEMP_RRESB: next_state <= IDLE_WAIT;
-            TEMP_RESET: next_state <= IDLE_WAIT;
-            TEMP_RXD2: next_state <= RTMP_WAIT;
-            TEMP_RXD3: next_state <= RREG_WAIT;
+            TEMP_WREG0: next_state <= IDLE_IDLE;
+            TEMP_REST0: next_state <= REST_IDLE;
+            TEMP_WREG1: next_state <= IDLE_IDLE;
+            TEMP_REST1: next_state <= REST_IDLE;
+            TEMP_WREG2: next_state <= IDLE_IDLE;
+            TEMP_REST2: next_state <= REST_IDLE;
+            TEMP_RRESA: next_state <= IDLE_IDLE;
+            TEMP_RXD0: next_state <= IDLE_IDLE;
+            TEMP_RXD1: next_state <= RTMP_IDLE;
+            TEMP_WREG3: next_state <= IDLE_IDLE;
+            TEMP_REST3: next_state <= REST_IDLE;
+            TEMP_RRESB: next_state <= IDLE_IDLE;
+            TEMP_RESET: next_state <= IDLE_IDLE;
+            TEMP_RXD2: next_state <= RTMP_IDLE;
+            TEMP_RXD3: next_state <= RREG_IDLE;
             TEMP_DONE: next_state <= CALI_IDLE;
 
             CALI_IDLE: next_state <= CALI_WORK;
-            CALI_WORK: next_state <= IDLE_WAIT;
-            CALI_RXD0: next_state <= IDLE_WAIT;
-            CALI_RXD1: next_state <= IDLE_WAIT;
-            CALI_RXD2: next_state <= IDLE_WAIT;
-            CALI_RXD3: next_state <= IDLE_WAIT;
-            CALI_RXD4: next_state <= IDLE_WAIT;
-            CALI_RXD5: next_state <= IDLE_WAIT;
-            CALI_RXD6: next_state <= IDLE_WAIT;
-            CALI_RXD7: next_state <= IDLE_WAIT;
-            CALI_RXD8: next_state <= IDLE_WAIT;
-            CALI_RXD9: next_state <= IDLE_WAIT;
+            CALI_WORK: next_state <= IDLE_IDLE;
+            CALI_RXD0: next_state <= IDLE_IDLE;
+            CALI_RXD1: next_state <= IDLE_IDLE;
+            CALI_RXD2: next_state <= IDLE_IDLE;
+            CALI_RXD3: next_state <= IDLE_IDLE;
+            CALI_RXD4: next_state <= IDLE_IDLE;
+            CALI_RXD5: next_state <= IDLE_IDLE;
+            CALI_RXD6: next_state <= IDLE_IDLE;
+            CALI_RXD7: next_state <= IDLE_IDLE;
+            CALI_RXD8: next_state <= IDLE_IDLE;
+            CALI_RXD9: next_state <= IDLE_IDLE;
             CALI_DONE: begin
                 if(~fs_conf) next_state <= MAIN_WAIT;
                 else next_state <= CALI_DONE;
             end
         
             CONV_IDLE: next_state <= CONV_CH00;
-            CONV_CH00: next_state <= IDLE_WAIT;
-            CONV_CH01: next_state <= IDLE_WAIT;
-            CONV_CH02: next_state <= WRAM_WAIT;
-            CONV_CH03: next_state <= WRAM_WAIT;
-            CONV_CH04: next_state <= WRAM_WAIT;
-            CONV_CH05: next_state <= WRAM_WAIT;
-            CONV_CH06: next_state <= WRAM_WAIT;
-            CONV_CH07: next_state <= WRAM_WAIT;
-            CONV_CH08: next_state <= WRAM_WAIT;
-            CONV_CH09: next_state <= WRAM_WAIT;
-            CONV_CH10: next_state <= WRAM_WAIT;
-            CONV_CH11: next_state <= WRAM_WAIT;
-            CONV_CH12: next_state <= WRAM_WAIT;
-            CONV_CH13: next_state <= WRAM_WAIT;
-            CONV_CH14: next_state <= WRAM_WAIT;
-            CONV_CH15: next_state <= WRAM_WAIT;
-            CONV_CH16: next_state <= WRAM_WAIT;
-            CONV_CH17: next_state <= WRAM_WAIT;
-            CONV_CH18: next_state <= WRAM_WAIT;
-            CONV_CH19: next_state <= WRAM_WAIT;
-            CONV_CH20: next_state <= WRAM_WAIT;
-            CONV_CH21: next_state <= WRAM_WAIT;
-            CONV_CH22: next_state <= WRAM_WAIT;
-            CONV_CH23: next_state <= WRAM_WAIT;
-            CONV_CH24: next_state <= WRAM_WAIT;
-            CONV_CH25: next_state <= WRAM_WAIT;
-            CONV_CH26: next_state <= WRAM_WAIT;
-            CONV_CH27: next_state <= WRAM_WAIT;
-            CONV_CH28: next_state <= WRAM_WAIT;
-            CONV_CH29: next_state <= WRAM_WAIT;
-            CONV_CH30: next_state <= WRAM_WAIT;
-            CONV_CH31: next_state <= WRAM_WAIT;
-            CONV_RXD0: next_state <= WRAM_WAIT;
-            CONV_RXD1: next_state <= WRAM_WAIT;
+            CONV_CH00: next_state <= IDLE_IDLE;
+            CONV_CH01: next_state <= IDLE_IDLE;
+            CONV_CH02: next_state <= WRAM_IDLE;
+            CONV_CH03: next_state <= WRAM_IDLE;
+            CONV_CH04: next_state <= WRAM_IDLE;
+            CONV_CH05: next_state <= WRAM_IDLE;
+            CONV_CH06: next_state <= WRAM_IDLE;
+            CONV_CH07: next_state <= WRAM_IDLE;
+            CONV_CH08: next_state <= WRAM_IDLE;
+            CONV_CH09: next_state <= WRAM_IDLE;
+            CONV_CH10: next_state <= WRAM_IDLE;
+            CONV_CH11: next_state <= WRAM_IDLE;
+            CONV_CH12: next_state <= WRAM_IDLE;
+            CONV_CH13: next_state <= WRAM_IDLE;
+            CONV_CH14: next_state <= WRAM_IDLE;
+            CONV_CH15: next_state <= WRAM_IDLE;
+            CONV_CH16: next_state <= WRAM_IDLE;
+            CONV_CH17: next_state <= WRAM_IDLE;
+            CONV_CH18: next_state <= WRAM_IDLE;
+            CONV_CH19: next_state <= WRAM_IDLE;
+            CONV_CH20: next_state <= WRAM_IDLE;
+            CONV_CH21: next_state <= WRAM_IDLE;
+            CONV_CH22: next_state <= WRAM_IDLE;
+            CONV_CH23: next_state <= WRAM_IDLE;
+            CONV_CH24: next_state <= WRAM_IDLE;
+            CONV_CH25: next_state <= WRAM_IDLE;
+            CONV_CH26: next_state <= WRAM_IDLE;
+            CONV_CH27: next_state <= WRAM_IDLE;
+            CONV_CH28: next_state <= WRAM_IDLE;
+            CONV_CH29: next_state <= WRAM_IDLE;
+            CONV_CH30: next_state <= WRAM_IDLE;
+            CONV_CH31: next_state <= WRAM_IDLE;
+            CONV_RXD0: next_state <= WRAM_IDLE;
+            CONV_RXD1: next_state <= WRAM_IDLE;
             CONV_DONE: begin
                 if(~fs_conv) next_state <= MAIN_WAIT;
                 else next_state <= CONV_DONE;
@@ -969,8 +983,93 @@ module intan(
         else if(state == CONF_IDLE) data_reg13 <= {1'b0, RL_DAC2_D10};
         else data_reg13 <= data_reg13;
     end
- 
- 
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fsys_txen <= 1'b0;
+        else if(state == MAIN_IDLE) fsys_txen <= 1'b0;
+        else if(state == IDLE_IDLE) fsys_txen <= 1'b1;
+        else if(state == WRAM_IDLE) fsys_txen <= 1'b1;
+        else if(state == RREG_IDLE) fsys_txen <= 1'b1;
+        else if(state == TREG_IDLE) fsys_txen <= 1'b1;
+        else if(state == RTMP_IDLE) fsys_txen <= 1'b1;
+        else fsys_txen <= 1'b0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fspi_rxen <= 1'b0;
+        else if(state == MAIN_IDLE) fspi_rxen <= 1'b0;
+        else if(state == IDLE_TAKE) fspi_rxen <= 1'b1;
+        else if(state == WRAM_TAKE) fspi_rxen <= 1'b1;
+        else if(state == RREG_TAKE) fspi_rxen <= 1'b1;
+        else if(state == TREG_TAKE) fspi_rxen <= 1'b1;
+        else if(state == RTMP_TAKE) fspi_rxen <= 1'b1;
+        else fspi_rxen <= 1'b0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) chip_rxda <= 16'h0000;
+        else if(state == MAIN_IDLE) chip_rxda <= 16'h0000;
+        else if(state == IDLE_TAKE) chip_rxda <= chip_rxd[31:16];
+        else if(state == WRAM_TAKE) chip_rxda <= chip_rxd[31:16];
+        else if(state == RREG_TAKE) chip_rxda <= chip_rxd[31:16];
+        else if(state == TREG_TAKE) chip_rxda <= chip_rxd[31:16];
+        else if(state == RTMP_TAKE) chip_rxda <= chip_rxd[31:16];
+        else chip_rxda <= chip_rxda;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) chip_rxdb <= 16'h0000;
+        else if(state == MAIN_IDLE) chip_rxdb <= 16'h0000;
+        else if(state == IDLE_TAKE) chip_rxdb <= chip_rxd[15:0];
+        else if(state == WRAM_TAKE) chip_rxdb <= chip_rxd[15:0];
+        else if(state == RREG_TAKE) chip_rxdb <= chip_rxd[15:0];
+        else if(state == TREG_TAKE) chip_rxdb <= chip_rxd[15:0];
+        else if(state == RTMP_TAKE) chip_rxdb <= chip_rxd[15:0];
+        else chip_rxdb <= chip_rxdb;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fs_spi <= 1'b0;
+        else if(state == MAIN_IDLE) fs_spi <= 1'b0;
+
+        else if(state == IDLE_IDLE) fs_spi <= 1'b1;
+        else if(state == IDLE_WAIT) fs_spi <= 1'b1;
+        else if(state == IDLE_TAKE) fs_spi <= 1'b1;
+        else if(state == IDLE_TRAN) fs_spi <= 1'b1;
+        else if(state == IDLE_DONE) fs_spi <= 1'b1;
+
+        else if(state == WRAM_IDLE) fs_spi <= 1'b1;
+        else if(state == WRAM_WAIT) fs_spi <= 1'b1;
+        else if(state == WRAM_TAKE) fs_spi <= 1'b1;
+        else if(state == WRAM_WORK) fs_spi <= 1'b1;
+        else if(state == WRAM_TRAN) fs_spi <= 1'b1;
+        else if(state == WRAM_DONE) fs_spi <= 1'b1;
+
+        else if(state == RREG_IDLE) fs_spi <= 1'b1;
+        else if(state == RREG_WAIT) fs_spi <= 1'b1;
+        else if(state == RREG_TAKE) fs_spi <= 1'b1;
+        else if(state == RREG_WORK) fs_spi <= 1'b1;
+        else if(state == RREG_TRAN) fs_spi <= 1'b1;
+        else if(state == RREG_DONE) fs_spi <= 1'b1;
+        else if(state == RREG_FAIL) fs_spi <= 1'b1;
+
+        else if(state == TREG_IDLE) fs_spi <= 1'b1;
+        else if(state == TREG_WAIT) fs_spi <= 1'b1;
+        else if(state == TREG_TAKE) fs_spi <= 1'b1;
+        else if(state == TREG_WORK) fs_spi <= 1'b1;
+        else if(state == TREG_TRAN) fs_spi <= 1'b1;
+        else if(state == TREG_DONE) fs_spi <= 1'b1;
+
+        else if(state == RTMP_IDLE) fs_spi <= 1'b1;
+        else if(state == RTMP_WAIT) fs_spi <= 1'b1;
+        else if(state == RTMP_TAKE) fs_spi <= 1'b1;
+        else if(state == RTMP_WORK) fs_spi <= 1'b1;
+        else if(state == RTMP_TRAN) fs_spi <= 1'b1;
+        else if(state == RTMP_DONE) fs_spi <= 1'b1;
+
+        else fs_spi <= 1'b0;
+    end
+
     spi
     spi_dut(
         .clk(spi_clk),
@@ -985,9 +1084,10 @@ module intan(
         .mosi(mosi),
         .cs(cs),
 
-        .chip_txd(chip_txd),
-        .chip_rxda(chip_rxda),
-        .chip_rxdb(chip_rxdb)
+        .chip_txd(chip_txd_fifo),
+        .chip_rxd(chip_rxd_fifo),
+        .chip_txen(fspi_txen),
+        .chip_rxen(fsys_rxen)
     );
 
     spi2fifo
@@ -1030,6 +1130,30 @@ module intan(
         .rd_clk(fifo_rxc),
         .dout(fifo_rxd[7:0]),
         .rd_en(fifo_rxen[0])
+    );
+
+    fifo_sys2spi
+    fifo_sys2spi(
+        .rst(rst),
+        .wr_clk(clk),
+        .din(chip_txd),
+        .wr_en(fsys_txen),
+
+        .rd_clk(spi_clk),
+        .dout(chip_txd_fifo),
+        .rd_en(fsys_rxen)
+    );
+
+    fifo_spi2sys
+    fifo_spi2sys_dut(
+        .rst(rst),
+        .wr_clk(spi_clk),
+        .din(chip_rxd_fifo),
+        .wr_en(fspi_txen),
+
+        .rd_clk(clk),
+        .dout(chip_rxd),
+        .rd_en(fspi_rxen)
     );
 
 

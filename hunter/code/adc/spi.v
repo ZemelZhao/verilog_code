@@ -181,22 +181,22 @@ module spi(
         if(rst) chip_rxd0 <= 16'h0000;
         else if(state == IDLE) chip_rxd0 <= 16'h0000;
         else if(state == WAIT) chip_rxd0 <= 16'h0000;
-        else if(state == SPI01) chip_rxd0[15] <= miso;
-        else if(state == SPI02) chip_rxd0[14] <= miso;
-        else if(state == SPI03) chip_rxd0[13] <= miso;
-        else if(state == SPI04) chip_rxd0[12] <= miso;
-        else if(state == SPI05) chip_rxd0[11] <= miso;
-        else if(state == SPI06) chip_rxd0[10] <= miso;
-        else if(state == SPI07) chip_rxd0[9] <= miso;
-        else if(state == SPI08) chip_rxd0[8] <= miso;
-        else if(state == SPI09) chip_rxd0[7] <= miso;
-        else if(state == SPI0A) chip_rxd0[6] <= miso;
-        else if(state == SPI0B) chip_rxd0[5] <= miso;
-        else if(state == SPI0C) chip_rxd0[4] <= miso;
-        else if(state == SPI0D) chip_rxd0[3] <= miso;
-        else if(state == SPI0E) chip_rxd0[2] <= miso;
-        else if(state == SPI0F) chip_rxd0[1] <= miso;
-        else if(state == LAST0) chip_rxd0[0] <= miso;
+        else if(state == SPI30) chip_rxd0[15] <= miso;
+        else if(state == SPI31) chip_rxd0[14] <= miso;
+        else if(state == SPI32) chip_rxd0[13] <= miso;
+        else if(state == SPI33) chip_rxd0[12] <= miso;
+        else if(state == SPI34) chip_rxd0[11] <= miso;
+        else if(state == SPI35) chip_rxd0[10] <= miso;
+        else if(state == SPI36) chip_rxd0[9] <= miso;
+        else if(state == SPI37) chip_rxd0[8] <= miso;
+        else if(state == SPI38) chip_rxd0[7] <= miso;
+        else if(state == SPI39) chip_rxd0[6] <= miso;
+        else if(state == SPI3A) chip_rxd0[5] <= miso;
+        else if(state == SPI3B) chip_rxd0[4] <= miso;
+        else if(state == SPI3C) chip_rxd0[3] <= miso;
+        else if(state == SPI3D) chip_rxd0[2] <= miso;
+        else if(state == SPI3E) chip_rxd0[1] <= miso;
+        else if(state == SPI3F) chip_rxd0[0] <= miso;
         else chip_rxd0 <= chip_rxd0;
     end
     
@@ -204,22 +204,22 @@ module spi(
         if(rst) chip_rxd1 <= 16'h0000;
         else if(state == IDLE) chip_rxd1 <= 16'h0000;
         else if(state == WAIT) chip_rxd1 <= 16'h0000;
-        else if(state == SPI21) chip_rxd1[15] <= miso;
-        else if(state == SPI22) chip_rxd1[14] <= miso;
-        else if(state == SPI23) chip_rxd1[13] <= miso;
-        else if(state == SPI24) chip_rxd1[12] <= miso;
-        else if(state == SPI25) chip_rxd1[11] <= miso;
-        else if(state == SPI26) chip_rxd1[10] <= miso;
-        else if(state == SPI27) chip_rxd1[9] <= miso;
-        else if(state == SPI28) chip_rxd1[8] <= miso;
-        else if(state == SPI29) chip_rxd1[7] <= miso;
-        else if(state == SPI2A) chip_rxd1[6] <= miso;
-        else if(state == SPI2B) chip_rxd1[5] <= miso;
-        else if(state == SPI2C) chip_rxd1[4] <= miso;
-        else if(state == SPI2D) chip_rxd1[3] <= miso;
-        else if(state == SPI2E) chip_rxd1[2] <= miso;
-        else if(state == SPI2F) chip_rxd1[1] <= miso;
-        else if(state == LAST2) chip_rxd1[0] <= miso;
+        else if(state == SPI11) chip_rxd1[15] <= miso;
+        else if(state == SPI12) chip_rxd1[14] <= miso;
+        else if(state == SPI13) chip_rxd1[13] <= miso;
+        else if(state == SPI14) chip_rxd1[12] <= miso;
+        else if(state == SPI15) chip_rxd1[11] <= miso;
+        else if(state == SPI16) chip_rxd1[10] <= miso;
+        else if(state == SPI17) chip_rxd1[9] <= miso;
+        else if(state == SPI18) chip_rxd1[8] <= miso;
+        else if(state == SPI19) chip_rxd1[7] <= miso;
+        else if(state == SPI1A) chip_rxd1[6] <= miso;
+        else if(state == SPI1B) chip_rxd1[5] <= miso;
+        else if(state == SPI1C) chip_rxd1[4] <= miso;
+        else if(state == SPI1D) chip_rxd1[3] <= miso;
+        else if(state == SPI1E) chip_rxd1[2] <= miso;
+        else if(state == SPI1F) chip_rxd1[1] <= miso;
+        else if(state == LAST1) chip_rxd1[0] <= miso;
         else chip_rxd1 <= chip_rxd1;
     end
 
@@ -283,20 +283,6 @@ module spi(
         else if(state == IDLE) chip_rxd <= 32'h00000000;
         else if(state == LAST3) chip_rxd <= {chip_rxd0, chip_rxd1};
         else chip_rxd <= chip_rxd;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) chip_txen <= 1'b0;
-        else if(state == IDLE) chip_txen <= 1'b0;
-        else if(state == LAST3) chip_txen <= 1'b1;
-        else chip_txen <= 1'b0;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) chip_rxen <= 1'b0;
-        else if(state == IDLE) chip_rxen <= 1'b0;
-        else if(state == WORK) chip_rxen <= 1'b1;
-        else chip_rxen <= 1'b0;
     end
 
     always@(posedge clk or posedge rst) begin

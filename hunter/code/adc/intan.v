@@ -985,28 +985,6 @@ module intan(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) fsys_txen <= 1'b0;
-        else if(state == MAIN_IDLE) fsys_txen <= 1'b0;
-        else if(state == IDLE_IDLE) fsys_txen <= 1'b1;
-        else if(state == WRAM_IDLE) fsys_txen <= 1'b1;
-        else if(state == RREG_IDLE) fsys_txen <= 1'b1;
-        else if(state == TREG_IDLE) fsys_txen <= 1'b1;
-        else if(state == RTMP_IDLE) fsys_txen <= 1'b1;
-        else fsys_txen <= 1'b0;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) fspi_rxen <= 1'b0;
-        else if(state == MAIN_IDLE) fspi_rxen <= 1'b0;
-        else if(state == IDLE_TAKE) fspi_rxen <= 1'b1;
-        else if(state == WRAM_TAKE) fspi_rxen <= 1'b1;
-        else if(state == RREG_TAKE) fspi_rxen <= 1'b1;
-        else if(state == TREG_TAKE) fspi_rxen <= 1'b1;
-        else if(state == RTMP_TAKE) fspi_rxen <= 1'b1;
-        else fspi_rxen <= 1'b0;
-    end
-
-    always@(posedge clk or posedge rst) begin
         if(rst) chip_rxda <= 16'h0000;
         else if(state == MAIN_IDLE) chip_rxda <= 16'h0000;
         else if(state == IDLE_TAKE) chip_rxda <= chip_rxd[31:16];
@@ -1084,10 +1062,8 @@ module intan(
         .mosi(mosi),
         .cs(cs),
 
-        .chip_txd(chip_txd_fifo),
-        .chip_rxd(chip_rxd_fifo),
-        .chip_txen(fspi_txen),
-        .chip_rxen(fsys_rxen)
+        .chip_txd(chip_txd),
+        .chip_rxd(chip_rxd)
     );
 
     spi2fifo
@@ -1132,29 +1108,29 @@ module intan(
         .rd_en(fifo_rxen[0])
     );
 
-    fifo_sys2spi
-    fifo_sys2spi(
-        .rst(rst),
-        .wr_clk(clk),
-        .din(chip_txd),
-        .wr_en(fsys_txen),
+    // fifo_sys2spi
+    // fifo_sys2spi(
+    //     .rst(rst),
+    //     .wr_clk(clk),
+    //     .din(chip_txd),
+    //     .wr_en(fsys_txen),
 
-        .rd_clk(spi_clk),
-        .dout(chip_txd_fifo),
-        .rd_en(fsys_rxen)
-    );
+    //     .rd_clk(spi_clk),
+    //     .dout(chip_txd_fifo),
+    //     .rd_en(fsys_rxen)
+    // );
 
-    fifo_spi2sys
-    fifo_spi2sys_dut(
-        .rst(rst),
-        .wr_clk(spi_clk),
-        .din(chip_rxd_fifo),
-        .wr_en(fspi_txen),
+    // fifo_spi2sys
+    // fifo_spi2sys_dut(
+    //     .rst(rst),
+    //     .wr_clk(spi_clk),
+    //     .din(chip_rxd_fifo),
+    //     .wr_en(fspi_txen),
 
-        .rd_clk(clk),
-        .dout(chip_rxd),
-        .rd_en(fspi_rxen)
-    );
+    //     .rd_clk(clk),
+    //     .dout(chip_rxd),
+    //     .rd_en(fspi_rxen)
+    // );
 
 
 

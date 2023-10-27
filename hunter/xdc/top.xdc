@@ -31,10 +31,10 @@ set_property PACKAGE_PIN T19 [get_ports com_txf]
 set_property PACKAGE_PIN T20 [get_ports com_rxf]
 
 ## ADC Section
-set_property IOSTANDARD LVDS_25 [get_ports {adc_miso_p[*]}]
-set_property IOSTANDARD LVDS_25 [get_ports {adc_mosi_p[*]}]
-set_property IOSTANDARD LVDS_25 [get_ports {adc_sclk_p[*]}]
-set_property IOSTANDARD LVDS_25 [get_ports {adc_cs_p[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {adc_miso_p[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {adc_mosi_p[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {adc_sclk_p[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {adc_cs_p[*]}]
 
 set_property PACKAGE_PIN E11 [get_ports {adc_miso_p[0]}]
 set_property PACKAGE_PIN D13 [get_ports {adc_miso_p[1]}]
@@ -55,6 +55,7 @@ set_property PACKAGE_PIN G11 [get_ports {adc_cs_p[0]}]
 set_property PACKAGE_PIN F12 [get_ports {adc_cs_p[1]}]
 set_property PACKAGE_PIN C15 [get_ports {adc_cs_p[2]}]
 set_property PACKAGE_PIN B14 [get_ports {adc_cs_p[3]}]
+
 
 
 

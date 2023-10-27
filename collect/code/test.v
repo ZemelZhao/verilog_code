@@ -17,11 +17,11 @@ module test(
 
     wire clk_in;
     wire clk;
-    wire clk_12m5, clk_50, clk_100;
-    wire clk_400;
+    wire clk_slow, clk_norm, clk_fast;
+    wire clk_ulta;
     wire rst;
 
-    assign clk = clk_50;
+    assign clk = clk_norm;
     assign rst = ~rst_n;
 
     reg link;
@@ -161,12 +161,12 @@ module test(
 
     usb
     usb_dut(
-        .sys_clk(clk_50),
-        .usb_txc(clk_12m5),
-        .usb_rxc(clk_50),
-        .pin_txc(clk_100),
-        .pin_rxc(clk_100),
-        .pin_cc(clk_400),
+        .sys_clk(clk_norm),
+        .usb_txc(clk_slow),
+        .usb_rxc(clk_norm),
+        .pin_txc(clk_fast),
+        .pin_rxc(clk_fast),
+        .pin_cc(clk_ulta),
 
         .rst(rst),
 
@@ -193,12 +193,12 @@ module test(
 
     ram_data
     ram_data_dut(
-        .clka(clk_50),
+        .clka(clk_norm),
         .addra(ram_txa),
         .dina(ram_txd),
         .wea(ram_txen),
 
-        .clkb(clk_50),
+        .clkb(clk_norm),
         .addrb(ram_rxa),
         .doutb(ram_rxd)
     );
@@ -206,10 +206,10 @@ module test(
     clk_wiz
     clk_wiz_dut(
         .clk_in(clk_in),
-        .clk_12m5(clk_12m5),
-        .clk_50(clk_50),
-        .clk_100(clk_100),
-        .clk_400(clk_400)
+        .clk_slow(clk_slow),
+        .clk_norm(clk_norm),
+        .clk_fast(clk_fast),
+        .clk_ulta(clk_ulta)
     );
 
     IBUFGDS 

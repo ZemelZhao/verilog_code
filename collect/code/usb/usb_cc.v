@@ -1,5 +1,6 @@
 module usb_cc(
     input clk,
+    input clk_fast,
     input fire,
 
     input usb_txd,
@@ -16,6 +17,7 @@ module usb_cc(
     localparam W0 = 4'h4, W1 = 4'h5, W2 = 4'h6, W3 = 4'h7;
 
     reg [2:0] lut0, lut1, lut2, lut3;
+    reg [3:0] rxd;
     wire rst;
 
     assign rst = ~fire;
@@ -81,59 +83,64 @@ module usb_cc(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) usb_rxd[0] <= 1'b0;
-        else if(state == IDLE) usb_rxd[0] <= 1'b0;
-        else if(state == W3 && lut0 == 3'h0) usb_rxd[0] <= 1'b0; 
-        else if(state == W3 && lut0 == 3'h1) usb_rxd[0] <= 1'b0; 
-        else if(state == W3 && lut0 == 3'h2) usb_rxd[0] <= 1'b0; 
-        else if(state == W3 && lut0 == 3'h3) usb_rxd[0] <= 1'b1; 
-        else if(state == W3 && lut0 == 3'h4) usb_rxd[0] <= 1'b0; 
-        else if(state == W3 && lut0 == 3'h5) usb_rxd[0] <= 1'b1; 
-        else if(state == W3 && lut0 == 3'h6) usb_rxd[0] <= 1'b1; 
-        else if(state == W3 && lut0 == 3'h7) usb_rxd[0] <= 1'b1; 
-        else usb_rxd[0] <= usb_rxd[0];
+        if(rst) rxd[0] <= 1'b0;
+        else if(state == IDLE) rxd[0] <= 1'b0;
+        else if(state == W3 && lut0 == 3'h0) rxd[0] <= 1'b0; 
+        else if(state == W3 && lut0 == 3'h1) rxd[0] <= 1'b0; 
+        else if(state == W3 && lut0 == 3'h2) rxd[0] <= 1'b0; 
+        else if(state == W3 && lut0 == 3'h3) rxd[0] <= 1'b1; 
+        else if(state == W3 && lut0 == 3'h4) rxd[0] <= 1'b0; 
+        else if(state == W3 && lut0 == 3'h5) rxd[0] <= 1'b1; 
+        else if(state == W3 && lut0 == 3'h6) rxd[0] <= 1'b1; 
+        else if(state == W3 && lut0 == 3'h7) rxd[0] <= 1'b1; 
+        else rxd[0] <= rxd[0];
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) usb_rxd[1] <= 1'b0;
-        else if(state == IDLE) usb_rxd[1] <= 1'b0;
-        else if(state == W3 && lut1 == 3'h0) usb_rxd[1] <= 1'b0; 
-        else if(state == W3 && lut1 == 3'h1) usb_rxd[1] <= 1'b0; 
-        else if(state == W3 && lut1 == 3'h2) usb_rxd[1] <= 1'b0; 
-        else if(state == W3 && lut1 == 3'h3) usb_rxd[1] <= 1'b1; 
-        else if(state == W3 && lut1 == 3'h4) usb_rxd[1] <= 1'b0; 
-        else if(state == W3 && lut1 == 3'h5) usb_rxd[1] <= 1'b1; 
-        else if(state == W3 && lut1 == 3'h6) usb_rxd[1] <= 1'b1; 
-        else if(state == W3 && lut1 == 3'h7) usb_rxd[1] <= 1'b1; 
-        else usb_rxd[1] <= usb_rxd[1];
+        if(rst) rxd[1] <= 1'b0;
+        else if(state == IDLE) rxd[1] <= 1'b0;
+        else if(state == W3 && lut1 == 3'h0) rxd[1] <= 1'b0; 
+        else if(state == W3 && lut1 == 3'h1) rxd[1] <= 1'b0; 
+        else if(state == W3 && lut1 == 3'h2) rxd[1] <= 1'b0; 
+        else if(state == W3 && lut1 == 3'h3) rxd[1] <= 1'b1; 
+        else if(state == W3 && lut1 == 3'h4) rxd[1] <= 1'b0; 
+        else if(state == W3 && lut1 == 3'h5) rxd[1] <= 1'b1; 
+        else if(state == W3 && lut1 == 3'h6) rxd[1] <= 1'b1; 
+        else if(state == W3 && lut1 == 3'h7) rxd[1] <= 1'b1; 
+        else rxd[1] <= rxd[1];
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) usb_rxd[2] <= 1'b0;
-        else if(state == IDLE) usb_rxd[2] <= 1'b0;
-        else if(state == W3 && lut2 == 3'h0) usb_rxd[2] <= 1'b0; 
-        else if(state == W3 && lut2 == 3'h1) usb_rxd[2] <= 1'b0; 
-        else if(state == W3 && lut2 == 3'h2) usb_rxd[2] <= 1'b0; 
-        else if(state == W3 && lut2 == 3'h3) usb_rxd[2] <= 1'b1; 
-        else if(state == W3 && lut2 == 3'h4) usb_rxd[2] <= 1'b0; 
-        else if(state == W3 && lut2 == 3'h5) usb_rxd[2] <= 1'b1; 
-        else if(state == W3 && lut2 == 3'h6) usb_rxd[2] <= 1'b1; 
-        else if(state == W3 && lut2 == 3'h7) usb_rxd[2] <= 1'b1; 
-        else usb_rxd[2] <= usb_rxd[2];
+        if(rst) rxd[2] <= 1'b0;
+        else if(state == IDLE) rxd[2] <= 1'b0;
+        else if(state == W3 && lut2 == 3'h0) rxd[2] <= 1'b0; 
+        else if(state == W3 && lut2 == 3'h1) rxd[2] <= 1'b0; 
+        else if(state == W3 && lut2 == 3'h2) rxd[2] <= 1'b0; 
+        else if(state == W3 && lut2 == 3'h3) rxd[2] <= 1'b1; 
+        else if(state == W3 && lut2 == 3'h4) rxd[2] <= 1'b0; 
+        else if(state == W3 && lut2 == 3'h5) rxd[2] <= 1'b1; 
+        else if(state == W3 && lut2 == 3'h6) rxd[2] <= 1'b1; 
+        else if(state == W3 && lut2 == 3'h7) rxd[2] <= 1'b1; 
+        else rxd[2] <= rxd[2];
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) usb_rxd[3] <= 1'b0;
-        else if(state == IDLE) usb_rxd[3] <= 1'b0;
-        else if(state == W3 && lut3 == 3'h0) usb_rxd[3] <= 1'b0; 
-        else if(state == W3 && lut3 == 3'h1) usb_rxd[3] <= 1'b0; 
-        else if(state == W3 && lut3 == 3'h2) usb_rxd[3] <= 1'b0; 
-        else if(state == W3 && lut3 == 3'h3) usb_rxd[3] <= 1'b1; 
-        else if(state == W3 && lut3 == 3'h4) usb_rxd[3] <= 1'b0; 
-        else if(state == W3 && lut3 == 3'h5) usb_rxd[3] <= 1'b1; 
-        else if(state == W3 && lut3 == 3'h6) usb_rxd[3] <= 1'b1; 
-        else if(state == W3 && lut3 == 3'h7) usb_rxd[3] <= 1'b1; 
-        else usb_rxd[3] <= usb_rxd[3];
+        if(rst) rxd[3] <= 1'b0;
+        else if(state == IDLE) rxd[3] <= 1'b0;
+        else if(state == W3 && lut3 == 3'h0) rxd[3] <= 1'b0; 
+        else if(state == W3 && lut3 == 3'h1) rxd[3] <= 1'b0; 
+        else if(state == W3 && lut3 == 3'h2) rxd[3] <= 1'b0; 
+        else if(state == W3 && lut3 == 3'h3) rxd[3] <= 1'b1; 
+        else if(state == W3 && lut3 == 3'h4) rxd[3] <= 1'b0; 
+        else if(state == W3 && lut3 == 3'h5) rxd[3] <= 1'b1; 
+        else if(state == W3 && lut3 == 3'h6) rxd[3] <= 1'b1; 
+        else if(state == W3 && lut3 == 3'h7) rxd[3] <= 1'b1; 
+        else rxd[3] <= rxd[3];
+    end
+
+    always@(posedge clk_fast or posedge rst) begin
+        if(rst) usb_rxd <= 4'h0;
+        else usb_rxd <= rxd;
     end
 
 endmodule

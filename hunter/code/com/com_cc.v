@@ -69,36 +69,11 @@ module com_cc(
         else rxd <= rxd;
     end
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) fifo_txen <= 1'b0;
-        else if(state == IDLE) fifo_txen <= 1'b0;
-        else if(state == W3) fifo_txen <= 1'b1;
-        else fifo_txen <= 1'b0;
-    end
-
-    always@(posedge clk_fast or posedge rst) begin
-        if(rst) fifo_rxen <= 1'b0;
-        else fifo_rxen <= 1'b1;
-    end
 
     always@(posedge clk_fast or posedge rst) begin
         if(rst) usb_rxd <= 1'b0;
         else usb_rxd <= rxd;
     end
-
-
-    // fifo_com
-    // fifo_com_dut(
-    //     .rst(rst),
-    //     .wr_clk(clk),
-    //     .din(rxd),
-    //     .wr_en(fifo_txen),
-
-    //     .rd_clk(clk_fast),
-    //     .dout(mid_rxd),
-    //     .rd_en(fifo_rxen)
-    // );
-
 
 
 

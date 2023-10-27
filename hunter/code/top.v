@@ -8,26 +8,34 @@ module top(
     input [1:0] com_rxd_n,
 
     input [3:0] adc_miso_p,
-    input [3:0] adc_miso_n,
     output [3:0] adc_mosi_p,
-    output [3:0] adc_mosi_n,
-    output [3:0] adc_sclk_p,
-    output [3:0] adc_sclk_n,
     output [3:0] adc_cs_p,
-    output [3:0] adc_cs_n,
+    output [3:0] adc_sclk_p,
+
+    // input [3:0] adc_miso_p,
+    // input [3:0] adc_miso_n,
+    // output [3:0] adc_mosi_p,
+    // output [3:0] adc_mosi_n,
+    // output [3:0] adc_sclk_p,
+    // output [3:0] adc_sclk_n,
+    // output [3:0] adc_cs_p,
+    // output [3:0] adc_cs_n,
 
     input com_rxf,
     output com_txf
 );
 
     wire clk_slow, clk_norm, clk_fast, clk_ulta;
-    wire clk_chip;
 
     wire [3:0] pin_txd;
     wire pin_rxd;
     wire fire_read, fire_send;
 
     wire [3:0] pin_cs, pin_sclk, pin_miso, pin_mosi;
+    assign adc_cs_p = pin_cs;
+    assign adc_sclk_p = pin_sclk;
+    assign adc_mosi_p = pin_mosi;
+    assign pin_miso = adc_miso_p;
 
     wire rst;
 
@@ -183,24 +191,24 @@ module top(
         .com_rxf(com_rxf),
         .com_txf(com_txf),
 
-        .adc_miso_p(adc_miso_p),
-        .adc_miso_n(adc_miso_n),
-        .adc_cs_p(adc_cs_p),
-        .adc_cs_n(adc_cs_n),
-        .adc_mosi_p(adc_mosi_p),
-        .adc_mosi_n(adc_mosi_n),
-        .adc_sclk_p(adc_sclk_p),
-        .adc_sclk_n(adc_sclk_n),
+        // .adc_miso_p(adc_miso_p),
+        // .adc_miso_n(adc_miso_n),
+        // .adc_cs_p(adc_cs_p),
+        // .adc_cs_n(adc_cs_n),
+        // .adc_mosi_p(adc_mosi_p),
+        // .adc_mosi_n(adc_mosi_n),
+        // .adc_sclk_p(adc_sclk_p),
+        // .adc_sclk_n(adc_sclk_n),
 
         .pin_txd(pin_txd),
         .pin_rxd(pin_rxd),
         .fire_send(fire_send),
-        .fire_read(fire_read),
+        .fire_read(fire_read)
 
-        .pin_cs(pin_cs),
-        .pin_sclk(pin_sclk),
-        .pin_mosi(pin_mosi),
-        .pin_miso(pin_miso)
+        // .pin_cs(pin_cs),
+        // .pin_sclk(pin_sclk),
+        // .pin_mosi(pin_mosi),
+        // .pin_miso(pin_miso)
     );
 
     clk_wiz
@@ -208,7 +216,6 @@ module top(
         .clk_in(clk_in),
         .clk_slow(clk_slow),
         .clk_norm(clk_norm),
-        .clk_chip(clk_chip),
         .clk_fast(clk_fast),
         .clk_ulta(clk_ulta)
     );

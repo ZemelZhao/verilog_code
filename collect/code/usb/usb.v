@@ -118,6 +118,7 @@ module usb(
     usb_cc
     usb_cc_dut(
         .clk(pin_cc),
+        .clk_fast(pin_rxc),
         .fire(fire_read),
 
         .usb_txd(usb_txd),

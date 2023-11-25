@@ -35,12 +35,12 @@ module mac(
     input [7:0] fifo_data_rxd
 );
 
-    localparam SRC_MAC_ADDR = 48'hF5DB0A3EBE79;
+    localparam SRC_MAC_ADDR = 48'h3CECEFF57563;
     localparam DET_MAC_ADDR = 48'hFFFFFFFFFFFF;
     localparam SRC_IP_ADDR = 32'hC0A80003;
-    localparam DET_IP_ADDR = 32'hC0A80002;
-    localparam SRC_IP_PORT = 16'h1F90;
-    localparam DET_IP_PORT = 16'h1F90;
+    localparam DET_IP_ADDR = 32'hC0A800FF;
+    localparam SRC_IP_PORT = 16'hF3D0;
+    localparam DET_IP_PORT = 16'h05FE;
 
     wire [47:0] src_mac_addr, tgt_mac_addr;
     wire [31:0] src_ip_addr, tgt_ip_addr;
@@ -100,9 +100,6 @@ module mac(
         .txd(e_txd),
         .txen(e_txen)
     );
-    
-
-
 
 
 endmodule

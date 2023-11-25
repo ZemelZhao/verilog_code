@@ -8,7 +8,7 @@ module usb_cs(
     input fd_read,
 
     output reg [3:0] read_btype,
-    input [11:0] read_ram_init,
+    input [11:0] data_idx,
 
     input [3:0] send_btype,
 
@@ -32,6 +32,11 @@ module usb_cs(
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
     localparam BAG_ERROR = 4'b1111;
+
+    localparam ADC_RAM_ADDR_DATA0 = 12'h000, ADC_RAM_ADDR_DATA1 = 12'h240;
+    localparam ADC_RAM_ADDR_DATA2 = 12'h480, ADC_RAM_ADDR_DATA3 = 12'h6C0;
+    localparam ADC_RAM_ADDR_DATA4 = 12'h900, ADC_RAM_ADDR_DATA5 = 12'hB40;
+    localparam ADC_RAM_ADDR_INIT = 12'hF00;
 
     (*MARK_DEBUG = "true"*)reg [7:0] state, next_state;
     reg [7:0] state_goto;
@@ -147,10 +152,15 @@ module usb_cs(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) rx_ram_init <= 12'h000;
-        else if(state == MAIN_IDLE) rx_ram_init <= 12'h000;
-        else if(state == MAIN_WAIT) rx_ram_init <= 12'h000;
-        else if(state == READ_PREP) rx_ram_init <= read_ram_init;
+        if(rst) rx_ram_init <= ADC_RAM_ADDR_INIT;
+        else if(state == MAIN_IDLE) rx_ram_init <= ADC_RAM_ADDR_INIT;
+        else if(state == MAIN_WAIT) rx_ram_init <= ADC_RAM_ADDR_INIT;
+        else if(state == READ_PREP && data_idx == 4'h0) rx_ram_init <= ADC_RAM_ADDR_DATA0;
+        else if(state == READ_PREP && data_idx == 4'h1) rx_ram_init <= ADC_RAM_ADDR_DATA1;
+        else if(state == READ_PREP && data_idx == 4'h2) rx_ram_init <= ADC_RAM_ADDR_DATA2;
+        else if(state == READ_PREP && data_idx == 4'h3) rx_ram_init <= ADC_RAM_ADDR_DATA3;
+        else if(state == READ_PREP && data_idx == 4'h4) rx_ram_init <= ADC_RAM_ADDR_DATA4;
+        else if(state == READ_PREP && data_idx == 4'h5) rx_ram_init <= ADC_RAM_ADDR_DATA5;
         else rx_ram_init <= rx_ram_init;
     end
 

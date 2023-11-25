@@ -1,29 +1,33 @@
-module console_cnt(
+module console_tick(
     input clk,
-    input rst,
+    input work,
 
     input [3:0] freq_samp,
-    input fs_cnt,
 
     output fs,
-    input fd_
+    input fd
 );
 
-    localparam FREQ_SAMP_1KHZ = 4'h1, FREQ_SAMP_2KHZ = 4'h2, FREQ_SAMP_4KHZ = 4'h3;
-    localparam FREQ_SAMP_8KHZ = 4'h4, FREQ_SAMP_16KHZ = 4'h5;
+    localparam IDLE = 4'b0001, WORK = 4'b0010, WAIT = 4'b0100, EROR = 4'b1000;
 
-    localparam CNT_FS_1KHZ = 16'd50_000, CNT_FS_2KHZ = 16'd25_000, CNT_FS_4KHZ = 16'd12_500;
-    localparam CNT_FS_8KHZ = 16'd6_250, CNT_FS_16KHZ = 16'd3_125;
+    localparam FSAMP_1KHZ = 4'h1, FSAMP_2KHZ = 4'h2, FSAMP_4KHZ = 4'h3;
+    localparam FSAMP_8KHZ = 4'h4, FSAMP_16KHZ = 4'h5;
+
+    localparam TICK_1KHZ = 16'd50_000, TICK_2KHZ = 16'd25_000, TICK_4KHZ = 16'd12_500;
+    localparam TICK_8KHZ = 16'd6_250, TICK_16KHZ = 16'd3_125;
 
     localparam NUMOUT = 16'h80;
 
-    reg [7:0] state, next_state;
-    localparam IDLE = 8'h00, WORK = 8'h01, WORK = 8'h02, DONE = 8'h03;
+    reg [3:0] state, next_state;
+    localparam IDLE = 4'h1, WORK = 4'h2, WAIT = 4'h4, DONE = 4'h8;
 
     reg [15:0] countdown;
     reg [15:0] num;
 
+    wire rst;
+
     assign fs = (state == DONE);
+    assign rst = ~work;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -57,19 +61,14 @@ module console_cnt(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) countdown <= CNT_FS_1KHZ;
-        else if(state == IDLE) countdown <= CNT_FS_1KHZ; 
-        else if(freq_samp == FREQ_SAMP_1KHZ) countdown <= CNT_FS_1KHZ;
-        else if(freq_samp == FREQ_SAMP_2KHZ) countdown <= CNT_FS_2KHZ;
-        else if(freq_samp == FREQ_SAMP_3KHZ) countdown <= CNT_FS_3KHZ;
-        else if(freq_samp == FREQ_SAMP_4KHZ) countdown <= CNT_FS_4KHZ;
-        else if(freq_samp == FREQ_SAMP_5KHZ) countdown <= CNT_FS_5KHZ;
-        else countdown <= CNT_FS_1KHZ;
+        if(rst) countdown <= TICK_1KHZ;
+        else if(state == IDLE) countdown <= TICK_1KHZ; 
+        else if(freq_samp == FSAMP_1KHZ) countdown <= TICK_1KHZ;
+        else if(freq_samp == FSAMP_2KHZ) countdown <= TICK_2KHZ;
+        else if(freq_samp == FSAMP_4KHZ) countdown <= TICK_4KHZ;
+        else if(freq_samp == FSAMP_8KHZ) countdown <= TICK_8KHZ;
+        else if(freq_samp == FSAMP_16KHZ) countdown <= TICK_16KHZ;
+        else countdown <= TICK_1KHZ;
     end
-
-
-
-
-
 
 endmodule

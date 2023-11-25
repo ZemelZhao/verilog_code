@@ -2,265 +2,290 @@ module console_usb(
     input clk,
     input rst,
 
-    output [0:7] fs_send,
-    input [0:7] fd_send,
-    input [0:7] fs_read,
-    output [0:7] fd_read,
-    output [0:31] send_btype,
-    input [0:31] read_btype,
-    output [0:255] cache_cmd,
+    input fs_adc_conf,
+    output fd_adc_conf,
+    input fs_adc_conv,
+    output fd_adc_conv,
+
+    input [15:0] device_cmd,
+    input [3:0] data_idx,
+
+    output [0:7] fs_usb_send,
+    input [0:7] fd_usb_send,
+    input [0:7] fs_usb_read,
+    output [0:7] fd_usb_read,
+
+    output [0:31] send_usb_btype,
+    input [0:31] read_usb_btype, 
+
     input [0:255] cache_stat,
+    output [0:255] cache_cmd,
+    output [95:0] adc_info 
 );
 
-    localparam DEVICE_IDX0 = 4'h1, DEVICE_IDX1 = 4'h3, DEVICE_IDX2 = 4'h5, DEVICE_IDX3 = 4'h7;
-    localparam DEVICE_IDX4 = 4'h9, DEVICE_IDX5 = 4'hB, DEVICE_IDX6 = 4'hD, DEVICE_IDX7 = 4'hF;
+    wire [0:7] adc_stat;
+    wire [15:0] conf_cmd;
 
-    wire [3:0] data_idx;
-    wire [15:0] device_cmd;
-    wire [0:127] device_stat;
-    wire [3:0] dlv_send_btype;
-    wire [0:31] rly_read_btype; 
-    wire fs_send_dlv, fd_read_rly;
-    wire [0:7] fd_send_dlv, fs_read_rly;
+    wire [0:7] fd_cs_send, fs_cs_read;
+    wire fs_cs_send, fd_cs_read;
+    wire [3:0] send_cs_btype, read_cs_btype;
 
-    console_usb_sub
-    console_usb_sub_dut0(
+    assign conf_cmd = adc_info[95:80];
+
+    console_usb_hq
+    console_usb_hq_dut(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[0]),
-        .fs_read_rly(fs_read_rly[0]),
-        .fd_read_rly(fd_read_rly),
+        .fs_adc_conf(fs_adc_conf),
+        .fd_adc_conf(fd_adc_conf),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[0:3]),
+        .fs_adc_conv(fs_adc_conv),
+        .fd_adc_conv(fd_adc_conv),
 
-        .fs_send(fs_send[0]),
-        .fd_send(fd_send[0]),
-        .send_btype(send_btype[0:3]),
+        .fs_send(fs_cs_send),
+        .fd_send(fd_cs_send),
+        .fs_read(fs_cs_read),
+        .fd_read(fd_cs_read),
+        .send_btype(send_cs_btype),
+        .read_btype(read_cs_btype),
 
-        .fs_read(fs_read[0]),
-        .fd_read(fd_read[0]),
-        .read_btype(read_btype[0:3]),
-
-        .device_idx(DEVICE_IDX0),
-        .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[0:31]),
-
-        .cache_stat(cache_stat[0:31]),
-        .device_stat(deivce_stat[0:15])
+        .cache_stat(cache_stat),
+        .com_cmd(device_cmd),
+        .adc_stat(adc_stat),
+        .adc_info(adc_info)
     );
 
-    console_usb_sub
-    console_usb_sub_dut1(
+    console_usb_branch
+    console_usb_branch_dut0(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[1]),
-        .fs_read_rly(fs_read_rly[1]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[0]),
+        .fs_cs_read(fs_cs_read[0]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[4:7]),
+        .fs_usb_send(fs_usb_send[0]),
+        .fd_usb_send(fd_usb_send[0]),
+        .fs_usb_read(fs_usb_read[0]),
+        .fd_usb_read(fd_usb_read[0]),
 
-        .fs_send(fs_send[1]),
-        .fd_send(fd_send[1]),
-        .send_btype(send_btype[4:7]),
+        .stat(adc_stat[0]),
 
-        .fs_read(fs_read[1]),
-        .fd_read(fd_read[1]),
-        .read_btype(read_btype[4:7]),
-
-        .device_idx(DEVICE_IDX1),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h0),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[32:63]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[32:63]),
-        .device_stat(deivce_stat[16:31])
+        .send_usb_btype(send_usb_btype[0:3]),
+        .read_usb_btype(read_usb_btype[0:3]),
+
+        .cache_cmd(cache_cmd[0:31])
     );
 
-    console_usb_sub
-    console_usb_sub_dut2(
+    console_usb_branch
+    console_usb_branch_dut1(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[2]),
-        .fs_read_rly(fs_read_rly[2]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[1]),
+        .fs_cs_read(fs_cs_read[1]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[8:11]),
+        .fs_usb_send(fs_usb_send[1]),
+        .fd_usb_send(fd_usb_send[1]),
+        .fs_usb_read(fs_usb_read[1]),
+        .fd_usb_read(fd_usb_read[1]),
 
-        .fs_send(fs_send[2]),
-        .fd_send(fd_send[2]),
-        .send_btype(send_btype[8:11]),
+        .stat(adc_stat[1]),
 
-        .fs_read(fs_read[2]),
-        .fd_read(fd_read[2]),
-        .read_btype(read_btype[8:11]),
-
-        .device_idx(DEVICE_IDX2),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h1),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[64:95]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[64:95]),
-        .device_stat(deivce_stat[32:47])
+        .send_usb_btype(send_usb_btype[4:7]),
+        .read_usb_btype(read_usb_btype[4:7]),
+
+        .cache_cmd(cache_cmd[32:63])
     );
 
-    console_usb_sub
-    console_usb_sub_dut3(
+    console_usb_branch
+    console_usb_branch_dut2(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[3]),
-        .fs_read_rly(fs_read_rly[3]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[2]),
+        .fs_cs_read(fs_cs_read[2]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[12:15]),
+        .fs_usb_send(fs_usb_send[2]),
+        .fd_usb_send(fd_usb_send[2]),
+        .fs_usb_read(fs_usb_read[2]),
+        .fd_usb_read(fd_usb_read[2]),
 
-        .fs_send(fs_send[3]),
-        .fd_send(fd_send[3]),
-        .send_btype(send_btype[12:15]),
+        .stat(adc_stat[2]),
 
-        .fs_read(fs_read[3]),
-        .fd_read(fd_read[3]),
-        .read_btype(read_btype[12:15]),
-
-        .device_idx(DEVICE_IDX3),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h2),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[96:127]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[96:127]),
-        .device_stat(deivce_stat[48:63])
+        .send_usb_btype(send_usb_btype[8:11]),
+        .read_usb_btype(read_usb_btype[8:11]),
+
+        .cache_cmd(cache_cmd[64:95])
     );
 
-    console_usb_sub
-    console_usb_sub_dut0(
+    console_usb_branch
+    console_usb_branch_dut3(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[4]),
-        .fs_read_rly(fs_read_rly[4]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[3]),
+        .fs_cs_read(fs_cs_read[3]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[16:19]),
+        .fs_usb_send(fs_usb_send[3]),
+        .fd_usb_send(fd_usb_send[3]),
+        .fs_usb_read(fs_usb_read[3]),
+        .fd_usb_read(fd_usb_read[3]),
 
-        .fs_send(fs_send[4]),
-        .fd_send(fd_send[4]),
-        .send_btype(send_btype[16:19]),
+        .stat(adc_stat[3]),
 
-        .fs_read(fs_read[4]),
-        .fd_read(fd_read[4]),
-        .read_btype(read_btype[16:19]),
-
-        .device_idx(DEVICE_IDX4),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h3),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[128:159]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[128:159]),
-        .device_stat(deivce_stat[64:79])
+        .send_usb_btype(send_usb_btype[12:15]),
+        .read_usb_btype(read_usb_btype[12:15]),
+
+        .cache_cmd(cache_cmd[96:127])
     );
 
-    console_usb_sub
-    console_usb_sub_dut5(
+    console_usb_branch
+    console_usb_branch_dut4(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[5]),
-        .fs_read_rly(fs_read_rly[5]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[4]),
+        .fs_cs_read(fs_cs_read[4]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[20:23]),
+        .fs_usb_send(fs_usb_send[4]),
+        .fd_usb_send(fd_usb_send[4]),
+        .fs_usb_read(fs_usb_read[4]),
+        .fd_usb_read(fd_usb_read[4]),
 
-        .fs_send(fs_send[5]),
-        .fd_send(fd_send[5]),
-        .send_btype(send_btype[20:23]),
+        .stat(adc_stat[4]),
 
-        .fs_read(fs_read[5]),
-        .fd_read(fd_read[5]),
-        .read_btype(read_btype[20:23]),
-
-        .device_idx(DEVICE_IDX5),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h4),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[160:191]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[160:191]),
-        .device_stat(deivce_stat[80:95])
+        .send_usb_btype(send_usb_btype[16:19]),
+        .read_usb_btype(read_usb_btype[16:19]),
+
+        .cache_cmd(cache_cmd[128:159])
     );
 
-    console_usb_sub
-    console_usb_sub_dut6(
+    console_usb_branch
+    console_usb_branch_dut5(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[6]),
-        .fs_read_rly(fs_read_rly[6]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[5]),
+        .fs_cs_read(fs_cs_read[5]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[24:27]),
+        .fs_usb_send(fs_usb_send[5]),
+        .fd_usb_send(fd_usb_send[5]),
+        .fs_usb_read(fs_usb_read[5]),
+        .fd_usb_read(fd_usb_read[5]),
 
-        .fs_send(fs_send[6]),
-        .fd_send(fd_send[6]),
-        .send_btype(send_btype[24:27]),
+        .stat(adc_stat[5]),
 
-        .fs_read(fs_read[6]),
-        .fd_read(fd_read[6]),
-        .read_btype(read_btype[24:27]),
-
-        .device_idx(DEVICE_IDX6),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h5),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[192:223]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[192:223]),
-        .device_stat(deivce_stat[96:111])
+        .send_usb_btype(send_usb_btype[20:23]),
+        .read_usb_btype(read_usb_btype[20:23]),
+
+        .cache_cmd(cache_cmd[160:191])
     );
 
-    console_usb_sub
-    console_usb_sub_dut7(
+    console_usb_branch
+    console_usb_branch_dut6(
         .clk(clk),
         .rst(rst),
 
-        .fs_send_dlv(fs_send_dlv),
-        .fd_send_dlv(fd_send_dlv[7]),
-        .fs_read_rly(fs_read_rly[7]),
-        .fd_read_rly(fd_read_rly),
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[6]),
+        .fs_cs_read(fs_cs_read[6]),
+        .fd_cs_read(fd_cs_read),
 
-        .dlv_send_btype(dlv_send_btype),
-        .rly_read_btype(rly_read_btype[28:31]),
+        .fs_usb_send(fs_usb_send[6]),
+        .fd_usb_send(fd_usb_send[6]),
+        .fs_usb_read(fs_usb_read[6]),
+        .fd_usb_read(fd_usb_read[6]),
 
-        .fs_send(fs_send[7]),
-        .fd_send(fd_send[7]),
-        .send_btype(send_btype[28:31]),
+        .stat(adc_stat[6]),
 
-        .fs_read(fs_read[7]),
-        .fd_read(fd_read[7]),
-        .read_btype(read_btype[28:31]),
-
-        .device_idx(DEVICE_IDX7),
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h6),
         .data_idx(data_idx),
-        .device_cmd(device_cmd),
-        .cache_cmd(cache_cmd[224:255]),
+        .conf_cmd(conf_cmd),
 
-        .cache_stat(cache_stat[224:255]),
-        .device_stat(deivce_stat[112:127])
+        .send_usb_btype(send_usb_btype[24:27]),
+        .read_usb_btype(read_usb_btype[24:27]),
+
+        .cache_cmd(cache_cmd[192:223])
+    );
+
+    console_usb_branch
+    console_usb_branch_dut7(
+        .clk(clk),
+        .rst(rst),
+
+        .fs_cs_send(fs_cs_send),
+        .fd_cs_send(fd_cs_send[7]),
+        .fs_cs_read(fs_cs_read[7]),
+        .fd_cs_read(fd_cs_read),
+
+        .fs_usb_send(fs_usb_send[7]),
+        .fd_usb_send(fd_usb_send[7]),
+        .fs_usb_read(fs_usb_read[7]),
+        .fd_usb_read(fd_usb_read[7]),
+
+        .stat(adc_stat[7]),
+
+        .send_cs_btype(send_cs_btype),
+        .read_cs_btype(read_cs_btype),
+        .device_idx(4'h7),
+        .data_idx(data_idx),
+        .conf_cmd(conf_cmd),
+
+        .send_usb_btype(send_usb_btype[28:31]),
+        .read_usb_btype(read_usb_btype[28:31]),
+
+        .cache_cmd(cache_cmd[224:255])
     );
 
 

@@ -54,9 +54,7 @@ module console_usb_sub(
     assign device_type = cache_stat[23:16];
     assign deivce_stat = cache_stat[15:12];
 
-
     reg [7:0] num;
-
 
     assign fs_send = (state == TYPE_WORK) || (state == CONF_WORK) || (state == CONV_WORK); 
     assign fd_send_dlv = (state == CONF_DONE) || (state == CONV_DONE);

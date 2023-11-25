@@ -8,7 +8,7 @@ module data_make(
     input [3:0] btype,
     input [3:0] data_idx,
 
-    input [47:0] cache_stat,
+    input [95:0] cache_info,
 
     output reg [11:0] cache_ram_rxa,
     input [63:0] cache_ram_rxd,
@@ -33,7 +33,7 @@ module data_make(
 
     localparam BAG_STAT = 4'h1, BAG_DATA = 4'h5;
 
-    localparam SLEN = 12'h08, HLEN = 12'h08, DLEN = 12'h200;
+    localparam SLEN = 12'h0E, HLEN = 12'h04, DLEN = 12'h200;
 
     reg [7:0] state, next_state;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_DONE = 8'h02;
@@ -46,17 +46,16 @@ module data_make(
     reg [11:0] cache_ram_addr_init;
     reg [11:0] dlen;
     reg [3:0] dnum, lnum;
-    wire [0:7] device_stat, device_temp;
+    wire [0:7] device_stat;
 
-    assign device_temp = cache_stat[31:24];
-    assign device_stat[0] = ~(cache_stat[47:46] == 2'b00);
-    assign device_stat[1] = ~(cache_stat[45:44] == 2'b00);
-    assign device_stat[2] = ~(cache_stat[43:42] == 2'b00);
-    assign device_stat[3] = ~(cache_stat[41:40] == 2'b00);
-    assign device_stat[4] = ~(cache_stat[39:38] == 2'b00);
-    assign device_stat[5] = ~(cache_stat[37:36] == 2'b00);
-    assign device_stat[6] = ~(cache_stat[35:34] == 2'b00);
-    assign device_stat[7] = ~(cache_stat[33:32] == 2'b00);
+    assign device_stat[0] = ~(cache_info[79:78] == 2'b00);
+    assign device_stat[1] = ~(cache_info[77:76] == 2'b00);
+    assign device_stat[2] = ~(cache_info[75:74] == 2'b00);
+    assign device_stat[3] = ~(cache_info[73:72] == 2'b00);
+    assign device_stat[4] = ~(cache_info[71:70] == 2'b00);
+    assign device_stat[5] = ~(cache_info[69:68] == 2'b00);
+    assign device_stat[6] = ~(cache_info[67:66] == 2'b00);
+    assign device_stat[7] = ~(cache_info[65:64] == 2'b00);
 
     assign fd = (state == MAIN_DONE);
 
@@ -181,20 +180,22 @@ module data_make(
         else if(state == MAIN_DONE) ram_txd <= 8'h00;
         else if(state == STAT_WORK && dlen == 12'h00) ram_txd <= 8'h66;
         else if(state == STAT_WORK && dlen == 12'h01) ram_txd <= 8'hBB;
-        else if(state == STAT_WORK && dlen == 12'h02) ram_txd <= cache_stat[47:40];
-        else if(state == STAT_WORK && dlen == 12'h03) ram_txd <= cache_stat[39:32];
-        else if(state == STAT_WORK && dlen == 12'h04) ram_txd <= cache_stat[31:24];
-        else if(state == STAT_WORK && dlen == 12'h05) ram_txd <= cache_stat[23:16];
-        else if(state == STAT_WORK && dlen == 12'h06) ram_txd <= cache_stat[15:8];
-        else if(state == STAT_WORK && dlen == 12'h07) ram_txd <= cache_stat[7:0];
+        else if(state == STAT_WORK && dlen == 12'h02) ram_txd <= cache_info[95:88];
+        else if(state == STAT_WORK && dlen == 12'h03) ram_txd <= cache_info[87:80];
+        else if(state == STAT_WORK && dlen == 12'h04) ram_txd <= cache_info[79:72];
+        else if(state == STAT_WORK && dlen == 12'h05) ram_txd <= cache_info[71:64];
+        else if(state == STAT_WORK && dlen == 12'h06) ram_txd <= cache_info[63:56];
+        else if(state == STAT_WORK && dlen == 12'h07) ram_txd <= cache_info[55:48];
+        else if(state == STAT_WORK && dlen == 12'h08) ram_txd <= cache_info[47:40];
+        else if(state == STAT_WORK && dlen == 12'h09) ram_txd <= cache_info[39:32];
+        else if(state == STAT_WORK && dlen == 12'h0A) ram_txd <= cache_info[31:24];
+        else if(state == STAT_WORK && dlen == 12'h0B) ram_txd <= cache_info[23:16];
+        else if(state == STAT_WORK && dlen == 12'h0C) ram_txd <= cache_info[15:8];
+        else if(state == STAT_WORK && dlen == 12'h0D) ram_txd <= cache_info[7:0];
         else if(state == DATA_HEAD && dlen == 12'h00) ram_txd <= 8'h55;
-        else if(state == DATA_HEAD && dlen == 12'h01) ram_txd <= 8'h55;
-        else if(state == DATA_HEAD && dlen == 12'h02) ram_txd <= 8'h55;
-        else if(state == DATA_HEAD && dlen == 12'h03) ram_txd <= 8'h55;
-        else if(state == DATA_HEAD && dlen == 12'h04) ram_txd <= 8'hAA;
-        else if(state == DATA_HEAD && dlen == 12'h05) ram_txd <= device_stat;
-        else if(state == DATA_HEAD && dlen == 12'h06) ram_txd <= device_temp;
-        else if(state == DATA_HEAD && dlen == 12'h07) ram_txd <= {4'h0, data_idx};
+        else if(state == DATA_HEAD && dlen == 12'h01) ram_txd <= 8'hAA;
+        else if(state == DATA_HEAD && dlen == 12'h02) ram_txd <= device_stat;
+        else if(state == DATA_HEAD && dlen == 12'h03) ram_txd <= {4'h0, data_idx};
         else if(state == DATA_WORK && dnum == 4'h0) ram_txd <= cache_ram_rxd[63:56]; 
         else if(state == DATA_WORK && dnum == 4'h1) ram_txd <= cache_ram_rxd[55:48]; 
         else if(state == DATA_WORK && dnum == 4'h2) ram_txd <= cache_ram_rxd[47:40]; 

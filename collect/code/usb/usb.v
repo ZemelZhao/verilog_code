@@ -10,34 +10,38 @@ module usb(
 
     input [3:0] pin_rxd,
     output pin_txd,
-    output fire_send,
-    input fire_read,
+    output pin_send,
+    input pin_read,
 
     input fs_send,
-    input [3:0] send_btype,
     output fd_send,
-    input [31:0] cache_cmd,
-
     output fs_read,
-    output [3:0] read_btype,
-    input [11:0] read_ram_init,
     input fd_read,
+
+    input [3:0] send_btype,
+    output [3:0] read_btype,
+
+    input [3:0] data_idx,
+    input [31:0] cache_cmd,
     output [31:0] cache_stat,
 
-    output [7:0] ram_txd,
-    output [11:0] ram_txa,
-    output ram_txen
+    input [11:0] ram_rxa,
+    input [7:0] ram_rxd
 );
 
     wire [3:0] usb_rxd;
     wire usb_txd;
-    (*MARK_DEBUG = "true"*)wire [7:0] com_rxd, com_txd;
+    wire [7:0] com_rxd, com_txd;
 
     wire fs_tx, fd_tx;
     wire fs_rx, fd_rx;
 
     wire [3:0] tx_btype, rx_btype;
     wire [11:0] rx_ram_init;
+
+    wire [7:0] ram_txd;
+    wire [11:0] ram_txa;
+    wire ram_txen;
 
     usb_cs
     usb_cs_dut(
@@ -51,7 +55,7 @@ module usb(
 
         .read_btype(read_btype),
         .send_btype(send_btype),
-        .read_ram_init(read_ram_init),
+        .data_idx(data_idx),
 
         .fs_tx(fs_tx),
         .fd_tx(fd_tx),
@@ -101,7 +105,7 @@ module usb(
 
         .din(usb_rxd),
         .dout(com_rxd),
-        .fire(fire_read)
+        .fire(pin_read)
     );
 
     usb_txf
@@ -112,14 +116,14 @@ module usb(
 
         .din(com_txd),
         .dout(usb_txd),
-        .fire(fire_send)
+        .fire(pin_send)
     );
 
     usb_cc
     usb_cc_dut(
         .clk(pin_cc),
         .clk_fast(pin_rxc),
-        .fire(fire_read),
+        .fire(pin_read),
 
         .usb_txd(usb_txd),
         .pin_txd(pin_txd),
@@ -127,6 +131,19 @@ module usb(
         .usb_rxd(usb_rxd),
         .pin_rxd(pin_rxd)
     );
+
+    usb_ram
+    usb_ram_dut(
+        .clka(usb_rxc),
+        .addra(ram_txa),
+        .dina(ram_txd),
+        .wea(ram_txen),
+
+        .clkb(pin_rxc),
+        .addrb(ram_rxa),
+        .doutb(ram_rxd)
+    );
+
 
 
 

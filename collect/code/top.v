@@ -1,178 +1,150 @@
 module top(
-    input clk_p,
-    input clk_n,
+    input clk_in_p,
+    input clk_in_n,
+
     input rst_n,
-
-    output fan,
-
-    output e_rstn,
-    output e_mdc,
-    input e_mdio,
-
-    input e_grxc,
-    (*MARK_DEBUG = "true"*)input e_rxdv,
-    input e_rxer,
-    (*MARK_DEBUG = "true"*)input [7:0] e_rxd,
-
-    output e_gtxc,
-    (*MARK_DEBUG = "true"*)output e_txen,
-    output e_txer,
-    (*MARK_DEBUG = "true"*)output [7:0] e_txd
+    output fan_n
 );
 
-    localparam TLEN = 32'd125_000_000;
-    localparam ARP = 16'h0806, IP = 16'h0800;
-    localparam ICMP = 8'h01, TCP = 8'h06, UDP = 8'h11;
+    wire fs_eth_send, fd_eth_send;
+    wire fs_eth_read, fd_eth_read;
+    wire [3:0] send_eth_btype, read_eth_btype;
 
-    reg [7:0] state, next_state;
-    localparam IDLE = 8'h00, WAIT = 8'h01, DONE = 8'h02;
-    localparam FIFO = 8'h10, WORK = 8'h11, REST = 8'h12;
+    wire [0:7] fs_usb_send, fd_usb_send;
+    wire [0:7] fs_udb_read, fd_usb_read;
+    wire [0:31] send_usb_btype, read_usb_btype;
 
-    wire fs_fifo_tx, fd_fifo_tx;
-    wire fs_send, fd_send;
-    wire fs_recv, fd_recv;
-    wire [15:0] tx_dlen, rx_dlen;
-    wire fifo_cmd_rxen, fifo_data_rxen;
-    wire [7:0] fifo_cmd_rxd, fifo_data_rxd;
-    wire fifo_data_txen;
-    wire [7:0] fifo_data_txd;
-    wire fifo_full;
+    wire [15:0] com_cmd;
+    wire [3:0] data_idx;
+    wire [95:0] cache_info; 
 
-    wire [15:0] mac_rx_mode, mac_tx_mode;
-    wire [7:0] ip_rx_mode, ip_tx_mode;
+    wire [0:255] cache_stat, cache_cmd;
 
-    wire clk, rst;
+    wire [15:0] ram_data_rxa, ram_data_txa;
+    wire [7:0] ram_data_rxd, ram_data_txd;
+    wire ram_data_txen;
 
-    reg [31:0] cnt;
+    wire [11:0] ram_usb_rxa;
+    wire [0:63] ram_usb_rxd;
 
-    assign mac_tx_mode = ARP;
-    assign ip_tx_mode = IP;
+    console
+    console_dut(
+        .clk(),
+        .rst(),
 
-    assign rst = ~rst_n;
+        .fs_eth_send(fs_eth_send),
+        .fd_eth_send(fd_eth_send),
+        .fs_eth_read(fs_eth_read),
+        .fd_eth_read(fd_eth_read),
 
+        .fs_usb_send(fs_usb_send),
+        .fd_usb_send(fd_usb_send),
+        .fs_usb_read(fs_usb_read),
+        .fd_usb_read(fd_usb_read),
 
-    assign fan = 1'b0;
-    assign fs_fifo_tx = (state == FIFO);
-    assign tx_dlen = 8'h40;
-    assign fs_send = (state == WORK);
+        .send_eth_btype(send_eth_btype),
+        .read_eth_btype(read_eth_btype),
+        .send_usb_btype(send_usb_btype),
+        .read_usb_btype(read_usb_btype),
 
-
-
-    IBUFDS #(
-        .DIFF_TERM("TRUE"),      // Differential Termination
-        .IBUF_LOW_PWR("TRUE"),   // Low power="TRUE", Highest performance="FALSE" 
-        .IOSTANDARD("DEFAULT")   // Specify the input I/O standard
-    ) u_ibuf_sys_clk (
-        .O(clk),             // Buffer output
-        .I(clk_p),           // Diff_p buffer input (connect directly to top-level port)
-        .IB(clk_n)           // Diff_n buffer input (connect directly to top-level port)
-    ); 
-
-
-    always@(posedge e_grxc or posedge rst) begin
-        if(rst) state <= IDLE;
-        else state <= next_state;
-    end
-
-    always@(*) begin
-        case(state)
-            IDLE: next_state <= WAIT;
-            WAIT: next_state <= FIFO;
-            FIFO: begin
-                if(fd_fifo_tx) next_state <= WORK;
-                else next_state <= FIFO;
-            end
-            WORK: begin
-                if(fd_send) next_state <= REST;
-                else next_state <= WORK;
-            end
-            REST: begin
-                if(cnt >= TLEN - 1'b1) next_state <= DONE;
-                else next_state <= REST;
-            end
-            DONE: next_state <= WAIT;
-            default: next_state <= IDLE;
-        endcase
-    end
-
-    always@(posedge e_grxc or posedge rst) begin
-        if(rst) cnt <= 32'h00;
-        else if(state == IDLE) cnt <= 32'h00;
-        else if(state == UDP) cnt <= 32'h00;
-        else if(state == REST) cnt <= cnt + 1'b1;
-        else cnt <= 32'h00;
-    end
-
-
-
-    fifo_tx
-    fifo_tx_dut(
-        .clk(e_grxc),
-        .rst(rst),
-
-        .full(fifo_full),
-        .fs(fs_fifo_tx),
-        .fd(fd_fifo_tx),
-
-        .dlen(tx_dlen),
-
-        .fifo_txen(fifo_data_txen),
-        .fifo_txd(fifo_data_txd)
+        .cache_stat(cache_stat),
+        .cache_cmd(cache_cmd),
+        .adc_info(cache_info),
+        .com_cmd(com_cmd)
     );
 
+    com
+    com_dut(
+        .clk(),
+        .rst(),
 
-    mac
-    mac_dut(
-        .e_grxc(e_grxc),
-        .e_rxdv(e_rxdv),
-        .e_rxd(e_rxd),
-        .e_rxer(e_rxer),
+        .fs_send(fs_eth_send),
+        .fd_send(fd_eth_send),
+        .fs_read(fs_eth_read),
+        .fd_read(fd_eth_read),
 
-        .e_gtxc(e_gtxc),
-        .e_txen(e_txen),
-        .e_txd(e_txd),
-        .e_txer(e_txer),
+        .send_btype(send_eth_btype),
+        .read_btype(read_eth_btype),
 
-        .e_rstn(e_rstn),
+        .ram_data_rxa(ram_data_rxa),
+        .ram_data_rxd(ram_data_rxd),
+
+        .cache_stat(cache_stat),
+        .cache_info(cache_info),
+        .data_idx(data_idx),
+        .com_cmd(com_cmd),
+
         .e_mdc(e_mdc),
         .e_mdio(e_mdio),
+        .e_rstn(e_rstn),
 
-        .fs_send(fs_send),
-        .fd_send(fd_send),
-        .fs_recv(fs_recv),
-        .fd_recv(fd_recv),
+        .e_grxc(e_grxc),
+        .e_gtxc(e_gtxc),
+        .e_rxdv(e_rxdv),
+        .e_txen(e_txen),
+        .e_rxer(e_rxer),
+        .e_txer(e_txer),
 
-        .mac_tx_mode(mac_tx_mode),
-        .ip_tx_mode(ip_tx_mode),
-        .arp_tx_req(1'b1),
-        .mac_rx_mode(mac_rx_mode),
-        .ip_rx_mode(ip_rx_mode),
-
-        .rst(rst),
-        .tx_dlen(tx_dlen),
-        .rx_dlen(rx_dlen),
-
-        .fifo_cmd_rxen(fifo_cmd_rxen),
-        .fifo_cmd_rxd(fifo_cmd_rxd),
-        .fifo_data_rxen(fifo_data_rxen),
-        .fifo_data_rxd(fifo_data_rxd)
+        .e_txd(e_txd),
+        .e_rxd(e_rxd)
     );
 
+    data_make
+    data_make_dut(
+        .clk(),
+        .rst(),
 
-    fifo_eth
-    fifo_read_dut(
-        .wr_clk(e_grxc),
-        .full(fifo_full),
-        .din(fifo_data_txd),
-        .wr_en(fifo_data_txen),
+        .fs(fs_com_send),
 
-        .rd_clk(e_gtxc),
-        .dout(fifo_data_rxd),
-        .rd_en(fifo_data_rxen)
+        .btype(send_eth_btype),
+        .data_idx(data_idx),
+
+        .cache_info(cache_info),
+
+        .cache_ram_rxa(ram_usb_rxa),
+        .cache_ram_rxd(ram_usb_rxd),
+
+        .ram_txa(ram_data_txa),
+        .ram_txd(ram_data_txd),
+        .ram_txen(ram_data_txen)
     );
 
+    genvar i;
+    generate
+        for (i=0; i<8; i=i+1) begin : usb_module_
+            usb
+            usb_dut(
+                .sys_clk(),
+                .usb_txc(),
+                .usb_rxc(),
+                .pin_txc(),
+                .pin_rxc(),
+                .pin_cc(),
 
+                .rst(rst),
 
+                .fs_send(fs_usb_send[i]),
+                .fd_send(fd_usb_send[i]),
+                .fs_read(fs_usb_read[i]),
+                .fd_read(fd_usb_read[i]),
+
+                .send_btype(send_usb_btype[3*i +: 4]),
+                .read_btype(read_usb_btype[3*i +: 4]),
+
+                .data_idx(data_idx),
+                .cache_cmd(cache_cmd[32*i +: 32]),
+                .cache_stat(cache_stat[32*i +: 32]),
+
+                .ram_rxa(ram_usb_rxa),
+                .ram_rxd(ram_usb_rxd[8*i +: 8]),
+
+                .pin_rxd(pin_rxd[4*i +: 4]),
+                .pin_txd(pin_txd[i]),
+                .pin_send(pin_send[i]),
+                .pin_read(pin_read[i])
+            );
+        end
+    endgenerate
 
 
 endmodule

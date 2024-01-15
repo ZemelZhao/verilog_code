@@ -1,4 +1,4 @@
-module con_send(
+module com_send(
     input clk,
     input rst,
 
@@ -21,7 +21,7 @@ module con_send(
     localparam COM_CONF = 4'h1, COM_READ = 4'h4, COM_STOP = 4'h9;
     localparam COM_DATA = 4'h5, COM_STAT = 4'hA;
 
-    localparam STAT_LEN = 16'h0E, HEAD_LEN = 16'h04;
+    localparam STAT_LEN = 16'h0E, HEAD_LEN = 16'h04, TRGG_LEN = 16'h04;
     localparam DATA_LEN_00 = 16'h0000;
     localparam DATA_LEN_01 = 16'h0080;
     localparam DATA_LEN_10 = 16'h0100;
@@ -89,7 +89,7 @@ module con_send(
         if(rst) ram_dlen <= 16'h0000;
         else if(state == IDLE) ram_dlen <= 16'h0000;
         else if(state == CAL1 && send_btype == COM_STAT) ram_dlen <= STAT_LEN;
-        else if(state == CAL1 && send_btype == COM_DATA) ram_dlen <= HEAD_LEN + dlen0 + dlen1 + dlen2 + dlen3 + dlen4 + dlen5 + dlen6 + dlen7;
+        else if(state == CAL1 && send_btype == COM_DATA) ram_dlen <= HEAD_LEN + TRGG_LEN + dlen0 + dlen1 + dlen2 + dlen3 + dlen4 + dlen5 + dlen6 + dlen7;
         else ram_dlen <= ram_dlen;
     end
 

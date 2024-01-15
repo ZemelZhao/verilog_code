@@ -54,7 +54,7 @@ module console_usb_branch(
     assign fd_cs_send = (state == MAIN_TX_DONE);
     assign fs_cs_read = (state == MAIN_RX_DONE);
     assign fs_usb_send = (state == CONF_SEND) || (state == CONV_SEND) || (state == TYPE_WORK);
-    assign fd_usb_read = (state == INIT_REST) || (state == CONF_WAIT) || (state == CONV_WAIT);
+    assign fd_usb_read = (state == INIT_WAIT) || (state == CONF_WAIT) || (state == CONV_WAIT);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -112,13 +112,10 @@ module console_usb_branch(
 
             CONF_IDLE: next_state <= CONF_SEND;
             CONF_SEND: begin
-                if(fd_usb_send) next_state <= MAIN_DONE;
+                if(fd_usb_send) next_state <= MAIN_TX_DONE;
                 else next_state <= CONF_SEND;
             end
-            CONF_READ: begin
-                if(read_usb_btype == BAG_DTEMP) next_state <= CONF_WAIT;
-                else next_state <= CONF_FAIL;
-            end
+            CONF_READ: next_state <= CONF_WAIT;
             CONF_WAIT: begin
                 if(~fs_usb_read) next_state <= CONF_DONE;
                 else next_state <= CONF_WAIT;

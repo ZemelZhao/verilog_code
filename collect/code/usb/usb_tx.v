@@ -11,11 +11,13 @@ module usb_tx(
     output reg [7:0] usb_txd
 );
 
+    localparam NLEN = 4'h02, PLEN = 4'h04;
+
     localparam BAG_INIT = 4'b0000;
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
 
-    localparam PID_INIT = 8'h00, PID_SYNC = 8'h01;
+    localparam PID_INIT = 8'h00, PID_SYNC = 8'h01, PID_PREM = 8'h5A;
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
     localparam PID_CMD = 8'h1E;
 
@@ -26,8 +28,9 @@ module usb_tx(
 
     reg [7:0] state, next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
-    localparam DNUM0 = 8'h04, DNUM1 = 8'h05;
+    localparam DNUM = 8'h04;
     localparam SYNC = 8'h08, WPID = 8'h09, WCMD = 8'h0A, CRC5 = 8'h0B;
+    localparam PREM = 8'h0C; 
 
     reg [7:0] pid, txd;
 
@@ -58,16 +61,22 @@ module usb_tx(
                 if(fs) next_state <= SYNC;
                 else next_state <= WAIT;
             end
+            PREM: begin
+                if(num >= PLEN - 1'b1) next_state <= SYNC;
+                else next_state <= PREM;
+            end
             SYNC: next_state <= WPID;
             WPID: begin
                 if(btype == BAG_ACK) next_state <= DONE;
                 else if(btype == BAG_NAK) next_state <= DONE;
                 else if(btype == BAG_STL) next_state <= DONE;
-                else next_state <= DNUM0;
+                else next_state <= DNUM;
             end
 
-            DNUM0: next_state <= DNUM1;
-            DNUM1: next_state <= WCMD;
+            DNUM: begin
+                if(num >= NLEN - 1'b1) next_state <= WCMD;
+                else next_state <= DNUM;
+            end
             WCMD: begin
                 if(num >= dlen - 1'b1) next_state <= CRC5;
                 else next_state <= WCMD;
@@ -87,7 +96,7 @@ module usb_tx(
         if(rst) cen <= 1'b0;
         else if(state == IDLE) cen <= 1'b0;
         else if(state == WAIT) cen <= 1'b0;
-        else if(state == DNUM1) cen <= 1'b1;
+        else if(state == DNUM && num == 1'b1) cen <= 1'b1;
         else if(state == WCMD) cen <= 1'b1;
         else cen <= 1'b0;
     end
@@ -96,7 +105,9 @@ module usb_tx(
         if(rst) num <= 4'h0;
         else if(state == IDLE) num <= 4'h0;
         else if(state == WAIT) num <= 4'h0;
-        else if(state == WCMD) num <= num + 1'b1;
+        else if(state == PREM && num < PLEN - 1'b1) num <= num + 1'b1;
+        else if(state == WCMD && num < dlen - 1'b1) num <= num + 1'b1;
+        else if(state == DNUM && num < NLEN - 1'b1) num <= num + 1'b1;
         else num <= 4'h0;
     end
 
@@ -131,10 +142,11 @@ module usb_tx(
 
     always@(posedge clk or posedge rst) begin
         if(rst) txd <= 8'h00;
+        else if(state == PREM) txd <= PID_PREM;
         else if(state == SYNC) txd <= PID_SYNC;
         else if(state == WPID) txd <= pid;
-        else if(state == DNUM0) txd <= 8'h00;
-        else if(state == DNUM1) txd <= dlen;
+        else if(state == DNUM && num == 4'h0) txd <= 8'h00;
+        else if(state == DNUM && num == 4'h1) txd <= dlen;
         else if(state == WCMD && btype == BAG_DIDX) txd <= {HEAD_DIDX, device_idx};
         else if(state == WCMD && btype == BAG_DDIDX) txd <= {HEAD_DDIDX, data_idx};
         else if(state == WCMD && btype == BAG_DPARAM && num == 4'h0) txd <= {HEAD_DPARAM, freq_samp};

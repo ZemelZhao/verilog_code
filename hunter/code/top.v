@@ -7,36 +7,22 @@ module top(
     input [1:0] com_rxd_p,
     input [1:0] com_rxd_n,
 
-    input [3:0] adc_miso_p,
-    output [3:0] adc_mosi_p,
-    output [3:0] adc_cs_p,
-    output [3:0] adc_sclk_p,
-
-    // input [3:0] adc_miso_p,
-    // input [3:0] adc_miso_n,
-    // output [3:0] adc_mosi_p,
-    // output [3:0] adc_mosi_n,
-    // output [3:0] adc_sclk_p,
-    // output [3:0] adc_sclk_n,
-    // output [3:0] adc_cs_p,
-    // output [3:0] adc_cs_n,
+    input [3:0] adc_miso,
+    output [3:0] adc_mosi,
+    output [3:0] adc_cs,
+    output [3:0] adc_sclk,
 
     input com_rxf,
     output com_txf
 );
 
-    wire clk_slow, clk_norm, clk_fast, clk_ulta;
+    wire clk_slow, clk_norm, clk_fast;
 
     wire [3:0] pin_txd;
     wire pin_rxd;
     wire fire_read, fire_send;
 
     wire [3:0] pin_cs, pin_sclk, pin_miso, pin_mosi;
-    assign adc_cs_p = pin_cs;
-    assign adc_sclk_p = pin_sclk;
-    assign adc_mosi_p = pin_mosi;
-    assign pin_miso = adc_miso_p;
-
     wire rst;
 
     // Control Section
@@ -104,7 +90,6 @@ module top(
         .com_rxc(clk_slow),
         .pin_txc(clk_fast),
         .pin_rxc(clk_fast),
-        .pin_cc(clk_ulta),
 
         .rst(rst),
 
@@ -191,24 +176,20 @@ module top(
         .com_rxf(com_rxf),
         .com_txf(com_txf),
 
-        // .adc_miso_p(adc_miso_p),
-        // .adc_miso_n(adc_miso_n),
-        // .adc_cs_p(adc_cs_p),
-        // .adc_cs_n(adc_cs_n),
-        // .adc_mosi_p(adc_mosi_p),
-        // .adc_mosi_n(adc_mosi_n),
-        // .adc_sclk_p(adc_sclk_p),
-        // .adc_sclk_n(adc_sclk_n),
+        .adc_miso(adc_miso),
+        .adc_cs(adc_cs),
+        .adc_mosi(adc_mosi),
+        .adc_sclk(adc_sclk),
 
         .pin_txd(pin_txd),
         .pin_rxd(pin_rxd),
         .fire_send(fire_send),
-        .fire_read(fire_read)
+        .fire_read(fire_read),
 
-        // .pin_cs(pin_cs),
-        // .pin_sclk(pin_sclk),
-        // .pin_mosi(pin_mosi),
-        // .pin_miso(pin_miso)
+        .pin_cs(pin_cs),
+        .pin_sclk(pin_sclk),
+        .pin_mosi(pin_mosi),
+        .pin_miso(pin_miso)
     );
 
     clk_wiz
@@ -216,8 +197,7 @@ module top(
         .clk_in(clk_in),
         .clk_slow(clk_slow),
         .clk_norm(clk_norm),
-        .clk_fast(clk_fast),
-        .clk_ulta(clk_ulta)
+        .clk_fast(clk_fast)
     );
 
     ram_data

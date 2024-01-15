@@ -4,7 +4,6 @@ module usb(
     input usb_rxc,
     input pin_txc,
     input pin_rxc,
-    input pin_cc,
 
     input rst,
 
@@ -26,7 +25,7 @@ module usb(
     output [31:0] cache_stat,
 
     input [11:0] ram_rxa,
-    input [7:0] ram_rxd
+    output [7:0] ram_rxd
 );
 
     wire [3:0] usb_rxd;
@@ -121,10 +120,6 @@ module usb(
 
     usb_cc
     usb_cc_dut(
-        .clk(pin_cc),
-        .clk_fast(pin_rxc),
-        .fire(pin_read),
-
         .usb_txd(usb_txd),
         .pin_txd(pin_txd),
 
@@ -132,8 +127,8 @@ module usb(
         .pin_rxd(pin_rxd)
     );
 
-    usb_ram
-    usb_ram_dut(
+    ram_usb
+    ram_usb_dut(
         .clka(usb_rxc),
         .addra(ram_txa),
         .dina(ram_txd),
@@ -143,14 +138,6 @@ module usb(
         .addrb(ram_rxa),
         .doutb(ram_rxd)
     );
-
-
-
-
-
-
-
-
 
 
 endmodule

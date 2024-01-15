@@ -45,6 +45,8 @@ module console_usb_hq(
     reg [0:63] adc_temp;
     reg [15:0] adc_conf;
 
+    reg ref_fs_read, ref_fd_send;
+
     assign adc_info = {adc_conf, adc_type, adc_temp};
 
     assign cmd_fd_send[0] = adc_stat[0] ?fd_send[0] :ref_fd_send;
@@ -67,6 +69,9 @@ module console_usb_hq(
 
     assign fd_adc_conf = (state == CONF_DONE);
     assign fd_adc_conv = (state == CONV_DONE);
+
+    assign fs_send = (state == CONF_WORK) || (state == CONV_WORK);
+    assign fd_read = (state == CONF_READ) || (state == CONV_READ);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -216,7 +221,7 @@ module console_usb_hq(
 
     always@(posedge clk or posedge rst) begin
         if(rst) adc_temp[40:47] <= 8'h00;
-        else if(state == MAIN_IDLE) adc_temp[0:7] <= 8'h00;
+        else if(state == MAIN_IDLE) adc_temp[40:47] <= 8'h00;
         else if(state == CONF_DONE && adc_stat[5]) adc_temp[40:47] <= cache_stat[160:167];
         else if(state == CONF_DONE) adc_temp[40:47] <= 8'h00;
         else adc_temp[40:47] <= adc_temp[40:47];

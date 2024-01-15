@@ -30,7 +30,7 @@ module console_hq(
     reg [7:0] state, next_state;
     reg [7:0] state_goto;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_DOOR = 8'h02;
-    localparam TICK_IDLE = 8'h10, TICK_WAIT = 8'h11, TICK_WOTK = 8'h12, TICK_DONE = 8'h13;
+    localparam TICK_IDLE = 8'h10, TICK_WAIT = 8'h11, TICK_WORK = 8'h12, TICK_DONE = 8'h13;
     localparam READ_IDLE = 8'h40, READ_WAIT = 8'h41, READ_WORK = 8'h42, READ_DONE = 8'h43;
     localparam SEND_IDLE = 8'h50, SEND_WAIT = 8'h51, SEND_WORK = 8'h52, SEND_DONE = 8'h53;
     localparam CONF_IDLE = 8'h80, CONF_WAIT = 8'h81, CONF_WORK = 8'h82, CONF_DONE = 8'h83;
@@ -52,6 +52,7 @@ module console_hq(
                 else if(fd_com_send) next_state <= SEND_DONE;
                 else if(fd_adc_conf) next_state <= CONF_DONE;
                 else if(fd_adc_conv) next_state <= CONV_DONE;
+                else next_state <= MAIN_WAIT;
             end
             MAIN_DOOR: next_state <= state_goto;
 

@@ -12,6 +12,7 @@ module data_make(
 
     output reg [11:0] cache_ram_rxa,
     input [63:0] cache_ram_rxd,
+    input [31:0] cache_trigger_rxd,
 
     output reg [15:0] ram_txa,
     output reg [7:0] ram_txd,
@@ -33,7 +34,7 @@ module data_make(
 
     localparam BAG_STAT = 4'h1, BAG_DATA = 4'h5;
 
-    localparam SLEN = 12'h0E, HLEN = 12'h04, DLEN = 12'h200;
+    localparam SLEN = 12'h0E, HLEN = 12'h04, DLEN = 12'h200, TLEN = 12'h04;
 
     reg [7:0] state, next_state;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_DONE = 8'h02;
@@ -41,10 +42,11 @@ module data_make(
     localparam DATA_IDLE = 8'h20, DATA_WAIT = 8'h22, DATA_WORK = 8'h23;
     localparam DATA_HEAD = 8'h24, DATA_GAP = 8'h25, DATA_REST = 8'h26;
     localparam DATA_JUDGE = 8'h27;
+    localparam TRGG_WORK = 8'h30;
 
     reg [15:0] ram_addr_init;
     reg [11:0] cache_ram_addr_init;
-    reg [11:0] dlen;
+    reg [11:0] dlen, tlen;
     reg [3:0] dnum, lnum;
     wire [0:7] device_stat;
 
@@ -100,9 +102,13 @@ module data_make(
             end
             DATA_REST: next_state <= DATA_JUDGE;
             DATA_JUDGE: begin
-                if(dnum >= DEVICE_NUM - 1'b1) next_state <= MAIN_DONE;
+                if(dnum >= DEVICE_NUM - 1'b1) next_state <= TRGG_WORK;
                 else if(device_stat[dnum]) next_state <= DATA_GAP;
                 else next_state <= DATA_REST;
+            end
+            TRGG_WORK: begin
+                if(dlen >= TLEN) next_state <= MAIN_DONE;
+                else next_state <= TRGG_WORK;
             end
             default: next_state <= MAIN_IDLE;
         endcase
@@ -196,6 +202,10 @@ module data_make(
         else if(state == DATA_HEAD && dlen == 12'h01) ram_txd <= 8'hAA;
         else if(state == DATA_HEAD && dlen == 12'h02) ram_txd <= device_stat;
         else if(state == DATA_HEAD && dlen == 12'h03) ram_txd <= {4'h0, data_idx};
+        else if(state == TRGG_WORK && dlen == 12'h00) ram_txd <= cache_trigger_rxd[31:24];
+        else if(state == TRGG_WORK && dlen == 12'h01) ram_txd <= cache_trigger_rxd[23:16];
+        else if(state == TRGG_WORK && dlen == 12'h02) ram_txd <= cache_trigger_rxd[15:8];
+        else if(state == TRGG_WORK && dlen == 12'h03) ram_txd <= cache_trigger_rxd[7:0];
         else if(state == DATA_WORK && dnum == 4'h0) ram_txd <= cache_ram_rxd[63:56]; 
         else if(state == DATA_WORK && dnum == 4'h1) ram_txd <= cache_ram_rxd[55:48]; 
         else if(state == DATA_WORK && dnum == 4'h2) ram_txd <= cache_ram_rxd[47:40]; 
@@ -226,6 +236,7 @@ module data_make(
         else if(state == STAT_WORK) dlen <= dlen + 1'b1;
         else if(state == DATA_HEAD) dlen <= dlen + 1'b1;
         else if(state == DATA_WORK) dlen <= dlen + 1'b1;
+        else if(state == TRGG_WORK) dlen <= dlen + 1'b1;
         else dlen <= 12'h00;
     end
 

@@ -8,21 +8,19 @@ module console_tick(
     input fd
 );
 
-    localparam IDLE = 4'b0001, WORK = 4'b0010, WAIT = 4'b0100, EROR = 4'b1000;
-
     localparam FSAMP_1KHZ = 4'h1, FSAMP_2KHZ = 4'h2, FSAMP_4KHZ = 4'h3;
     localparam FSAMP_8KHZ = 4'h4, FSAMP_16KHZ = 4'h5;
 
-    localparam TICK_1KHZ = 16'd50_000, TICK_2KHZ = 16'd25_000, TICK_4KHZ = 16'd12_500;
-    localparam TICK_8KHZ = 16'd6_250, TICK_16KHZ = 16'd3_125;
+    localparam TICK_1KHZ = 24'd75_000, TICK_2KHZ = 24'd37_500, TICK_4KHZ = 24'd18_750;
+    localparam TICK_8KHZ = 24'd9_375, TICK_16KHZ = 24'd4_687;
 
     localparam NUMOUT = 16'h80;
 
     reg [3:0] state, next_state;
     localparam IDLE = 4'h1, WORK = 4'h2, WAIT = 4'h4, DONE = 4'h8;
 
-    reg [15:0] countdown;
-    reg [15:0] num;
+    reg [23:0] countdown;
+    reg [23:0] num;
 
     wire rst;
 
@@ -37,10 +35,7 @@ module console_tick(
     always@(*) begin
         case(state)
             IDLE: next_state <= WAIT;
-            WAIT: begin
-                if(fs_cnt) next_state <= WORK;
-                else next_state <= WAIT;
-            end
+            WAIT: next_state <= WORK;
             WORK: begin
                 if(num == countdown - 1'b1) next_state <= DONE;
                 else next_state <= WORK;
@@ -55,9 +50,9 @@ module console_tick(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) num <= 16'h0000;
-        else if(num >= countdown - 2'h2) num <= num + 1'b1;
-        else num <= 16'h0000;
+        if(rst) num <= 24'h00;
+        else if(num <= countdown - 2'h2) num <= num + 1'b1;
+        else num <= 24'h00;
     end
 
     always@(posedge clk or posedge rst) begin

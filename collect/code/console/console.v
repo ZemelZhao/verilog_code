@@ -13,7 +13,7 @@ module console(
 
     input [0:255] cache_stat,
     output [0:255] cache_cmd,
-    output [95:0] cache_info
+    output [95:0] cache_info,
 
 // ETH Section
     output fs_eth_send,
@@ -24,7 +24,7 @@ module console(
     output [3:0] send_eth_btype,
     input [3:0] read_eth_btype,
 
-    input [15:0] com_cmd,
+    input [15:0] com_cmd
 );
 
     wire tick_work;
@@ -45,7 +45,7 @@ module console(
 
     console_hq
     console_hq_dut(
-        .clk(),
+        .clk(clk),
         .rst(rst),
 
         .fs_com_read(fs_com_read),
@@ -69,7 +69,7 @@ module console(
 
     console_usb
     console_usb_dut(
-        .clk(),
+        .clk(clk),
         .rst(rst),
 
         .fs_adc_conf(fs_adc_conf),
@@ -78,7 +78,7 @@ module console(
         .fd_adc_conv(fd_adc_conv),
 
         .device_cmd(device_cmd),
-        .data_idx(data_idx)
+        .data_idx(data_idx),
 
         .fs_usb_send(fs_usb_send),
         .fd_usb_send(fd_usb_send),
@@ -90,13 +90,12 @@ module console(
 
         .cache_stat(cache_stat),
         .cache_cmd(cache_cmd),
-        .ram_addr_init(ram_addr_init),
         .adc_info(cache_info)
     );
 
     console_com
     console_com_dut(
-        .clk(),
+        .clk(clk),
         .rst(rst),
 
         .fs_com_send(fs_com_send),
@@ -121,7 +120,7 @@ module console(
 
     console_tick
     console_tick_dut(
-        .clk(),
+        .clk(clk),
         .work(tick_work),
 
         .freq_samp(freq_samp),

@@ -38,7 +38,7 @@ module com_cs(
 
     localparam DEBUG_NUM = 8'h80;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     reg [7:0] state_goto;
 

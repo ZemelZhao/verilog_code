@@ -2,223 +2,183 @@ module com_read(
     input clk,
     input rst,
 
-    output fs_read,
-    input fd_read,
+    input fs_eth,
+    output fd_eth,
 
-    input fs_eth_read,
-    output fd_eth_read,
+    output fs,
+    input fd,
 
-    output reg [3:0] read_btype,
-    output reg [15:0] com_cmd,
-    output reg [39:0] trgg_cmd,
+    input [15:0] password,
+ 
+    output reg [7:0] rxa,
+    input [7:0] rxd,
 
-    output [7:0] ram_rxa_init,
-    output reg [7:0] ram_rxa,
-    input [7:0] ram_rxd
+    (*MARK_DEBUG = "true"*)output reg [3:0] btype,
+    output reg [11:0] com_cmd,
+    output reg [39:0] trgg_cmd
 );
 
+    parameter RAM_ADDR_INIT = 8'h0A;
+
+    localparam STD_HEAD = 16'h55AA;
+
+    localparam NUM_HEAD0 = 8'h00, NUM_HEAD1 = 8'h01;
+    localparam NUM_DIDX0 = 8'h02, NUM_DIDX1 = 8'h03;
+    localparam NUM_FUNC0 = 8'h04, NUM_FUNC1 = 8'h05;
+    localparam NUM_RATE0 = 8'h06, NUM_RATE1 = 8'h07;
+    localparam NUM_LFILT = 8'h08, NUM_HFILT = 8'h09;
+    localparam NUM_TRGG0 = 8'h0A, NUM_TRGG1 = 8'h0B;
+    localparam NUM_DLY00 = 8'h0C, NUM_DLY01 = 8'h0D;
+    localparam NUM_DLY10 = 8'h0E, NUM_DLY11 = 8'h0F;
+    localparam NUM_PART0 = 8'h10, NUM_PART1 = 8'h11;
+
+
     localparam DATA_LATENCY = 8'h02;
-    localparam RAM_ADDR_INIT = 8'h80;
-    localparam RAM_ADDR_TYPE = 8'h85, RAM_ADDR_SAMP = 8'h87;
-    localparam RAM_ADDR_LFLT = 8'h88, RAM_ADDR_HFLT = 8'h89;
-    localparam RAM_ADDR_TRGG = 8'h8B;
-    localparam RAM_ADDR_TDLY00 = 8'h8C, RAM_ADDR_TDLY01 = 8'h8D;
-    localparam RAM_ADDR_TDLY10 = 8'h8E, RAM_ADDR_TDLY11 = 8'h8F;
+    localparam NUM = 8'h12;
 
-    localparam COM_INIT = 4'h0;
-    localparam COM_CONF = 4'h1, COM_READ = 4'h4, COM_STOP = 4'h9;
-    localparam COM_RX00 = 4'h2, COM_RX01 = 4'hD;
-    localparam COM_DATA = 4'h5, COM_STAT = 4'hA;
+    reg [5:0] state, next_state;
 
-    localparam NUM = 8'h0D;
+    localparam IDLE = 6'h01, WAIT = 6'h02, WORK = 6'h04;
+    localparam TAKE = 6'h08, REST = 6'h10, DONE = 6'h20;
 
-    reg [7:0] state, next_state;
-    localparam MAIN_IDLE = 8'h01, MAIN_WAIT = 8'h02;
-    localparam READ_IDLE = 8'h04, READ_DATA = 8'h08;
-    localparam READ_TAKE = 8'h10, READ_WORK = 8'h20;
-    localparam READ_DONE = 8'h40;
-
-    reg [7:0] dtype, dsamp, dlflt, dhflt;
-    reg [7:0] trgg;
-    reg [15:0] trgg_dly0, trgg_dly1;
+    localparam BTYPE_INIT = 4'h0;
+    localparam BTYPE_CONF = 4'h01, BTYPE_READ = 4'h02, BTYPE_STOP = 4'h03;
+    localparam BTYPE_RXD0 = 4'h04, BTYPE_RXD1 = 4'h05;
+    localparam BAG_CONF = 16'h001E, BAG_READ = 16'h004C, BAG_STOP = 16'h0097;
+    localparam BAG_RXD0 = 16'h002D, BAG_RXD1 = 16'h00D2;
 
     reg [7:0] num;
-    
-    assign fs_read = (state == READ_DONE);
-    assign fd_eth_read = (state == READ_WORK);
-    assign ram_txa_init = RAM_ADDR_INIT;
+    reg [15:0] data[0:8];
+    wire [15:0] sum;
+    wire part, pass;
+    assign sum = data[1]+data[2]+data[3]+data[4]+data[5]+data[6]+data[7]; 
+
+    // assign part = (sum == data[NUM_PART0[7:1]]) && (data[NUM_HEAD0[7:1]] == STD_HEAD);
+    // assign pass = data[NUM_DIDX0[7:1]] == password;
+
+    assign part = 1'b1;
+    assign pass = 1'b1;
+
+    assign fd_eth = (state == REST);
+    assign fs = (state == DONE);
 
     always@(posedge clk or posedge rst) begin
-        if(rst) state <= MAIN_IDLE;
+        if(rst) state <= IDLE;
         else state <= next_state;
     end
     
     always@(*) begin
         case(state)
-            MAIN_IDLE: next_state <= MAIN_WAIT;
-            MAIN_WAIT: begin
-                if(fs_eth_read) next_state <= READ_IDLE;
-                else next_state <= MAIN_WAIT;
+            IDLE: next_state <= WAIT;
+            WAIT: begin
+                if(fs_eth) next_state <= WORK;
+                else next_state <= WAIT;
             end
-
-            READ_IDLE: next_state <= READ_DATA;
-            READ_DATA: begin
-                if(num >= NUM - 1'b1) next_state <= READ_TAKE;
-                else next_state <= READ_DATA;
+            WORK: begin
+                if(num >= NUM + DATA_LATENCY) next_state <= TAKE;
+                else next_state <= WORK;
             end
-            READ_TAKE: next_state <= READ_WORK;
-            READ_WORK: begin
-                if(fd_read) next_state <= READ_DONE;
-                else next_state <= READ_WORK;
+            TAKE: next_state <= REST;
+            REST: begin
+                if(~fs_eth) next_state <= DONE;
+                else next_state <= REST;
             end
-            READ_DONE: begin
-                if(~fs_eth_read) next_state <= MAIN_IDLE;
-                else next_state <= READ_DONE;
+            DONE: begin
+                if(fd) next_state <= IDLE;
+                else next_state <= DONE;
             end
-
-            default: next_state <= MAIN_IDLE;
+            
+            default: next_state <= IDLE;
         endcase
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) read_btype <= COM_INIT;
-        else if(state == MAIN_IDLE) read_btype <= COM_INIT;
-        else if(state == READ_TAKE) read_btype <= dtype[3:0];
-        else read_btype <= read_btype;
+        if(rst) rxa <= RAM_ADDR_INIT;
+        else if(state == WORK && num == NUM_HEAD0) rxa <= RAM_ADDR_INIT + NUM_HEAD0;
+        else if(state == WORK && num == NUM_HEAD1) rxa <= RAM_ADDR_INIT + NUM_HEAD1;
+        else if(state == WORK && num == NUM_DIDX0) rxa <= RAM_ADDR_INIT + NUM_DIDX0;
+        else if(state == WORK && num == NUM_DIDX1) rxa <= RAM_ADDR_INIT + NUM_DIDX1;
+        else if(state == WORK && num == NUM_FUNC0) rxa <= RAM_ADDR_INIT + NUM_FUNC0;
+        else if(state == WORK && num == NUM_FUNC1) rxa <= RAM_ADDR_INIT + NUM_FUNC1;
+        else if(state == WORK && num == NUM_RATE0) rxa <= RAM_ADDR_INIT + NUM_RATE0;
+        else if(state == WORK && num == NUM_RATE1) rxa <= RAM_ADDR_INIT + NUM_RATE1;
+        else if(state == WORK && num == NUM_LFILT) rxa <= RAM_ADDR_INIT + NUM_LFILT;
+        else if(state == WORK && num == NUM_HFILT) rxa <= RAM_ADDR_INIT + NUM_HFILT;
+        else if(state == WORK && num == NUM_TRGG0) rxa <= RAM_ADDR_INIT + NUM_TRGG0;
+        else if(state == WORK && num == NUM_TRGG1) rxa <= RAM_ADDR_INIT + NUM_TRGG1;
+        else if(state == WORK && num == NUM_DLY00) rxa <= RAM_ADDR_INIT + NUM_DLY00;
+        else if(state == WORK && num == NUM_DLY01) rxa <= RAM_ADDR_INIT + NUM_DLY01;
+        else if(state == WORK && num == NUM_DLY10) rxa <= RAM_ADDR_INIT + NUM_DLY10;
+        else if(state == WORK && num == NUM_DLY11) rxa <= RAM_ADDR_INIT + NUM_DLY11;
+        else if(state == WORK && num == NUM_PART0) rxa <= RAM_ADDR_INIT + NUM_PART0;
+        else if(state == WORK && num == NUM_PART1) rxa <= RAM_ADDR_INIT + NUM_PART1;
+        else rxa <= RAM_ADDR_INIT;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) com_cmd <= 16'h0000;
-        else if(state == MAIN_IDLE) com_cmd <= 16'h0000;
-        else if(state == READ_TAKE) com_cmd <= {dsamp, dlflt, dhflt, 4'h0};
+        if(rst) begin
+            data[NUM_HEAD0[7:1]] <= 16'h00;
+            data[NUM_DIDX0[7:1]] <= 16'h00;
+            data[NUM_FUNC0[7:1]] <= 16'h00;
+            data[NUM_RATE0[7:1]] <= 16'h00;
+            data[NUM_LFILT[7:1]] <= 16'h00;
+            data[NUM_TRGG0[7:1]] <= 16'h00;
+            data[NUM_DLY00[7:1]] <= 16'h00;
+            data[NUM_DLY10[7:1]] <= 16'h00;
+            data[NUM_PART0[7:1]] <= 16'h00;
+        end
+        else if(state == WORK && num == NUM_HEAD0 + DATA_LATENCY + 1'b1) data[NUM_HEAD0[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_HEAD1 + DATA_LATENCY + 1'b1) data[NUM_HEAD1[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_DIDX0 + DATA_LATENCY + 1'b1) data[NUM_DIDX0[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_DIDX1 + DATA_LATENCY + 1'b1) data[NUM_DIDX1[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_FUNC0 + DATA_LATENCY + 1'b1) data[NUM_FUNC0[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_FUNC1 + DATA_LATENCY + 1'b1) data[NUM_FUNC1[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_RATE0 + DATA_LATENCY + 1'b1) data[NUM_RATE0[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_RATE1 + DATA_LATENCY + 1'b1) data[NUM_RATE1[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_LFILT + DATA_LATENCY + 1'b1) data[NUM_LFILT[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_HFILT + DATA_LATENCY + 1'b1) data[NUM_HFILT[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_TRGG0 + DATA_LATENCY + 1'b1) data[NUM_TRGG0[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_TRGG1 + DATA_LATENCY + 1'b1) data[NUM_TRGG1[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_DLY00 + DATA_LATENCY + 1'b1) data[NUM_DLY00[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_DLY01 + DATA_LATENCY + 1'b1) data[NUM_DLY01[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_DLY10 + DATA_LATENCY + 1'b1) data[NUM_DLY10[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_DLY11 + DATA_LATENCY + 1'b1) data[NUM_DLY11[7:1]][7:0] <= rxd;
+        else if(state == WORK && num == NUM_PART0 + DATA_LATENCY + 1'b1) data[NUM_PART0[7:1]][15:8] <= rxd;
+        else if(state == WORK && num == NUM_PART1 + DATA_LATENCY + 1'b1) data[NUM_PART1[7:1]][7:0] <= rxd;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) num <= 8'h00;
+        else if(state == WORK) num <= num + 1'b1;
+        else num <= 8'h00;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) btype <= BTYPE_INIT;
+        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_CONF) btype <= BTYPE_CONF;
+        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_READ) btype <= BTYPE_READ;
+        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_STOP) btype <= BTYPE_STOP;
+        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_RXD0) btype <= BTYPE_RXD0;
+        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_RXD1) btype <= BTYPE_RXD1;
+        else btype <= btype;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) com_cmd <= 12'h000;
+        else if(state == TAKE && part && data[NUM_FUNC0[7:1]] == BAG_CONF) begin
+            com_cmd <= {data[NUM_RATE1[7:1]][3:0], data[NUM_LFILT[7:1]][11:8], data[NUM_HFILT[7:1]][3:0]};
+        end
+        else if(state == TAKE && part == 1'b0) com_cmd <= 12'h000;
         else com_cmd <= com_cmd;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) trgg_cmd <= 40'h0000;
-        else if(state == MAIN_IDLE) trgg_cmd <= 40'h0000;
-        else if(state == READ_TAKE) trgg_cmd <= {trgg, trgg_dly0, trgg_dly1};
+        else if(state == TAKE && part && data[NUM_FUNC0[7:1]] == BAG_CONF) begin
+            trgg_cmd <= {data[NUM_TRGG0[7:1]][11:8], data[NUM_TRGG1[7:1]][3:0], data[NUM_DLY00[7:1]], data[NUM_DLY10[7:1]]};
+        end
+        else if(state == TAKE && part == 1'b0) trgg_cmd <= 40'h0000;
         else trgg_cmd <= trgg_cmd;
     end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) ram_rxa <= RAM_ADDR_INIT;
-        else if(state == MAIN_IDLE) ram_rxa <= RAM_ADDR_INIT;
-        else if(state == READ_IDLE) ram_rxa <= RAM_ADDR_INIT;
-        else if(state == READ_DATA && num == 8'h00) ram_rxa <= RAM_ADDR_TYPE;
-        else if(state == READ_DATA && num == 8'h01) ram_rxa <= RAM_ADDR_SAMP;
-        else if(state == READ_DATA && num == 8'h02) ram_rxa <= RAM_ADDR_LFLT;
-        else if(state == READ_DATA && num == 8'h03) ram_rxa <= RAM_ADDR_HFLT;
-        else if(state == READ_DATA && num == 8'h04) ram_rxa <= RAM_ADDR_TRGG;
-        else if(state == READ_DATA && num == 8'h05) ram_rxa <= RAM_ADDR_TDLY00;
-        else if(state == READ_DATA && num == 8'h06) ram_rxa <= RAM_ADDR_TDLY01;
-        else if(state == READ_DATA && num == 8'h07) ram_rxa <= RAM_ADDR_TDLY10;
-        else if(state == READ_DATA && num == 8'h08) ram_rxa <= RAM_ADDR_TDLY11;
-        else ram_rxa <= RAM_ADDR_INIT;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dtype <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) dtype <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h01 && DATA_LATENCY == 8'h01) dtype <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h02 && DATA_LATENCY == 8'h02) dtype <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h03 && DATA_LATENCY == 8'h03) dtype <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h04 && DATA_LATENCY == 8'h04) dtype <= ram_rxd;
-        else dtype <= dtype;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dsamp <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) dsamp <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h02 && DATA_LATENCY == 8'h01) dsamp <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h03 && DATA_LATENCY == 8'h02) dsamp <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h04 && DATA_LATENCY == 8'h03) dsamp <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h05 && DATA_LATENCY == 8'h04) dsamp <= ram_rxd;
-        else dsamp <= dsamp;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlflt <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) dlflt <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h03 && DATA_LATENCY == 8'h01) dlflt <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h04 && DATA_LATENCY == 8'h02) dlflt <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h05 && DATA_LATENCY == 8'h03) dlflt <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h06 && DATA_LATENCY == 8'h04) dlflt <= ram_rxd;
-        else dlflt <= dlflt;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dhflt <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) dhflt <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h04 && DATA_LATENCY == 8'h01) dhflt <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h05 && DATA_LATENCY == 8'h02) dhflt <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h06 && DATA_LATENCY == 8'h03) dhflt <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h07 && DATA_LATENCY == 8'h04) dhflt <= ram_rxd;
-        else dhflt <= dhflt;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) trgg <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) trgg <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h05 && DATA_LATENCY == 8'h01) trgg <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h06 && DATA_LATENCY == 8'h02) trgg <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h07 && DATA_LATENCY == 8'h03) trgg <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h08 && DATA_LATENCY == 8'h04) trgg <= ram_rxd;
-        else trgg <= trgg;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) trgg_dly0[15:8] <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) trgg_dly0[15:8] <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h06 && DATA_LATENCY == 8'h01) trgg_dly0[15:8] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h07 && DATA_LATENCY == 8'h02) trgg_dly0[15:8] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h08 && DATA_LATENCY == 8'h03) trgg_dly0[15:8] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h09 && DATA_LATENCY == 8'h04) trgg_dly0[15:8] <= ram_rxd;
-        else trgg_dly0[15:8] <= trgg_dly0[15:8];
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) trgg_dly0[7:0] <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) trgg_dly0[7:0] <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h07 && DATA_LATENCY == 8'h01) trgg_dly0[7:0] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h08 && DATA_LATENCY == 8'h02) trgg_dly0[7:0] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h09 && DATA_LATENCY == 8'h03) trgg_dly0[7:0] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h0A && DATA_LATENCY == 8'h04) trgg_dly0[7:0] <= ram_rxd;
-        else trgg_dly0[7:0] <= trgg_dly0[7:0];
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) trgg_dly1[15:8] <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) trgg_dly1[15:8] <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h08 && DATA_LATENCY == 8'h01) trgg_dly1[15:8] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h09 && DATA_LATENCY == 8'h02) trgg_dly1[15:8] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h0A && DATA_LATENCY == 8'h03) trgg_dly1[15:8] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h0B && DATA_LATENCY == 8'h04) trgg_dly1[15:8] <= ram_rxd;
-        else trgg_dly1[15:8] <= trgg_dly1[15:8];
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) trgg_dly1[7:0] <= {COM_INIT, COM_INIT};
-        else if(state == MAIN_IDLE) trgg_dly1[7:0] <= {COM_INIT, COM_INIT};
-        else if(state == READ_DATA && num == 8'h09 && DATA_LATENCY == 8'h01) trgg_dly1[7:0] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h0A && DATA_LATENCY == 8'h02) trgg_dly1[7:0] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h0B && DATA_LATENCY == 8'h03) trgg_dly1[7:0] <= ram_rxd;
-        else if(state == READ_DATA && num == 8'h0C && DATA_LATENCY == 8'h04) trgg_dly1[7:0] <= ram_rxd;
-        else trgg_dly1[7:0] <= trgg_dly1[7:0];
-    end
-
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) num <= 8'h00;
-        else if(state == MAIN_IDLE) num <= 8'h00;
-        else if(state == READ_DATA) num <= num + 1'b1;
-        else num <= 8'h00;
-    end
-
-
-
-
-    
-
 
 endmodule

@@ -4,7 +4,7 @@ module com_rxf(
 
     input fire,
     input din,
-    output [7:0] dout
+    output reg [7:0] dout
 );
 
     // PREMABLE CODE 5A 5A 5A 5A 01

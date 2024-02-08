@@ -174,7 +174,7 @@ module typec_tx(
     end
 
     always@(posedge clk or posedge rst) begin // num
-        if(rst) num <= 12'h0000;
+        if(rst) num <= 12'h000;
         else if(state == DATA) num <= num + 1'b1;
         else num <= 12'h000;
     end

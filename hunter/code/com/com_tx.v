@@ -59,7 +59,7 @@ module com_tx(
         case(state)
             IDLE: next_state <= WAIT;
             WAIT: begin
-                if(fs) next_state <= PRE0;
+                if(fs) next_state <= PREM;
                 else next_state <= WAIT;
             end
             PREM: begin

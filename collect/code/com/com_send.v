@@ -2,49 +2,38 @@ module com_send(
     input clk,
     input rst,
 
-    input fs_send,
-    output fd_send,
+    output fs_eth,
+    input fd_eth,
 
-    output fs_eth_send,
-    input fd_eth_send,
+    input fs,
+    output fd,
 
-    input [3:0] send_btype,
+    input [3:0] btype,
+    input [3:0] didx,
+    input [11:0] dlen,
 
-    input [95:0] cache_info,
-    input [3:0] data_idx,
-
-    output reg [15:0] ram_rxa_init,
-    output reg [15:0] ram_dlen
+    output reg [14:0] ram_data_rxa_init,
+    output reg [12:0] data_len 
 );
 
-    localparam COM_INIT = 4'h0;
-    localparam COM_CONF = 4'h1, COM_READ = 4'h4, COM_STOP = 4'h9;
-    localparam COM_DATA = 4'h5, COM_STAT = 4'hA;
+    reg [4:0] state, next_state;
 
-    localparam STAT_LEN = 16'h0E, HEAD_LEN = 16'h04, TRGG_LEN = 16'h04;
-    localparam DATA_LEN_00 = 16'h0000;
-    localparam DATA_LEN_01 = 16'h0080;
-    localparam DATA_LEN_10 = 16'h0100;
-    localparam DATA_LEN_11 = 16'h0200;
+    localparam IDLE = 5'h01, WAIT = 5'h02, TAKE = 5'h04;
+    localparam WORK = 5'h08, DONE = 5'h10;
 
-    localparam COM_RAM_ADDR_DATA0 = 16'h0000, COM_RAM_ADDR_DATA1 = 16'h2400;
-    localparam COM_RAM_ADDR_DATA2 = 16'h4800, COM_RAM_ADDR_DATA3 = 16'h6C00;
-    localparam COM_RAM_ADDR_DATA4 = 16'h9000, COM_RAM_ADDR_DATA5 = 16'hB400;
-    localparam COM_RAM_ADDR_STAT = 16'h2300, COM_RAM_ADDR_INIT = 16'hF000;
+    localparam RAM_DATA_RXA_INIT = 15'h0000, RAM_DATA_RXA_INFO = 15'h0100;
+    localparam RAM_DATA_RXA_DAT0 = 15'h1000, RAM_DATA_RXA_DAT1 = 15'h2200;
+    localparam RAM_DATA_RXA_DAT2 = 15'h3400, RAM_DATA_RXA_DAT3 = 15'h4600;
+    localparam RAM_DATA_RXA_DAT4 = 15'h5800, RAM_DATA_RXA_DAT5 = 15'h6A00;
 
-    wire [0:15] device_type;
-
-    reg [7:0] state, next_state;
-    localparam IDLE = 8'h01, WAIT = 8'h02, CAL0 = 8'h04, CAL1 = 8'h08;
-    localparam WORK = 8'h10, DONE = 8'h20;
-
-    reg [15:0] dlen0, dlen1, dlen2, dlen3;
-    reg [15:0] dlen4, dlen5, dlen6, dlen7;
+    localparam DATA_LEN_INFO = 12'h000E, DATA_LEN_INIT = 12'h0000;
+    localparam DATA_LEN_PART = 12'h0024;
     
-    assign device_type = cache_info[79:64];
-    assign fs_eth_send = (state == WORK); 
-    assign fd_send = (state == DONE);
+    localparam BTYPE_INFO = 4'h1;
+    localparam BTYPE_DATA = 4'hE;
 
+    assign fs_eth = (state == WORK);
+    assign fd = (state == DONE);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -55,17 +44,16 @@ module com_send(
         case(state)
             IDLE: next_state <= WAIT;
             WAIT: begin
-                if(fs_send) next_state <= CAL0;
+                if(fs) next_state <= TAKE;
                 else next_state <= WAIT;
             end
-            CAL0: next_state <= CAL1;
-            CAL1: next_state <= WORK;
+            TAKE: next_state <= WORK;
             WORK: begin
-                if(fd_eth_send) next_state <= DONE;
+                if(fd_eth) next_state <= DONE;
                 else next_state <= WORK;
             end
             DONE: begin
-                if(~fs_send) next_state <= WAIT;
+                if(~fs) next_state <= IDLE;
                 else next_state <= DONE;
             end
             default: next_state <= IDLE;
@@ -73,114 +61,27 @@ module com_send(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_rxa_init <= COM_RAM_ADDR_INIT;
-        else if(state == CAL1 && send_btype == COM_STAT) ram_rxa_init <= COM_RAM_ADDR_STAT;
-        else if(state == CAL1 && send_btype == COM_DATA && data_idx == 4'h0) ram_rxa_init <= COM_RAM_ADDR_DATA0;
-        else if(state == CAL1 && send_btype == COM_DATA && data_idx == 4'h1) ram_rxa_init <= COM_RAM_ADDR_DATA1;
-        else if(state == CAL1 && send_btype == COM_DATA && data_idx == 4'h2) ram_rxa_init <= COM_RAM_ADDR_DATA2;
-        else if(state == CAL1 && send_btype == COM_DATA && data_idx == 4'h3) ram_rxa_init <= COM_RAM_ADDR_DATA3;
-        else if(state == CAL1 && send_btype == COM_DATA && data_idx == 4'h4) ram_rxa_init <= COM_RAM_ADDR_DATA4;
-        else if(state == CAL1 && send_btype == COM_DATA && data_idx == 4'h5) ram_rxa_init <= COM_RAM_ADDR_DATA5;
-        else if(state == CAL1) ram_rxa_init <= COM_RAM_ADDR_INIT;
-        else ram_rxa_init <= ram_rxa_init;
+        if(rst) data_len <= DATA_LEN_INIT;
+        else if(state == TAKE && btype == BTYPE_INFO) data_len <= DATA_LEN_INFO;
+        else if(state == TAKE && btype == BTYPE_DATA) data_len <= dlen + DATA_LEN_PART;
+        else if(state == TAKE) data_len <= DATA_LEN_INIT;
+        else if(state == DONE) data_len <= DATA_LEN_INIT;
+        else data_len <= data_len;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_dlen <= 16'h0000;
-        else if(state == IDLE) ram_dlen <= 16'h0000;
-        else if(state == CAL1 && send_btype == COM_STAT) ram_dlen <= STAT_LEN;
-        else if(state == CAL1 && send_btype == COM_DATA) ram_dlen <= HEAD_LEN + TRGG_LEN + dlen0 + dlen1 + dlen2 + dlen3 + dlen4 + dlen5 + dlen6 + dlen7;
-        else ram_dlen <= ram_dlen;
+        if(rst) ram_data_rxa_init <= RAM_DATA_RXA_INIT;
+        else if(state == TAKE && btype == BTYPE_INFO) ram_data_rxa_init <= RAM_DATA_RXA_INFO;
+        else if(state == TAKE && btype == BTYPE_DATA && didx == 4'h0) ram_data_rxa_init <= RAM_DATA_RXA_DAT0;
+        else if(state == TAKE && btype == BTYPE_DATA && didx == 4'h1) ram_data_rxa_init <= RAM_DATA_RXA_DAT1;
+        else if(state == TAKE && btype == BTYPE_DATA && didx == 4'h2) ram_data_rxa_init <= RAM_DATA_RXA_DAT2;
+        else if(state == TAKE && btype == BTYPE_DATA && didx == 4'h3) ram_data_rxa_init <= RAM_DATA_RXA_DAT3;
+        else if(state == TAKE && btype == BTYPE_DATA && didx == 4'h4) ram_data_rxa_init <= RAM_DATA_RXA_DAT4;
+        else if(state == TAKE && btype == BTYPE_DATA && didx == 4'h5) ram_data_rxa_init <= RAM_DATA_RXA_DAT5;
+        else if(state == TAKE) ram_data_rxa_init <= RAM_DATA_RXA_INIT;
+        else if(state == DONE) ram_data_rxa_init <= RAM_DATA_RXA_INIT;
+        else ram_data_rxa_init <= ram_data_rxa_init;
     end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen0 <= DATA_LEN_00;
-        else if(state == IDLE) dlen0 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[0:1] == 2'b00) dlen0 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[0:1] == 2'b01) dlen0 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[0:1] == 2'b10) dlen0 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[0:1] == 2'b11) dlen0 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen0 <= DATA_LEN_00;
-        else dlen0 <= dlen0;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen1 <= DATA_LEN_00;
-        else if(state == IDLE) dlen1 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[2:3] == 2'b00) dlen1 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[2:3] == 2'b01) dlen1 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[2:3] == 2'b10) dlen1 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[2:3] == 2'b11) dlen1 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen1 <= DATA_LEN_00;
-        else dlen1 <= dlen1;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen2 <= DATA_LEN_00;
-        else if(state == IDLE) dlen2 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[4:5] == 2'b00) dlen2 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[4:5] == 2'b01) dlen2 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[4:5] == 2'b10) dlen2 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[4:5] == 2'b11) dlen2 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen2 <= DATA_LEN_00;
-        else dlen2 <= dlen2;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen3 <= DATA_LEN_00;
-        else if(state == IDLE) dlen3 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[6:7] == 2'b00) dlen3 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[6:7] == 2'b01) dlen3 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[6:7] == 2'b10) dlen3 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[6:7] == 2'b11) dlen3 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen3 <= DATA_LEN_00;
-        else dlen3 <= dlen3;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen4 <= DATA_LEN_00;
-        else if(state == IDLE) dlen4 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[8:9] == 2'b00) dlen4 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[8:9] == 2'b01) dlen4 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[8:9] == 2'b10) dlen4 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[8:9] == 2'b11) dlen4 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen4 <= DATA_LEN_00;
-        else dlen4 <= dlen4;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen5 <= DATA_LEN_00;
-        else if(state == IDLE) dlen5 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[10:11] == 2'b00) dlen5 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[10:11] == 2'b01) dlen5 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[10:11] == 2'b10) dlen5 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[10:11] == 2'b11) dlen5 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen5 <= DATA_LEN_00;
-        else dlen5 <= dlen5;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen6 <= DATA_LEN_00;
-        else if(state == IDLE) dlen6 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[12:13] == 2'b00) dlen6 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[12:13] == 2'b01) dlen6 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[12:13] == 2'b10) dlen6 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[12:13] == 2'b11) dlen6 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen6 <= DATA_LEN_00;
-        else dlen6 <= dlen6;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen7 <= DATA_LEN_00;
-        else if(state == IDLE) dlen7 <= DATA_LEN_00;
-        else if(state == CAL0 && device_type[14:15] == 2'b00) dlen7 <= DATA_LEN_00; 
-        else if(state == CAL0 && device_type[14:15] == 2'b01) dlen7 <= DATA_LEN_01; 
-        else if(state == CAL0 && device_type[14:15] == 2'b10) dlen7 <= DATA_LEN_10; 
-        else if(state == CAL0 && device_type[14:15] == 2'b11) dlen7 <= DATA_LEN_11; 
-        else if(state == CAL0) dlen7 <= DATA_LEN_00;
-        else dlen7 <= dlen7;
-    end
-
 
 
 

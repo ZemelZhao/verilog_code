@@ -18,19 +18,19 @@ module eth
     output[7:0]         gmii_txd            ,                              
     output 		        gmii_tx_er          ,
     
-    input               tx_send_i           ,//发�?�使能，上升沿有�?
-    input[15:0]         tx_len_i            ,//发�?�长度， 单位Byte
-    input[15:0]         tx_addr_i           ,//发�?�开始地�?，单位Byte
-    output[15:0]        tx_addr_o           ,//读取发�?�数据的地址 ---net to ram 
-    input[7:0]          tx_data_i           ,//发�?�的数据        --- ram to net
-    output              tx_done_o           ,//发�?�完拉高，发送使能变低，有点延迟无所谓，1us都可�?
+    input               tx_send_i           ,//发送使能，上升沿有效
+    input[15:0]         tx_len_i            ,//发送长度， 单位Byte
+    input[15:0]         tx_addr_i           ,//发送开始地址，单位Byte
+    output[15:0]        tx_addr_o           ,//读取发送数据的地址 ---net to ram 
+    input[7:0]          tx_data_i           ,//发送的数据        --- ram to net
+    output              tx_done_o           ,//发送完拉高，发送使能变低，有点延迟无所谓，1us都可以
     
-    input[15:0]         rx_addr_i           ,//接收地址�? 
+    input[15:0]         rx_addr_i           ,//接收地址， 
     output reg[7:0]     rx_data_o       = 'd0   ,//接收数据
-    output reg[15:0]    rx_addr_o       = 'd0   ,//接收数据的地�?，每次都从rx_addr_i�?始�?�增
-    output reg          rx_valid_o      = 'd0   ,//接收的有效数�?-- 可以直接 ram wr
-    input               rx_ready                ,//默认是低，为高的时�?�，拉低rx_done_o，等待rx_ready拉低
-    output reg[15:0]    rx_len_o        = 'd0   ,//接收长度�? 单位Byte
+    output reg[15:0]    rx_addr_o       = 'd0   ,//接收数据的地址，每次都从rx_addr_i开始递增
+    output reg          rx_valid_o      = 'd0   ,//接收的有效数据-- 可以直接 ram wr
+    input               rx_ready                ,//默认是低，为高的时候，拉低rx_done_o，等待rx_ready拉低
+    output reg[15:0]    rx_len_o        = 'd0   ,//接收长度， 单位Byte
     output reg          rx_done_o       = 'd0   //接收完一包数据，拉高
     //rx_done_o &  rx_ready都低时，打开接收
     
@@ -38,7 +38,7 @@ module eth
 
     wire[15:0]      rx_length         ;//接收数据长度
     wire[7:0]       rx_data           ;//接收数据
-    wire            rx_valid          ;//接收的有效数�?
+    wire            rx_valid          ;//接收的有效数据
 
     reg             rst_n       = 'd0;
     reg[19:0]       rst_cnt     = 'd0; 

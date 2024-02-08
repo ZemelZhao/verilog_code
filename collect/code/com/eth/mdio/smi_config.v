@@ -1,6 +1,6 @@
 `timescale 1 ns/1 ns
 module smi_config#(
-    parameter REF_CLK = 75,         //reference clock frequency(MHz)
+    parameter REF_CLK = 50,         //reference clock frequency(MHz)
     parameter MDC_CLK = 500         //mdc clock(KHz)
 )
 (
@@ -29,6 +29,7 @@ reg  flag_speed      = 'd0;
  
 reg[2:0]    done_b    = 'd0;
 reg[15:0]   read_data_b     = 'd0;
+//always @(posedge clk or negedge rst_n)  begin
 always @(posedge clk)  begin
     done_b[2:1]                   <= done_b[1:0];
     if(done) begin

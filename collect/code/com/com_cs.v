@@ -12,32 +12,25 @@ module com_cs(
     input fs_com_read,
     output fd_com_read,
 
-    input [3:0] btype
+    output reg [3:0] com_tx_btype,
+    input [3:0] com_rx_btype,
+
+    output reg [3:0] data_idx,
+    output reg [3:0] com_btype
 );
 
-    localparam NUM_LATENCY = 4'h4;
-    localparam TIMEOUT = 12'h400;
+    reg [9:0] state, next_state;
+    localparam MAIN_IDLE = 10'h001, MAIN_WAIT = 10'h002;
+    localparam READ_IDLE = 10'h004, READ_WAIT = 10'h008, READ_WORK = 10'h010, READ_DONE = 10'h020;
+    localparam SEND_IDLE = 10'h040, SEND_WAIT = 10'h080, SEND_WORK = 10'h100, SEND_DONE = 10'h200;
 
-    localparam COM_RX00 = 4'h2, COM_RX01 = 4'hD;
-    localparam COM_INIT = 4'h0;
-
-    reg [15:0] state, next_state;
-    localparam MAIN_IDLE = 16'h0001, MAIN_WAIT = 16'h0002;
-    localparam SEND_IDLE = 16'h0010, SEND_WORK = 16'h0020;
-    localparam SEND_WAIT = 16'h0040, SEND_DONE = 16'h0080;
-    localparam READ_IDLE = 16'h0100, READ_WORK = 16'h0200;
-    localparam READ_WAIT = 16'h0400, READ_DONE = 16'h0800;
-    localparam WAIT_IDLE = 16'h1000, WAIT_READ = 16'h2000;
-    localparam WAIT_TAKE = 16'h4000, WAIT_DONE = 16'h8000;
-
-    reg [11:0] num;
-
-    reg [3:0] btype_d0;
-
-    assign fs_com_send = (state == SEND_WAIT);
-    assign fd_com_read = (state == READ_DONE);
-    assign fs_read = (state == READ_WAIT);
     assign fd_send = (state == SEND_DONE);
+    assign fs_read = (state == READ_IDLE);
+    assign fs_com_send = (state == READ_WORK) || (state == SEND_IDLE);
+    assign fd_com_read = (state == READ_WAIT) || (state == SEND_WORK);
+
+    localparam DATA_IDX = 4'h5;
+    localparam BTYPE_INIT = 4'h0, BTYPE_INFO = 4'h1, BTYPE_DATA = 4'hE;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -53,49 +46,35 @@ module com_cs(
                 else next_state <= MAIN_WAIT;
             end
 
-            SEND_IDLE: begin
-                if(NUM_LATENCY == 4'h0) next_state <= SEND_WAIT;
-                else next_state <= SEND_WORK;
+            READ_IDLE: begin
+                if(fd_read) next_state <= READ_WAIT;
+                else next_state <= READ_IDLE;
             end
-            SEND_WORK: begin
-                if(num >= NUM_LATENCY) next_state <= SEND_WAIT;
-                else next_state <= SEND_WORK;
+            READ_WAIT: begin
+                if(~fs_com_read) next_state <= READ_WORK;
+                else next_state <= READ_WAIT;
             end
-            SEND_WAIT: begin
-                if(fd_com_send) next_state <= WAIT_IDLE;
-                else next_state <= SEND_WAIT;
+            READ_WORK: begin
+                if(fd_com_send) next_state <= READ_DONE;
+                else next_state <= READ_WORK;
             end
-            SEND_DONE: begin
-                if(~fs_send) next_state <= MAIN_WAIT;
-                else next_state <= SEND_DONE;
-            end
+            READ_DONE: next_state <= MAIN_IDLE;
 
-            WAIT_IDLE: begin
-                if(num >= TIMEOUT) next_state <= SEND_IDLE;
-                else if(fs_com_read) next_state <= WAIT_READ;
-                else next_state <= WAIT_IDLE;
-            end
-            WAIT_READ: begin
-                if(~fs_com_read) next_state <= WAIT_TAKE;
-                else next_state <= WAIT_READ;
-            end
-            WAIT_TAKE: begin
-                if(btype_d0 == COM_INIT) next_state <= WAIT_DONE; 
-                else if(btype_d0 == COM_RX00 && btype == COM_RX01) next_state <= WAIT_DONE; 
-                else if(btype_d0 == COM_RX01 && btype == COM_RX00) next_state <= WAIT_DONE;
+            SEND_IDLE: begin
+                if(fd_com_send) next_state <= SEND_WAIT;
                 else next_state <= SEND_IDLE;
             end
-            WAIT_DONE: next_state <= SEND_DONE;
-
-            READ_IDLE: next_state <= READ_WORK;
-            READ_WORK: next_state <= SEND_WAIT;
-            READ_WAIT: begin
-                if(fd_read) next_state <= READ_DONE;
+            SEND_WAIT: begin
+                if(fs_com_read) next_state <= SEND_WORK;
                 else next_state <= SEND_WAIT;
             end
-            READ_DONE: begin
-                if(~fs_com_read) next_state <= MAIN_WAIT;
-                else next_state <= READ_DONE;
+            SEND_WORK: begin
+                if(~fs_com_read) next_state <= SEND_DONE;
+                else next_state <= SEND_WORK;
+            end
+            SEND_DONE: begin
+                if(~fs_send) next_state <= MAIN_IDLE;
+                else next_state <= SEND_DONE;
             end
 
             default: next_state <= MAIN_IDLE;
@@ -103,16 +82,32 @@ module com_cs(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) num <= 4'h0;
-        else if(state == MAIN_IDLE) num <= 4'h0;
-        else if(state == SEND_WORK) num <= num + 1'b1;
-        else num <= 4'h0;
+        if(rst) data_idx <= 4'h0;
+        else if(state == MAIN_WAIT && fs_send && data_idx == DATA_IDX) data_idx <= 4'h0;
+        else if(state == MAIN_WAIT && fs_send) data_idx <= data_idx + 1'b1;
+        else data_idx <= data_idx;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) btype_d0 <= COM_INIT;
-        else btype_d0 <= btype;
+        if(rst) com_tx_btype <= BTYPE_INIT;
+        else if(state == MAIN_IDLE) com_tx_btype <= BTYPE_INIT;
+        else if(state == MAIN_WAIT && fs_send) com_tx_btype <= BTYPE_DATA;
+        else if(state == MAIN_WAIT && fs_com_read) com_tx_btype <= BTYPE_INFO;
+        else com_tx_btype <= com_tx_btype;
     end
 
-endmodule
+    always@(posedge clk or posedge rst) begin
+        if(rst) com_btype <= BTYPE_INIT;
+        else if(state == MAIN_IDLE) com_btype <= BTYPE_INIT;
+        else if(state == MAIN_WAIT && fs_com_read) com_btype <= com_rx_btype;
+        else if(state == MAIN_WAIT) com_btype <= BTYPE_INIT;
+        else com_btype <= com_btype;
+    end
 
+
+
+
+
+
+
+endmodule

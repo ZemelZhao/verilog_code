@@ -44,6 +44,7 @@ module trgg_sp(
                 else next_state <= COUNT;
             end
             WORK: begin
+                
             end
 
         endcase

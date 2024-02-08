@@ -126,7 +126,7 @@ module intan(
     localparam REG59 = 6'h3B; 
     localparam REG60 = 6'h3C, REG61 = 6'h3D, REG62 = 6'h3E, REG63 = 6'h3F;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     reg [7:0] state_goto, state_back;
 

@@ -32,6 +32,7 @@ module intan(
     input [1:0] fifo_rxen,
     output [15:0] fifo_rxd,
 
+    input led,
     output stat
 );
 
@@ -59,10 +60,10 @@ module intan(
     localparam FILTUP_1K5 = 4'h9, FILTUP_1K0 = 4'hA, FILTUP_750 = 4'hB, FILTUP_500 = 4'hC;
     localparam FILTUP_300 = 4'hD, FILTUP_200 = 4'hE, FILTUP_100 = 4'hF;
 
-    localparam FILTLOW_100 = 4'h1, FILTLOW_020 = 4'h2, FILTLOW_015 = 4'h3, FILTLOW_010 = 4'h4;
-    localparam FILTLOW_7D5 = 4'h5, FILTLOW_5D0 = 4'h6, FILTLOW_3D0 = 4'h7, FILTLOW_2D5 = 4'h8;
-    localparam FILTLOW_2D0 = 4'h9, FILTLOW_1D0 = 4'hA, FILTLOW_D75 = 4'hB, FILTLOW_D50 = 4'hC;
-    localparam FILTLOW_D30 = 4'hD, FILTLOW_D25 = 4'hE, FILTLOW_D10 = 4'hF;
+    localparam FILTLOW_D10 = 4'h1, FILTLOW_D25 = 4'h2, FILTLOW_D30 = 4'h3, FILTLOW_D50 = 4'h4;
+    localparam FILTLOW_D75 = 4'h5, FILTLOW_1D0 = 4'h6, FILTLOW_2D0 = 4'h7, FILTLOW_2D5 = 4'h8;
+    localparam FILTLOW_3D0 = 4'h9, FILTLOW_5D0 = 4'hA, FILTLOW_7D5 = 4'hB, FILTLOW_010 = 4'hC;
+    localparam FILTLOW_015 = 4'hD, FILTLOW_020 = 4'hE, FILTLOW_100 = 4'hF;
 
     localparam DATA_REG00_NORMAL = 8'hDE, DATA_REG00_RESET = 8'hFE; 
     localparam DATA_REG01_12KHZ = 8'h20, DATA_REG01_4KHZ = 8'h10, DATA_REG01_8KHZ = 8'h08, DATA_REG01_16KHZ = 8'h03;
@@ -149,9 +150,9 @@ module intan(
     localparam INIT_IDLE = 8'h68, INIT_DONE = 8'h69, INIT_RXD0 = 8'h6A, INIT_RXD1 = 8'h6B;
 
     localparam TYPE_REG59 = 8'h70, TYPE_REG60 = 8'h71, TYPE_REG61 = 8'h72, TYPE_REG62 = 8'h73;
-    localparam TYPE_REG63 = 8'h74;
+    localparam TYPE_REG63 = 8'h74, TYPE_REG03 = 8'h75;
     localparam TYPE_IDLE = 8'h78, TYPE_DONE = 8'h79, TYPE_RXD0 = 8'h7A, TYPE_RXD1 = 8'h7B;
-    localparam TYPE_RXD2 = 8'h7C, TYPE_RXD3 = 8'h7D;
+    localparam TYPE_RXD2 = 8'h7C, TYPE_RXD3 = 8'h7D, TYPE_RXD4 = 8'h7E, TYPE_RXD5 = 8'h7F;
 
     localparam CONF_REG00 = 8'h80, CONF_REG01 = 8'h81, CONF_REG02 = 8'h82, CONF_REG03 = 8'h83;
     localparam CONF_REG04 = 8'h84, CONF_REG05 = 8'h85, CONF_REG06 = 8'h86, CONF_REG07 = 8'h87;
@@ -335,6 +336,9 @@ module intan(
             TYPE_REG59: next_state <= IDLE_IDLE;
             TYPE_RXD2: next_state <= IDLE_IDLE;
             TYPE_RXD3: next_state <= RREG_IDLE;
+            TYPE_REG03: next_state <= IDLE_IDLE;
+            TYPE_RXD4: next_state <= IDLE_IDLE;
+            TYPE_RXD5: next_state <= RREG_IDLE;
             TYPE_DONE: begin
                 if(~fs_type) next_state <= MAIN_WAIT;
                 else next_state <= TYPE_DONE;
@@ -454,7 +458,9 @@ module intan(
         else if(state == TYPE_RXD0) state_goto <= TYPE_RXD1;
         else if(state == TYPE_RXD1) state_goto <= TYPE_REG59;
         else if(state == TYPE_RXD2) state_goto <= TYPE_RXD3;
-        else if(state == TYPE_RXD3) state_goto <= TYPE_DONE;
+        else if(state == TYPE_RXD3) state_goto <= TYPE_REG03;
+        else if(state == TYPE_RXD4) state_goto <= TYPE_RXD5;
+        else if(state == TYPE_RXD5) state_goto <= TYPE_DONE;
         else if(state == CONF_RXD0) state_goto <= CONF_RXD1;
         else if(state == CONF_RXD1) state_goto <= CONF_DONE;
         else if(state == TEMP_RXD0) state_goto <= TEMP_RXD1;
@@ -483,6 +489,7 @@ module intan(
 
         else if(state == TYPE_REG63) state_goto <= TYPE_RXD0;
         else if(state == TYPE_REG59) state_goto <= TYPE_RXD2;
+        else if(state == TYPE_REG03) state_goto <= TYPE_RXD4;
 
         else if(state == CONF_REG00) state_goto <= CONF_REG01;
         else if(state == CONF_REG01) state_goto <= CONF_REG02;
@@ -518,7 +525,6 @@ module intan(
         else if(state == TEMP_REST3) state_goto <= TEMP_RRESB;
         else if(state == TEMP_RRESB) state_goto <= TEMP_RESET;
         else if(state == TEMP_RESET) state_goto <= TEMP_RXD2;
-
 
         else if(state == CONV_CH00) state_goto <= CONV_CH01;
         else if(state == CONV_CH01) state_goto <= CONV_CH02;
@@ -603,6 +609,7 @@ module intan(
         else if(state == TYPE_REG61) chip_txd <= {HEAD_RX, REG61, 8'h00};
         else if(state == TYPE_REG62) chip_txd <= {HEAD_RX, REG62, 8'h00};
         else if(state == TYPE_REG63) chip_txd <= {HEAD_RX, REG63, 8'h00};
+        else if(state == TYPE_REG03) chip_txd <= {HEAD_TX, REG03, DATA_REG03_NORMAL[7:1], ~led};
 
         else if(state == CONF_REG00) chip_txd <= {HEAD_TX, REG00, DATA_REG00_NORMAL};
         else if(state == CONF_REG01) chip_txd <= {HEAD_TX, REG01, data_reg01};
@@ -682,6 +689,7 @@ module intan(
         else if(state == INIT_REG43) chip_rxda_res <= {RHEAD_RX, DATA_REG43};
         else if(state == INIT_REG44) chip_rxda_res <= {RHEAD_RX, DATA_REG44};
         else if(state == TYPE_REG59) chip_rxda_res <= {RHEAD_RX, DATA_REG59_A};
+        else if(state == TYPE_REG03) chip_rxda_res <= {RHEAD_TX, DATA_REG03_NORMAL[7:1], ~led};
         else if(state == CONF_REG00) chip_rxda_res <= {RHEAD_TX, DATA_REG00_NORMAL};
         else if(state == CONF_REG01) chip_rxda_res <= {RHEAD_TX, data_reg01};
         else if(state == CONF_REG02) chip_rxda_res <= {RHEAD_TX, data_reg02};
@@ -718,6 +726,7 @@ module intan(
         else if(state == INIT_REG43) chip_rxdb_res <= {RHEAD_RX, DATA_REG43};
         else if(state == INIT_REG44) chip_rxdb_res <= {RHEAD_RX, DATA_REG44};
         else if(state == TYPE_REG59) chip_rxdb_res <= {RHEAD_RX, DATA_REG59_B};
+        else if(state == TYPE_REG03) chip_rxdb_res <= {RHEAD_TX, DATA_REG03_NORMAL[7:1], ~led};
         else if(state == CONF_REG00) chip_rxdb_res <= {RHEAD_TX, DATA_REG00_NORMAL};
         else if(state == CONF_REG01) chip_rxdb_res <= {RHEAD_TX, data_reg01};
         else if(state == CONF_REG02) chip_rxdb_res <= {RHEAD_TX, data_reg02};

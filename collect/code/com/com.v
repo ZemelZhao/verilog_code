@@ -22,7 +22,7 @@ module com(
 
     output [15:0] ram_data_rxa,
     input [7:0] ram_data_rxd,
-    input [11:0] data_len,
+    input [12:0] data_len,
 
     output ram_cmd_txen,
     output [7:0] ram_cmd_txa,
@@ -35,7 +35,7 @@ module com(
 );
 
     wire fs_eth_read, fd_eth_read;
-    (*MARK_DEBUG = "true"*)wire fs_eth_send, fd_eth_send;
+    wire fs_eth_send, fd_eth_send;
 
     wire [14:0] ram_data_rxa_init;
     wire [12:0] ram_data_dlen;
@@ -45,9 +45,10 @@ module com(
     wire [3:0] data_idx;
 
     wire [3:0] com_tx_btype, com_rx_btype;
+    wire [15:0] ram_cmd_dlen;
 
-    parameter PASSWORD = 16'h55AA;
     localparam CMD_RXA = 8'h0A;
+    localparam PASSWORD = 16'h55AA;
 
     eth 
     eth_dut(
@@ -124,7 +125,7 @@ module com(
 
     com_cs
     com_cs_dut(
-        .clk(gmii_rxc),
+        .clk(clk),
         .rst(rst),
 
         .fs_send(fs_send),

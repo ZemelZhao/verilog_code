@@ -13,7 +13,11 @@ module top(
     output [3:0] adc_sclk,
 
     input com_rxf,
-    output com_txf
+    output com_txf,
+
+    inout [1:0] com_trf,
+
+    input [1:0] com_cc
 );
 
     wire clk_slow, clk_norm, clk_fast;
@@ -36,7 +40,8 @@ module top(
     wire fd_com_txer;
 
     // DATA Section
-    wire [31:0] cache_cmd, cache_stat;
+    wire [31:0] cache_cmd; 
+    wire [31:0] cache_stat;
 
     // ADC Section
     wire [63:0] fifo_rxd;
@@ -51,8 +56,6 @@ module top(
     wire [7:0] ram_txd, ram_rxd;
     wire [11:0] ram_txa, ram_rxa;
     wire ram_txen;
-
-    assign rst = ~rst_n;
 
     console
     console_dut(
@@ -90,6 +93,7 @@ module top(
         .com_rxc(clk_slow),
         .pin_txc(clk_fast),
         .pin_rxc(clk_fast),
+        .clk_ult(clk_ulta),
 
         .rst(rst),
 
@@ -167,14 +171,22 @@ module top(
         .ram_txen(ram_txen)
     );
 
-    pin
-    pin_dut(
+    crep
+    crep_dut(
+        .clk(clk_in),
+
+        .clk_slow(clk_slow),
+        .clk_norm(clk_norm),
+        .clk_fast(clk_fast),
+        .clk_ulta(clk_ulta),
+
         .com_txd_p(com_txd_p),
         .com_txd_n(com_txd_n),
         .com_rxd_p(com_rxd_p),
         .com_rxd_n(com_rxd_n),
-        .com_rxf(com_rxf),
         .com_txf(com_txf),
+        .com_rxf(com_rxf),
+        .com_cc(com_cc),
 
         .adc_miso(adc_miso),
         .adc_cs(adc_cs),
@@ -189,15 +201,10 @@ module top(
         .pin_cs(pin_cs),
         .pin_sclk(pin_sclk),
         .pin_mosi(pin_mosi),
-        .pin_miso(pin_miso)
-    );
+        .pin_miso(pin_miso),
 
-    clk_wiz
-    clk_wiz_dut(
-        .clk_in(clk_in),
-        .clk_slow(clk_slow),
-        .clk_norm(clk_norm),
-        .clk_fast(clk_fast)
+        .rst_n(rst_n),
+        .rst(rst)
     );
 
     ram_data

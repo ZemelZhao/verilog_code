@@ -2,95 +2,68 @@ module console(
     input clk,
     input rst,
 
-// USB Section
-    output [0:7] fs_usb_send,
-    input [0:7] fd_usb_send,
-    input [0:7] fs_usb_read,
-    output [0:7] fd_usb_read,
+    output fs_com_send,
+    input fd_com_send,
+    input fs_com_read,
+    output fd_com_read,
 
-    output [0:31] send_usb_btype,
-    input [0:31] read_usb_btype,
+    output [7:0] fs_usb_send,
+    input [7:0] fd_usb_send,
+    input [7:0] ff_usb_send,
+    input [7:0] fs_usb_read,
+    output [7:0] fd_usb_read,
 
-    input [0:255] cache_stat,
-    output [0:255] cache_cmd,
-    output [95:0] cache_info,
+    output fs_data,
+    input fd_data,
 
-// ETH Section
-    output fs_eth_send,
-    input fd_eth_send,
-    input fs_eth_read,
-    output fd_eth_read,
+    input [3:0] com_btype,
+    input [51:0] cache_cmd,
 
-    output [3:0] send_eth_btype,
-    input [3:0] read_eth_btype,
+    output [31:0] send_usb_btype,
+    input [31:0] read_usb_btype,
 
-    input [15:0] com_cmd
-);
+    input [255:0] usb_stat,
+    output [255:0] usb_cmd,
+    output [79:0] dev_stat,
 
-    wire tick_work;
+    output [12:0] com_dlen,
+    output [3:0] data_btype
+); 
 
-    wire fs_com_send, fd_com_send;
-    wire fs_com_read, fd_com_read;
-    wire fs_adc_conf, fd_adc_conf;
-    wire fs_adc_conv, fd_adc_conv;
-    wire fs_adc_tick, fd_adc_tick;
+    wire fs_conf, fd_conf;
+    wire fs_conv, fd_conv;
+    wire fs_send, fd_send;
+    wire fs_read, fd_read;
 
-    wire [3:0] com_send_btype, com_read_btype;
-    wire [3:0] data_idx;
-    wire [3:0] freq_samp;
-    wire [15:0] device_cmd;
+    wire tick;
 
-    assign freq_samp = device_cmd[15:12];
+    wire [1:0] com_state;
+    wire [3:0] fsamp;
+    
+    wire [11:0] com_cmd;
+    wire [39:0] trgg_cmd;
 
+    assign fsamp = cache_cmd[51:48];
+    assign com_cmd = cache_cmd[51:40];
+    assign trgg_cmd = cache_cmd[39:0];
 
-    console_hq
-    console_hq_dut(
+    console_core
+    console_core_dut(
         .clk(clk),
         .rst(rst),
 
-        .fs_com_read(fs_com_read),
-        .fd_com_read(fd_com_read),
-        .fs_com_send(fs_com_send),
-        .fd_com_send(fd_com_send),
+        .fs_conf(fs_conf),
+        .fd_conf(fd_conf),
+        .fs_conv(fs_conv),
+        .fd_conv(fd_conv),
 
-        .fs_adc_conf(fs_adc_conf),
-        .fd_adc_conf(fd_adc_conf),
-        .fs_adc_conv(fs_adc_conv),
-        .fd_adc_conv(fd_adc_conv),
-        .fs_adc_tick(fs_adc_tick),
-        .fd_adc_tick(fd_adc_tick),
+        .fs_send(fs_send),
+        .fd_send(fd_send),
+        .fs_read(fs_read),
+        .fd_read(fd_read),
 
-        .com_send_btype(com_send_btype),
-        .com_read_btype(com_read_btype),
-
-        .data_idx(data_idx),
-        .work(tick_work)
-    );
-
-    console_usb
-    console_usb_dut(
-        .clk(clk),
-        .rst(rst),
-
-        .fs_adc_conf(fs_adc_conf),
-        .fd_adc_conf(fd_adc_conf),
-        .fs_adc_conv(fs_adc_conv),
-        .fd_adc_conv(fd_adc_conv),
-
-        .device_cmd(device_cmd),
-        .data_idx(data_idx),
-
-        .fs_usb_send(fs_usb_send),
-        .fd_usb_send(fd_usb_send),
-        .fs_usb_read(fs_usb_read),
-        .fd_usb_read(fd_usb_read),
-
-        .send_usb_btype(send_usb_btype),
-        .read_usb_btype(read_usb_btype),
-
-        .cache_stat(cache_stat),
-        .cache_cmd(cache_cmd),
-        .adc_info(cache_info)
+        .tick(tick),
+        .com_state(com_state)
     );
 
     console_com
@@ -98,39 +71,67 @@ module console(
         .clk(clk),
         .rst(rst),
 
+        .fs_send(fs_send),
+        .fd_send(fd_send),
+        .fs_read(fs_read),
+        .fd_read(fd_read),
+
         .fs_com_send(fs_com_send),
         .fd_com_send(fd_com_send),
         .fs_com_read(fs_com_read),
         .fd_com_read(fd_com_read),
 
-        .com_send_btype(com_send_btype),
-        .com_read_btype(com_read_btype),
+        .com_btype(com_btype),
+        .com_state(com_state)
+    );
 
-        .fs_send(fs_eth_send),
-        .fd_send(fd_eth_send),
-        .fs_read(fs_eth_read),
-        .fd_read(fd_eth_read),
+    console_usb
+    console_usb_dut(
+        .clk(clk),
+        .rst(rst),
 
-        .send_btype(send_eth_btype),
-        .read_btype(read_eth_btype),
+        .fs_conf(fs_conf),
+        .fd_conf(fd_conf),
+        .fs_conv(fs_conv),
+        .fd_conv(fd_conv),
+
+        .fs_usb_send(fs_usb_send),
+        .fd_usb_send(fd_usb_send),
+        .ff_usb_send(ff_usb_send),
+        .fs_usb_read(fs_usb_read),
+        .fd_usb_read(fd_usb_read),
+
+        .send_usb_btype(send_usb_btype),
+        .read_usb_btype(read_usb_btype),
 
         .com_cmd(com_cmd),
-        .device_cmd(device_cmd)
+        .usb_cmd(usb_cmd),
+        .usb_stat(usb_stat),
+        .dev_stat(dev_stat),
+
+        .com_dlen(com_dlen)
+    );
+
+    console_data
+    console_data_dut(
+        .clk(clk),
+        .rst(rst),
+
+        .fs(fs_data),
+        .fd(fd_data),
+        .fs_com_send(fs_com_send),
+        .fs_com_read(fs_com_read),
+
+        .btype(data_btype)
     );
 
     console_tick
     console_tick_dut(
         .clk(clk),
-        .work(tick_work),
-
-        .freq_samp(freq_samp),
-
-        .fs(fs_adc_tick),
-        .fd(fd_adc_tick)
+        .fs_conf(fs_conf),
+        .fsamp(fsamp),
+        .tick(tick)
     );
-
-
-
 
 
 

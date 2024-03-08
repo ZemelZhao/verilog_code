@@ -19,25 +19,27 @@ module adc(
     input [31:0] cache_cmd,
     output [31:0] cache_stat,
 
-    input [3:0] pin_miso,
-    output [3:0] pin_mosi,
-    output [3:0] pin_sclk,
-    output [3:0] pin_cs,
+    input [0:3] pin_miso,
+    output [0:3] pin_mosi,
+    output [0:3] pin_sclk,
+    output [0:3] pin_cs,
 
-    input [7:0] fifo_rxen,
-    output [63:0] fifo_rxd
+    input [0:7] fifo_rxen,
+    output [0:63] fifo_rxd
 );
+    localparam INTAN_NUM = 4;
 
-    wire [3:0] fdc_init, fdc_type, fdc_conf, fdc_conv;
-    wire [15:0] tempa, tempb, tempc, tempd;
+    wire [0:3] fdc_init, fdc_type, fdc_conf, fdc_conv;
+    wire [15:0] temp[0:3];
     wire [17:0] temp_all;
 
     wire [15:0] device_temp;
-    wire [7:0] device_type;
-    wire [3:0] device_stat;
+    wire [0:7] device_type;
+    wire [0:3] device_stat;
+    wire [0:3] device_idx;
     wire [3:0] freq_samp, filt_up, filt_low;
 
-    assign temp_all = tempa + tempb + tempc + tempd;
+    assign temp_all = temp[0] + temp[1] + temp[2] + temp[3];
     assign device_temp = temp_all[17:2];
 
     assign fd_init = &fdc_init;
@@ -46,160 +48,52 @@ module adc(
     assign fd_conv = &fdc_conv;
 
     assign cache_stat = {device_temp, device_type, device_stat, 4'h0};
+    assign device_idx = cache_cmd[31:28];
     assign freq_samp = cache_cmd[23:20];
     assign filt_up = cache_cmd[19:16];
     assign filt_low = cache_cmd[15:12];
 
-    intan
-    intan_duta(
-        .clk(clk),
-        .spi_clk(spi_clk),
-        .fifo_txc(fifo_txc),
-        .fifo_rxc(fifo_rxc),
+    genvar i;
+    generate
+        for (i=0; i<INTAN_NUM; i=i+1) begin : intan_inst
+            intan
+            intan_dut(
+                .clk(clk),
+                .spi_clk(spi_clk),
+                .fifo_txc(fifo_txc),
+                .fifo_rxc(fifo_rxc),
 
-        .rst(rst),
+                .rst(rst),
 
-        .fs_init(fs_init),
-        .fs_type(fs_type),
-        .fs_conf(fs_conf),
-        .fs_conv(fs_conv),
+                .fs_init(fs_init),
+                .fs_type(fs_type),
+                .fs_conf(fs_conf),
+                .fs_conv(fs_conv),
 
-        .fd_init(fdc_init[3]),
-        .fd_type(fdc_type[3]),
-        .fd_conf(fdc_conf[3]),
-        .fd_conv(fdc_conv[3]),
+                .fd_init(fdc_init[i]),
+                .fd_type(fdc_type[i]),
+                .fd_conf(fdc_conf[i]),
+                .fd_conv(fdc_conv[i]),
 
-        .freq_samp(freq_samp[2:0]),
-        .device_type(device_type[7:6]),
-        .device_temp(tempa),
+                .freq_samp(freq_samp[2:0]),
+                .device_type(device_type[2*i +: 2]),
+                .device_temp(temp[i]),
 
-        .filt_up(filt_up),
-        .filt_low(filt_low),
+                .filt_up(filt_up),
+                .filt_low(filt_low),
 
-        .miso(pin_miso[3]),
-        .mosi(pin_mosi[3]),
-        .sclk(pin_sclk[3]),
-        .cs(pin_cs[3]),
-        
-        .fifo_rxen(fifo_rxen[7:6]),
-        .fifo_rxd(fifo_rxd[63:48]),
+                .miso(pin_miso[i]),
+                .mosi(pin_mosi[i]),
+                .sclk(pin_sclk[i]),
+                .cs(pin_cs[i]),
+                
+                .fifo_rxen(fifo_rxen[2*i +: 2]),
+                .fifo_rxd(fifo_rxd[16*i +: 16]),
 
-        .stat(device_stat[3])
-    );
-
-    intan
-    intan_dutb(
-        .clk(clk),
-        .spi_clk(spi_clk),
-        .fifo_txc(fifo_txc),
-        .fifo_rxc(fifo_rxc),
-
-        .rst(rst),
-
-        .fs_init(fs_init),
-        .fs_type(fs_type),
-        .fs_conf(fs_conf),
-        .fs_conv(fs_conv),
-
-        .fd_init(fdc_init[2]),
-        .fd_type(fdc_type[2]),
-        .fd_conf(fdc_conf[2]),
-        .fd_conv(fdc_conv[2]),
-
-        .freq_samp(freq_samp[2:0]),
-        .device_type(device_type[5:4]),
-        .device_temp(tempb),
-
-        .filt_up(filt_up),
-        .filt_low(filt_low),
-
-        .miso(pin_miso[2]),
-        .mosi(pin_mosi[2]),
-        .sclk(pin_sclk[2]),
-        .cs(pin_cs[2]),
-        
-        .fifo_rxen(fifo_rxen[5:4]),
-        .fifo_rxd(fifo_rxd[47:32]),
-
-        .stat(device_stat[2])
-    );
-
-    intan
-    intan_dutc(
-        .clk(clk),
-        .spi_clk(spi_clk),
-        .fifo_txc(fifo_txc),
-        .fifo_rxc(fifo_rxc),
-
-        .rst(rst),
-
-        .fs_init(fs_init),
-        .fs_type(fs_type),
-        .fs_conf(fs_conf),
-        .fs_conv(fs_conv),
-
-        .fd_init(fdc_init[1]),
-        .fd_type(fdc_type[1]),
-        .fd_conf(fdc_conf[1]),
-        .fd_conv(fdc_conv[1]),
-
-        .freq_samp(freq_samp[2:0]),
-        .device_type(device_type[3:2]),
-        .device_temp(tempc),
-
-        .filt_up(filt_up),
-        .filt_low(filt_low),
-
-        .miso(pin_miso[1]),
-        .mosi(pin_mosi[1]),
-        .sclk(pin_sclk[1]),
-        .cs(pin_cs[1]),
-        
-        .fifo_rxen(fifo_rxen[3:2]),
-        .fifo_rxd(fifo_rxd[31:16]),
-
-        .stat(device_stat[1])
-    );
-
-    intan
-    intan_dutd(
-        .clk(clk),
-        .spi_clk(spi_clk),
-        .fifo_txc(fifo_txc),
-        .fifo_rxc(fifo_rxc),
-
-        .rst(rst),
-
-        .fs_init(fs_init),
-        .fs_type(fs_type),
-        .fs_conf(fs_conf),
-        .fs_conv(fs_conv),
-
-        .fd_init(fdc_init[0]),
-        .fd_type(fdc_type[0]),
-        .fd_conf(fdc_conf[0]),
-        .fd_conv(fdc_conv[0]),
-
-        .freq_samp(freq_samp[2:0]),
-        .device_type(device_type[1:0]),
-        .device_temp(tempd),
-
-        .filt_up(filt_up),
-        .filt_low(filt_low),
-
-        .miso(pin_miso[0]),
-        .mosi(pin_mosi[0]),
-        .sclk(pin_sclk[0]),
-        .cs(pin_cs[0]),
-        
-        .fifo_rxen(fifo_rxen[1:0]),
-        .fifo_rxd(fifo_rxd[15:0]),
-
-        .stat(device_stat[0])
-    );
-
+                .led(device_idx[i]),
+                .stat(device_stat[i])
+            );
+        end
+    endgenerate
 
 endmodule
-
-
-

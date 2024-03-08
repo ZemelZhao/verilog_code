@@ -1,6 +1,5 @@
 module usb(
     input sys_clk,
-    input clk_ult,
     input usb_txc,
     input usb_rxc,
     input pin_txc,
@@ -15,7 +14,6 @@ module usb(
 
     input fs_send,
     output fd_send,
-    output ff_send,
     output fs_read,
     input fd_read,
 
@@ -25,11 +23,11 @@ module usb(
     input [31:0] cache_cmd,
     output [31:0] cache_stat,
 
-    (*MARK_DEBUG = "true"*)input [11:0] ram_rxa,
-    (*MARK_DEBUG = "true"*)output [7:0] ram_rxd
+    input [11:0] ram_rxa,
+    output [7:0] ram_rxd
 );
 
-    (*MARK_DEBUG = "true"*)wire [3:0] usb_rxd;
+    wire [3:0] usb_rxd;
     wire usb_txd;
     (*MARK_DEBUG = "true"*)wire [7:0] com_rxd, com_txd;
 
@@ -39,9 +37,9 @@ module usb(
     wire [3:0] tx_btype, rx_btype;
     wire [11:0] rx_ram_init;
 
-    (*MARK_DEBUG = "true"*)wire [7:0] ram_txd;
-    (*MARK_DEBUG = "true"*)wire [11:0] ram_txa;
-    (*MARK_DEBUG = "true"*)wire ram_txen;
+    wire [7:0] ram_txd;
+    wire [11:0] ram_txa;
+    wire ram_txen;
 
     usb_cs
     usb_cs_dut(
@@ -50,7 +48,6 @@ module usb(
 
         .fs_send(fs_send),
         .fd_send(fd_send),
-        .ff_send(ff_send),
         .fs_read(fs_read),
         .fd_read(fd_read),
 
@@ -121,10 +118,6 @@ module usb(
 
     usb_cc
     usb_cc_dut(
-        .clk(clk_ult),
-        .clk_fast(pin_rxc),
-        .fire(pin_read),
-
         .usb_txd(usb_txd),
         .pin_txd(pin_txd),
 

@@ -5,217 +5,260 @@ module top(
     input rst_n,
     output fan_n,
 
-// Ethernet
-    output e_rstn,
     output e_mdc,
     inout e_mdio,
-
-    input e_grxc,
-    input e_rxdv,
-    input e_rxer,
-    input [7:0] e_rxd,
+    output e_rstn,
 
     output e_gtxc,
-    output e_txen,
-    output e_txer,
-    output [7:0] e_txd,
+    input e_grxc,
 
-// USB
-    input [0:31] u_rxd,
-    input [0:7] u_read,
-    output [0:7] u_txd,
-    output [0:7] u_send
+    input e_rxdv,
+    input [7:0] e_rxd,
+    input e_rxer,
+
+    output e_txen,
+    output [7:0] e_txd,
+    output e_txer,
+
+    input [0:31] u_rxd_p,
+    input [0:31] u_rxd_n,
+    output [0:7] u_txd_p,
+    output [0:7] u_txd_n,
+
+    output [0:7] u_txen,
+    input [0:7] u_rxdv,
+
+    output [7:0] led_n
 );
 
-// CRE
+    wire clk_slow, clk_norm, clk_fast, clk_ulta;
+    wire gmii_txc, gmii_rxc;
 
-    wire clk_slow, clk_norm, clk_fast;
-    wire gmii_rxc, gmii_txc;
-
-    wire locked;
-
-    wire rst;
-
-    assign e_gtxc = ~gmii_rxc;
-    assign gmii_txc = gmii_rxc;
-
-
-// CONTROL
-    wire fs_eth_send, fd_eth_send;
-    wire fs_eth_read, fd_eth_read;
-    wire [3:0] send_eth_btype, read_eth_btype;
-
-    wire [0:7] fs_usb_send, fd_usb_send;
+    wire [0:7] fs_usb_send, fd_usb_send, ff_usb_send;
     wire [0:7] fs_usb_read, fd_usb_read;
+
+    wire fs_data, fd_data;
+    wire [3:0] com_btype, data_btype;
     wire [0:31] send_usb_btype, read_usb_btype;
 
-// DATA
-    wire [15:0] com_cmd;
-    wire [3:0] data_idx;
-    wire [95:0] cache_info; 
+    wire [51:0] cache_cmd;
+    wire [0:255] usb_stat; 
+    wire [0:255] usb_cmd;
+    wire [0:79] dev_stat;
 
-    wire [0:255] cache_stat, cache_cmd;
-
-// RAM
-    wire [15:0] ram_data_rxa, ram_data_txa;
-    wire [7:0] ram_data_rxd, ram_data_txd;
-    wire ram_data_txen;
+    wire [12:0] com_dlen;
 
     wire [11:0] ram_usb_rxa;
     wire [0:63] ram_usb_rxd;
+    
+    wire [15:0] ram_data_rxa;
+    wire [7:0] ram_data_rxd;
+    wire [14:0] ram_data_txa;
+    wire [7:0] ram_data_txd;
 
+    wire [7:0] ram_cmd_txa;
+    wire [7:0] ram_cmd_txd;
+    wire [7:0] ram_cmd_rxa;
+    wire [7:0] ram_cmd_rxd;
+    wire ram_cmd_txen;
 
-// Combinational Circuit
-    BUFG
-    BUFG_inst(
-        .I(e_grxc),
-        .O(gmii_rxc)
-    );
+    wire [0:31] u_rxd;
+    wire [0:7] u_txd;
 
-    assign e_gtxc = ~gmii_rxc;
-    assign gmii_txc = gmii_rxc;
-    assign rst = ~rst_n;
+    wire rst;
+
+    assign led_n[7] = |dev_stat[0:1] ?1'b0 : 1'b1;
+    assign led_n[6] = |dev_stat[10:11] ?1'b0 : 1'b1;
+    assign led_n[5] = |dev_stat[20:21] ?1'b0 : 1'b1;
+    assign led_n[4] = |dev_stat[30:31] ?1'b0 : 1'b1;
+    assign led_n[3] = |dev_stat[40:41] ?1'b0 : 1'b1;
+    assign led_n[2] = |dev_stat[50:51] ?1'b0 : 1'b1;
+    assign led_n[1] = |dev_stat[60:61] ?1'b0 : 1'b1;
+    assign led_n[0] = |dev_stat[70:71] ?1'b0 : 1'b1;
+
 
     console
     console_dut(
         .clk(clk_norm),
-        .rst(~locked),
+        .rst(rst),
 
-        .fs_eth_send(fs_eth_send),
-        .fd_eth_send(fd_eth_send),
-        .fs_eth_read(fs_eth_read),
-        .fd_eth_read(fd_eth_read),
+        .fs_com_send(fs_com_send),
+        .fd_com_send(fd_com_send),
+        .fs_com_read(fs_com_read),
+        .fd_com_read(fd_com_read),
 
         .fs_usb_send(fs_usb_send),
         .fd_usb_send(fd_usb_send),
+        .ff_usb_send(ff_usb_send),
         .fs_usb_read(fs_usb_read),
         .fd_usb_read(fd_usb_read),
 
-        .send_eth_btype(send_eth_btype),
-        .read_eth_btype(read_eth_btype),
+        .fs_data(fs_data),
+        .fd_data(fd_data),
+
+        .com_btype(com_btype),
+        .cache_cmd(cache_cmd),
+
         .send_usb_btype(send_usb_btype),
         .read_usb_btype(read_usb_btype),
 
-        .cache_cmd(cache_cmd),
-        .cache_info(cache_info),
-        .com_cmd(com_cmd)
+        .usb_stat(usb_stat),
+        .usb_cmd(usb_cmd),
+        .dev_stat(dev_stat),
+
+        .com_dlen(com_dlen),
+        .data_btype(data_btype)
     );
+
 
     com
     com_dut(
         .clk(clk_norm),
-        .rst(~locked),
+        .rst(rst),
 
-        .fs_send(fs_eth_send),
-        .fd_send(fd_eth_send),
-        .fs_read(fs_eth_read),
-        .fd_read(fd_eth_read),
+        .fs_read(fs_com_read),
+        .fd_read(fd_com_read),
+        .fs_send(fs_com_send),
+        .fd_send(fd_com_send),
 
-        .send_btype(send_eth_btype),
-        .read_btype(read_eth_btype),
+        .com_btype(com_btype),
+        .cache_cmd(cache_cmd),
 
         .ram_data_rxa(ram_data_rxa),
         .ram_data_rxd(ram_data_rxd),
+        .data_len(com_dlen),
 
-        .cache_stat(cache_stat),
-        .cache_info(cache_info),
-        .data_idx(data_idx),
-        .com_cmd(com_cmd),
+        .ram_cmd_txen(ram_cmd_txen),
+        .ram_cmd_txa(ram_cmd_txa),
+        .ram_cmd_txd(ram_cmd_txd),
+        .ram_cmd_rxa(ram_cmd_rxa),
+        .ram_cmd_rxd(ram_cmd_rxd),
 
         .e_mdc(e_mdc),
         .e_mdio(e_mdio),
         .e_rstn(e_rstn),
 
-        .e_grxc(gmii_rxc),
-        .e_gtxc(gmii_txc),
+        .gmii_txc(gmii_txc),
+        .gmii_rxc(gmii_rxc),
+        .e_rxd(e_rxd),
         .e_rxdv(e_rxdv),
-        .e_txen(e_txen),
         .e_rxer(e_rxer),
-        .e_txer(e_txer),
-
+        .e_txen(e_txen),
         .e_txd(e_txd),
-        .e_rxd(e_rxd)
-    );
-
-    data_make
-    data_make_dut(
-        .clk(clk_fast),
-        .rst(~locked),
-
-        .fs(fs_eth_send),
-        .fd(),
-
-        .btype(send_eth_btype),
-        .data_idx(data_idx),
-
-        .cache_info(cache_info),
-
-        .cache_ram_rxa(ram_usb_rxa),
-        .cache_ram_rxd(ram_usb_rxd),
-
-        .ram_txa(ram_data_txa),
-        .ram_txd(ram_data_txd),
-        .ram_txen(ram_data_txen)
+        .e_txer(e_txer)
     );
 
     genvar i;
     generate
-        for (i=0; i<8; i=i+1) begin : usb_dut
-            usb
-            usb_inst(
-                .sys_clk(clk_norm),
-                .usb_txc(clk_slow),
-                .usb_rxc(clk_norm),
-                .pin_txc(clk_fast),
-                .pin_rxc(clk_fast),
+        for (i=0; i<8; i=i+1) begin : usb_inst
+        usb
+        usb_dut(
+            .sys_clk(clk_norm),
+            .clk_ult(clk_ulta),
+            .usb_txc(clk_slow),
+            .usb_rxc(clk_norm),
+            .pin_txc(clk_fast),
+            .pin_rxc(clk_fast),
 
-                .rst(~locked),
+            .rst(rst),
 
-                .fs_send(fs_usb_send[i]),
-                .fd_send(fd_usb_send[i]),
-                .fs_read(fs_usb_read[i]),
-                .fd_read(fd_usb_read[i]),
+            .fs_send(fs_usb_send[i]),
+            .fd_send(fd_usb_send[i]),
+            .ff_send(ff_usb_send[i]),
+            .fs_read(fs_usb_read[i]),
+            .fd_read(fd_usb_read[i]),
 
-                .send_btype(send_usb_btype[4*i +: 4]),
-                .read_btype(read_usb_btype[4*i +: 4]),
+            .send_btype(send_usb_btype[4*i +: 4]),
+            .read_btype(read_usb_btype[4*i +: 4]),
 
-                .data_idx(data_idx),
-                .cache_cmd(cache_cmd[32*i +: 32]),
-                .cache_stat(cache_stat[32*i +: 32]),
+            .cache_cmd(usb_cmd[32*i +: 32]),
+            .cache_stat(usb_stat[32*i +: 32]),
 
-                .ram_rxa(ram_usb_rxa),
-                .ram_rxd(ram_usb_rxd[8*i +: 8]),
+            .ram_rxa(ram_usb_rxa),
+            .ram_rxd(ram_usb_rxd[8*i +: 8]),
 
-                .pin_rxd(u_rxd[4*i +: 4]),
-                .pin_txd(u_txd[i]),
-                .pin_send(u_send[i]),
-                .pin_read(u_read[i])
-            );
+            .pin_rxd(u_rxd[4*i +: 4]),
+            .pin_txd(u_txd[i]),
+            .pin_send(u_txen[i]),
+            .pin_read(u_rxdv[i])
+        );
         end
     endgenerate
 
-    clk_wiz
-    clk_wiz_dut(
-        .clk_in1_p(clk_in_p),
-        .clk_in1_n(clk_in_n),
-        .reset(rst),
-        .locked(locked),
+    data_make
+    data_make_dut(
+        .clk(clk_fast),
+        .rst(rst),
+
+        .fs(fs_data),
+        .fd(fd_data),
+
+        .btype(data_btype),
+        
+        .usb_stat(dev_stat),
+        .trgg_rxd(trgg_rxd),
+
+        .ram_rxa(ram_usb_rxa),
+        .ram_rxd(ram_usb_rxd),
+
+        .ram_data_txa(ram_data_txa),
+        .ram_data_txd(ram_data_txd),
+        .ram_data_txen(ram_data_txen)
+    );
+
+
+    crep
+    crep_dut(
+        .clk_in_p(clk_in_p),
+        .clk_in_n(clk_in_n),
+
+        .e_grxc(e_grxc),
+        .e_gtxc(e_gtxc),
+        
         .clk_slow(clk_slow),
         .clk_norm(clk_norm),
-        .clk_fast(clk_fast)
+        .clk_fast(clk_fast),
+        .clk_ulta(clk_ulta),
+
+        .gmii_txc(gmii_txc),
+        .gmii_rxc(gmii_rxc),
+        
+        .rst_n(rst_n),
+        .rst(rst),
+
+        .u_rxd(u_rxd),
+        .u_txd(u_txd),
+
+        .u_rxd_p(u_rxd_p),
+        .u_rxd_n(u_rxd_n),
+        .u_txd_p(u_txd_p),
+        .u_txd_n(u_txd_n),
+
+        .fan_n(fan_n)
     );
 
     ram_data
     ram_data_dut(
         .clka(clk_fast),
+        .wea(ram_data_txen),
         .addra(ram_data_txa),
         .dina(ram_data_txd),
-        .wea(ram_data_txen),
 
-        .clkb(e_gtxc),
+        .clkb(gmii_txc),
         .addrb(ram_data_rxa),
         .doutb(ram_data_rxd)
     );
 
+    ram_cmd
+    ram_cmd_dut(
+        .clka(gmii_rxc),
+        .wea(ram_cmd_txen),
+        .addra(ram_cmd_txa),
+        .dina(ram_cmd_txd),
+
+        .clkb(gmii_rxc),
+        .addrb(ram_cmd_rxa),
+        .doutb(ram_cmd_rxd)
+    );
 
 endmodule

@@ -5,6 +5,7 @@ module pin(
     input [1:0] com_rxd_n,
     input com_rxf,
     output com_txf,
+    input [1:0] com_cc,
 
     input [3:0] adc_miso,
     output [3:0] adc_cs,
@@ -15,6 +16,7 @@ module pin(
     output pin_rxd,
     input fire_send,
     output fire_read,
+    output [1:0] pin_cc,
 
     input [3:0] pin_cs,
     input [3:0] pin_sclk,
@@ -29,6 +31,8 @@ module pin(
     assign pin_rxd = com_rxd[1];
     assign com_txf = fire_send;
     assign fire_read = com_rxf;
+
+    assign pin_cc = com_cc;
 
     assign adc_cs = pin_cs;
     assign adc_mosi = pin_mosi;

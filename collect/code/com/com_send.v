@@ -10,7 +10,7 @@ module com_send(
 
     input [3:0] btype,
     input [3:0] didx,
-    input [11:0] dlen,
+    input [12:0] dlen,
 
     output reg [14:0] ram_data_rxa_init,
     output reg [12:0] data_len 
@@ -26,8 +26,8 @@ module com_send(
     localparam RAM_DATA_RXA_DAT2 = 15'h3400, RAM_DATA_RXA_DAT3 = 15'h4600;
     localparam RAM_DATA_RXA_DAT4 = 15'h5800, RAM_DATA_RXA_DAT5 = 15'h6A00;
 
-    localparam DATA_LEN_INFO = 12'h000E, DATA_LEN_INIT = 12'h0000;
-    localparam DATA_LEN_PART = 12'h0024;
+    localparam DATA_LEN_INFO = 12'h00E, DATA_LEN_INIT = 12'h000;
+    localparam DATA_LEN_PART = 12'h008;
     
     localparam BTYPE_INFO = 4'h1;
     localparam BTYPE_DATA = 4'hE;

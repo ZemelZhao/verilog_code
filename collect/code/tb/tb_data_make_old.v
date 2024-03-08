@@ -12,34 +12,19 @@ module tb_data_make(
 
     wire [7:0] fd_ram_tx;
 
-    wire [63:0] ram_rxd;
-    wire [11:0] ram_rxa;
-    wire [79:0] cache_stat;
-    wire [31:0] trgg_rxd;
+    wire [63:0] cache_ram_rxd;
+    wire [11:0] cache_ram_rxa;
+    wire [47:0] cache_stat;
 
-    wire [9:0] stat0, stat1, stat2, stat3;
-    wire [9:0] stat4, stat5, stat6, stat7;
- 
-    wire [14:0] ram_data_txa;
-    wire [7:0] ram_data_txd;
-    wire ram_data_txen;
+    wire [15:0] ram_txa;
+    wire [7:0] ram_txd;
+    wire ram_txen;
 
     reg [3:0] num, btype, data_idx;
 
     localparam BAG_STAT = 4'h1, BAG_DATA = 4'h5, BAG_INIT = 4'h0;
 
-    assign stat0 = 10'b0101010000;
-    assign stat1 = 10'b0101010001;
-    assign stat2 = 10'b0101010010;
-    assign stat3 = 10'b0101010011;
-    assign stat4 = 10'b0001010100;
-    assign stat5 = 10'b0001010101;
-    assign stat6 = 10'b0001010110;
-    assign stat7 = 10'b0001010111;
-
-    assign cache_stat = {stat0, stat1, stat2, stat3, stat4, stat5, stat6, stat7};
-    assign trgg_rxd = 32'h02468ACE;
-
+    assign cache_stat = 48'hC3007F3A1234;
     assign fs_ram_tx = (state == RAM_TX);
     assign fs_tran = (state == STAT_WORK) || (state == DATA_WORK);
 
@@ -108,6 +93,9 @@ module tb_data_make(
         else data_idx <= data_idx;
     end
 
+
+
+
     data_make
     data_make_dut(
         .clk(clk),
@@ -115,19 +103,15 @@ module tb_data_make(
 
         .fs(fs_tran),
         .fd(fd_tran),
-
         .btype(btype),
         .data_idx(data_idx),
+        .cache_stat(cache_stat),
+        .cache_ram_rxa(cache_ram_rxa),
+        .cache_ram_rxd(cache_ram_rxd),
 
-        .usb_stat(cache_stat),
-        .trgg_rxd(trgg_rxd),
-
-        .ram_rxa(ram_rxa),
-        .ram_rxd(ram_rxd),
-
-        .ram_data_txa(ram_data_txa),
-        .ram_data_txd(ram_data_txd),
-        .ram_data_txen(ram_data_txen)
+        .ram_txa(ram_txa),
+        .ram_txd(ram_txd),
+        .ram_txen(ram_txen)
     );
 
 
@@ -244,8 +228,8 @@ module tb_data_make(
         .wea(cache_ram_txen0),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[63:56])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[63:56])
     );
 
     ram_usb
@@ -256,8 +240,8 @@ module tb_data_make(
         .wea(cache_ram_txen1),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[55:48])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[55:48])
     );
 
     ram_usb
@@ -268,8 +252,8 @@ module tb_data_make(
         .wea(cache_ram_txen2),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[47:40])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[47:40])
     );
 
     ram_usb
@@ -280,8 +264,8 @@ module tb_data_make(
         .wea(cache_ram_txen3),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[39:32])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[39:32])
     );
 
     ram_usb
@@ -292,8 +276,8 @@ module tb_data_make(
         .wea(cache_ram_txen4),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[31:24])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[31:24])
     );
 
     ram_usb
@@ -304,8 +288,8 @@ module tb_data_make(
         .wea(cache_ram_txen5),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[23:16])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[23:16])
     );
 
     ram_usb
@@ -316,8 +300,8 @@ module tb_data_make(
         .wea(cache_ram_txen6),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[15:8])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[15:8])
     );
 
     ram_usb
@@ -328,8 +312,8 @@ module tb_data_make(
         .wea(cache_ram_txen7),
 
         .clkb(clk),
-        .addrb(ram_rxa),
-        .doutb(ram_rxd[7:0])
+        .addrb(cache_ram_rxa),
+        .doutb(cache_ram_rxd[7:0])
     );
 
 

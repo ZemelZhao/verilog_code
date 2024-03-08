@@ -2,95 +2,114 @@ module console_usb(
     input clk,
     input rst,
 
-    input fs_adc_conf,
-    output fd_adc_conf,
-    input fs_adc_conv,
-    output fd_adc_conv,
-
-    input [15:0] device_cmd,
-    input [3:0] data_idx,
+    input fs_conf,
+    output fd_conf,
+    input fs_conv,
+    output fd_conv,
 
     output [0:7] fs_usb_send,
     input [0:7] fd_usb_send,
+    input [0:7] ff_usb_send,
     input [0:7] fs_usb_read,
     output [0:7] fd_usb_read,
 
     output [0:31] send_usb_btype,
-    input [0:31] read_usb_btype, 
+    input [0:31] read_usb_btype,
 
-    input [0:255] cache_stat,
-    output [0:255] cache_cmd,
-    output [95:0] adc_info 
+    input [11:0] com_cmd,
+    output [0:255] usb_cmd,
+
+    input [0:255] usb_stat,
+    (*MARK_DEBUG = "true"*)output [0:79] dev_stat,
+
+    output [12:0] com_dlen
 );
-    localparam DEVICE_IDX = 64'h0123_4567_89AB_CDEF;
 
-    wire [0:7] adc_stat;
-    wire [15:0] conf_cmd;
+    wire [3:0] data_idx;
+    wire [0:31] device_idx;
+    wire [3:0] send_btype, read_btype;
 
-    wire [0:7] fd_cs_send, fs_cs_read;
-    wire fs_cs_send, fd_cs_read;
-    wire [3:0] send_cs_btype, read_cs_btype;
-    wire [0:63] device_idx;
+    wire fs_send, fd_read;
+    wire [0:7] fd_send, fs_read;
+    wire [15:0] stat;
 
-    assign conf_cmd = adc_info[95:80];
-    assign device_idx = DEVICE_IDX;
+    assign stat = {dev_stat[0:1], dev_stat[10:11], dev_stat[20:21], dev_stat[30:31],
+                   dev_stat[40:41], dev_stat[50:51], dev_stat[60:61], dev_stat[70:71]};
 
-    console_usb_hq
-    console_usb_hq_dut(
+    console_usb_core
+    console_usb_core_dut(
         .clk(clk),
         .rst(rst),
 
-        .fs_adc_conf(fs_adc_conf),
-        .fd_adc_conf(fd_adc_conf),
+        .fs_conf(fs_conf),
+        .fd_conf(fd_conf),
+        .fs_conv(fs_conv),
+        .fd_conv(fd_conv),
 
-        .fs_adc_conv(fs_adc_conv),
-        .fd_adc_conv(fd_adc_conv),
+        .fs_send(fs_send),
+        .fd_send(fd_send),
+        .fs_read(fs_read),
+        .fd_read(fd_read),
 
-        .fs_send(fs_cs_send),
-        .fd_send(fd_cs_send),
-        .fs_read(fs_cs_read),
-        .fd_read(fd_cs_read),
-        .send_btype(send_cs_btype),
-        .read_btype(read_cs_btype),
+        .send_btype(send_btype),
+        .read_btype(read_btype),
 
-        .cache_stat(cache_stat),
-        .com_cmd(device_cmd),
-        .adc_stat(adc_stat),
-        .adc_info(adc_info)
+        .data_idx(data_idx),
+        .device_idx(device_idx)
     );
 
+    console_usb_num
+    console_usb_num_dut(
+        .clk(clk),
+        .rst(rst),
+
+        .dev_stat(stat),
+        .fd_read(fd_read),
+        .read_btype(read_btype),
+
+        .data_len(com_dlen)
+    );
+
+
     genvar i;
-    generate 
-        for (i=0; i<8; i=i+1) begin : console_usb_branch_dut
-            console_usb_branch
-            console_usb_branch_inst(
+    generate
+        for (i=0; i<8; i=i+1) begin : console_usb_dev_inst
+            console_usb_dev
+            console_usb_dev_dut(
                 .clk(clk),
                 .rst(rst),
 
-                .fs_cs_send(fs_cs_send),
-                .fd_cs_send(fd_cs_send[i]),
-                .fs_cs_read(fs_cs_read[i]),
-                .fd_cs_read(fd_cs_read),
+                .fs_send(fs_send),
+                .fd_send(fd_send[i]),
+                .fs_read(fs_read[i]),
+                .fd_read(fd_read),
 
                 .fs_usb_send(fs_usb_send[i]),
                 .fd_usb_send(fd_usb_send[i]),
+                .ff_usb_send(ff_usb_send[i]),
                 .fs_usb_read(fs_usb_read[i]),
                 .fd_usb_read(fd_usb_read[i]),
 
-                .stat(adc_stat[i]),
-
-                .send_cs_btype(send_cs_btype),
-                .read_cs_btype(read_cs_btype),
-                .device_idx(device_idx[4*i +: 4]),
-                .data_idx(data_idx),
-                .conf_cmd(conf_cmd),
-
+                .send_btype(send_btype),
+                .read_btype(read_btype),
                 .send_usb_btype(send_usb_btype[4*i +: 4]),
                 .read_usb_btype(read_usb_btype[4*i +: 4]),
 
-                .cache_cmd(cache_cmd[32*i +: 32])
+                .device_idx(device_idx[4*i +: 4]),
+                .data_idx(data_idx),
+                .com_cmd(com_cmd),
+                .usb_cmd(usb_cmd[32*i +: 32]),
+
+                .usb_stat(usb_stat[32*i +: 32]),
+                .dev_stat(dev_stat[10*i +: 10])
             );
         end
     endgenerate
+
+
+
+
+
+
 
 endmodule

@@ -7,11 +7,11 @@ module com_read(
 
     output fs,
     input fd,
-
-    input [15:0] password,
  
     output reg [7:0] rxa,
     input [7:0] rxd,
+
+    input [15:0] password,
 
     (*MARK_DEBUG = "true"*)output reg [3:0] btype,
     output reg [11:0] com_cmd,
@@ -155,11 +155,11 @@ module com_read(
 
     always@(posedge clk or posedge rst) begin
         if(rst) btype <= BTYPE_INIT;
-        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_CONF) btype <= BTYPE_CONF;
-        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_READ) btype <= BTYPE_READ;
-        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_STOP) btype <= BTYPE_STOP;
-        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_RXD0) btype <= BTYPE_RXD0;
-        else if(state == TAKE && pass && part && data[NUM_FUNC0[7:1]] == BAG_RXD1) btype <= BTYPE_RXD1;
+        else if(state == TAKE && part && pass && data[NUM_FUNC0[7:1]] == BAG_CONF) btype <= BTYPE_CONF;
+        else if(state == TAKE && part && pass && data[NUM_FUNC0[7:1]] == BAG_READ) btype <= BTYPE_READ;
+        else if(state == TAKE && part && pass && data[NUM_FUNC0[7:1]] == BAG_STOP) btype <= BTYPE_STOP;
+        else if(state == TAKE && part && pass && data[NUM_FUNC0[7:1]] == BAG_RXD0) btype <= BTYPE_RXD0;
+        else if(state == TAKE && part && pass && data[NUM_FUNC0[7:1]] == BAG_RXD1) btype <= BTYPE_RXD1;
         else btype <= btype;
     end
 

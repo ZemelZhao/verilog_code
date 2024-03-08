@@ -1,5 +1,6 @@
 module com(
     input sys_clk,
+    input clk_ult,
     input com_txc,
     input com_rxc,
     input pin_txc,
@@ -9,8 +10,8 @@ module com(
 
     output [3:0] pin_txd,
     input pin_rxd,
-    output fire_txd,
-    input fire_rxd,
+    (*MARK_DEBUG = "true"*)output fire_txd,
+    (*MARK_DEBUG = "true"*)input fire_rxd,
 
     input fs_send,
     input [3:0] send_btype,
@@ -121,6 +122,10 @@ module com(
 
     com_cc
     com_cc_dut(
+        .clk(clk_ult),
+        .clk_fast(pin_rxc),
+        .fire(fire_rxd),
+
         .usb_txd(usb_txd),
         .usb_rxd(usb_rxd),
 

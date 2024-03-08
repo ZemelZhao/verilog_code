@@ -2,63 +2,87 @@ module data_make(
     input clk,
     input rst,
 
-    input fs,
-    output fd,
+    (*MARK_DEBUG = "true"*)input fs,
+    (*MARK_DEBUG = "true"*)output fd,
 
     input [3:0] btype,
-    input [3:0] data_idx,
 
-    input [95:0] cache_info,
+    input [0:79] usb_stat,
+    input [31:0] trgg_rxd,
 
-    output reg [11:0] cache_ram_rxa,
-    input [63:0] cache_ram_rxd,
-    input [31:0] cache_trigger_rxd,
+    (*MARK_DEBUG = "true"*)output reg [14:0] ram_data_txa,
+    (*MARK_DEBUG = "true"*)output reg [7:0] ram_data_txd,
+    (*MARK_DEBUG = "true"*)output reg ram_data_txen,
 
-    output reg [15:0] ram_txa,
-    output reg [7:0] ram_txd,
-    output reg ram_txen
-);
+    (*MARK_DEBUG = "true"*)output reg [11:0] ram_rxa,
+    (*MARK_DEBUG = "true"*)input [0:63] ram_rxd
+); 
 
     localparam DATA_LATENCY = 4'h2;
     localparam DEVICE_NUM = 4'h8;
 
-    localparam ADC_RAM_ADDR_DATA0 = 12'h000, ADC_RAM_ADDR_DATA1 = 12'h240;
-    localparam ADC_RAM_ADDR_DATA2 = 12'h480, ADC_RAM_ADDR_DATA3 = 12'h6C0;
-    localparam ADC_RAM_ADDR_DATA4 = 12'h900, ADC_RAM_ADDR_DATA5 = 12'hB40;
-    localparam ADC_RAM_ADDR_INIT = 12'hF00;
+    localparam RAM_DATA_TXA_INIT = 15'h0000, RAM_DATA_TXA_INFO = 15'h0100;
+    localparam RAM_DATA_TXA_DAT0 = 15'h1000, RAM_DATA_TXA_DAT1 = 15'h2200;
+    localparam RAM_DATA_TXA_DAT2 = 15'h3400, RAM_DATA_TXA_DAT3 = 15'h4600;
+    localparam RAM_DATA_TXA_DAT4 = 15'h5800, RAM_DATA_TXA_DAT5 = 15'h6A00;
+
+    localparam RAM_RXA_DAT0 = 12'h000, RAM_RXA_DAT1 = 12'h240;
+    localparam RAM_RXA_DAT2 = 12'h480, RAM_RXA_DAT3 = 12'h6C0;
+    localparam RAM_RXA_DAT4 = 12'h900, RAM_RXA_DAT5 = 12'hB40;
+    localparam RAM_RXA_INIT = 12'hF00;
+
+    localparam BTYPE_INIT = 4'h0, BTYPE_INFO = 4'h1, BTYPE_DATA = 4'hE;
     
-    localparam COM_RAM_ADDR_DATA0 = 16'h0000, COM_RAM_ADDR_DATA1 = 16'h2400;
-    localparam COM_RAM_ADDR_DATA2 = 16'h4800, COM_RAM_ADDR_DATA3 = 16'h6C00;
-    localparam COM_RAM_ADDR_DATA4 = 16'h9000, COM_RAM_ADDR_DATA5 = 16'hB400;
-    localparam COM_RAM_ADDR_STAT = 16'h2300, COM_RAM_ADDR_INIT = 16'hF000;
+    localparam SLEN = 8'h0E, HLEN = 8'h04, TLEN = 12'h04;
+    localparam DLEN_00 = 12'h000, DLEN_01 = 12'h080, DLEN_10 = 12'h100, DLEN_11 = 12'h200; 
 
-    localparam BAG_STAT = 4'h1, BAG_DATA = 4'h5;
+    localparam DATA_IDX = 4'h5;
 
-    localparam SLEN = 12'h0E, HLEN = 12'h04, DLEN = 12'h200, TLEN = 12'h04;
+    reg [19:0] state, next_state;
+    localparam MAIN_IDLE = 20'h00001, MAIN_WAIT = 20'h00002, MAIN_WORK = 20'h00004, MAIN_DONE = 20'h00008;
+    localparam STAT_IDLE = 20'h00010, STAT_WAIT = 20'h00020, STAT_WORK = 20'h00040, STAT_DONE = 20'h00080;
+    localparam DATA_IDLE = 20'h00100, DATA_WAIT = 20'h00200, DATA_WORK = 20'h00400, DATA_DONE = 20'h00800;
+    localparam DATA_HEAD = 20'h01000, DATA_REST = 20'h02000, DATA_DOOR = 20'h04000, DATA_CRIT = 20'h08000;
+    localparam DATA_MAKE = 20'h10000, DATA_LAST = 20'h20000, DATA_TRGG = 20'h40000;
 
-    reg [7:0] state, next_state;
-    localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_DONE = 8'h02;
-    localparam STAT_IDLE = 8'h10, STAT_WAIT = 8'h11, STAT_WORK = 8'h12;
-    localparam DATA_IDLE = 8'h20, DATA_WAIT = 8'h22, DATA_WORK = 8'h23;
-    localparam DATA_HEAD = 8'h24, DATA_GAP = 8'h25, DATA_REST = 8'h26;
-    localparam DATA_JUDGE = 8'h27;
-    localparam TRGG_WORK = 8'h30;
+    reg [7:0] hlen; 
+    reg [11:0] dlen;
+    reg [11:0] num;
+    reg [3:0] dev;
 
-    reg [15:0] ram_addr_init;
-    reg [11:0] cache_ram_addr_init;
-    reg [11:0] dlen, tlen;
-    reg [3:0] dnum, lnum;
-    wire [0:7] device_stat;
+    reg [3:0] data_idx;
 
-    assign device_stat[0] = ~(cache_info[79:78] == 2'b00);
-    assign device_stat[1] = ~(cache_info[77:76] == 2'b00);
-    assign device_stat[2] = ~(cache_info[75:74] == 2'b00);
-    assign device_stat[3] = ~(cache_info[73:72] == 2'b00);
-    assign device_stat[4] = ~(cache_info[71:70] == 2'b00);
-    assign device_stat[5] = ~(cache_info[69:68] == 2'b00);
-    assign device_stat[6] = ~(cache_info[67:66] == 2'b00);
-    assign device_stat[7] = ~(cache_info[65:64] == 2'b00);
+    wire [1:0] dev_stat[0:7];
+    wire [7:0] dev_temp[0:7];
+    wire [0:7] com_stat;
 
+    assign dev_stat[0] = usb_stat[0:1];
+    assign dev_stat[1] = usb_stat[10:11];
+    assign dev_stat[2] = usb_stat[20:21];
+    assign dev_stat[3] = usb_stat[30:31];
+    assign dev_stat[4] = usb_stat[40:41];
+    assign dev_stat[5] = usb_stat[50:51];
+    assign dev_stat[6] = usb_stat[60:61];
+    assign dev_stat[7] = usb_stat[70:71];
+
+    assign dev_temp[0] = usb_stat[2:9];
+    assign dev_temp[1] = usb_stat[12:19];
+    assign dev_temp[2] = usb_stat[22:29];
+    assign dev_temp[3] = usb_stat[32:39];
+    assign dev_temp[4] = usb_stat[42:49];
+    assign dev_temp[5] = usb_stat[52:59];
+    assign dev_temp[6] = usb_stat[62:69];
+    assign dev_temp[7] = usb_stat[72:79];
+
+    assign com_stat[0] = ~(dev_stat[0] == 2'b00);
+    assign com_stat[1] = ~(dev_stat[1] == 2'b00);
+    assign com_stat[2] = ~(dev_stat[2] == 2'b00);
+    assign com_stat[3] = ~(dev_stat[3] == 2'b00);
+    assign com_stat[4] = ~(dev_stat[4] == 2'b00);
+    assign com_stat[5] = ~(dev_stat[5] == 2'b00);
+    assign com_stat[6] = ~(dev_stat[6] == 2'b00);
+    assign com_stat[7] = ~(dev_stat[7] == 2'b00);
+    
     assign fd = (state == MAIN_DONE);
 
     always@(posedge clk or posedge rst) begin
@@ -70,8 +94,12 @@ module data_make(
         case(state)
             MAIN_IDLE: next_state <= MAIN_WAIT;
             MAIN_WAIT: begin
-                if(fs && btype == BAG_STAT) next_state <= STAT_IDLE;
-                else if(fs && btype == BAG_DATA) next_state <= DATA_IDLE;
+                if(fs) next_state <= MAIN_WORK;
+                else next_state <= MAIN_WAIT;
+            end
+            MAIN_WORK: begin
+                if(btype == BTYPE_INFO) next_state <= STAT_IDLE;
+                else if(btype == BTYPE_DATA) next_state <= DATA_IDLE;
                 else next_state <= MAIN_WAIT;
             end
             MAIN_DONE: begin
@@ -82,180 +110,159 @@ module data_make(
             STAT_IDLE: next_state <= STAT_WAIT;
             STAT_WAIT: next_state <= STAT_WORK;
             STAT_WORK: begin
-                if(dlen >= SLEN - 1'b1) next_state <= MAIN_DONE;
+                if(num >= SLEN - 1'b1) next_state <= STAT_DONE;
                 else next_state <= STAT_WORK;
             end
+            STAT_DONE: next_state <= MAIN_DONE;
 
             DATA_IDLE: next_state <= DATA_WAIT;
             DATA_WAIT: next_state <= DATA_HEAD;
             DATA_HEAD: begin
-                if(dlen >= HLEN - 1'b1) next_state <= DATA_REST;
+                if(num >= HLEN - 1'b1) next_state <= DATA_REST;
                 else next_state <= DATA_HEAD;
             end
-            DATA_GAP: begin
-                if(lnum >= DATA_LATENCY - 1'b1) next_state <= DATA_WORK;
-                else next_state <= DATA_GAP;
+            DATA_MAKE: next_state <= DATA_LAST;
+            DATA_LAST: begin
+                if(num >= DATA_LATENCY - 1'b1) next_state <= DATA_WORK;
+                else next_state <= DATA_LAST;
             end
             DATA_WORK: begin
-                if(dlen >= DLEN - 1'b1) next_state <= DATA_REST;
+                if(num >= dlen - 1'b1) next_state <= DATA_DOOR;
                 else next_state <= DATA_WORK;
             end
-            DATA_REST: next_state <= DATA_JUDGE;
-            DATA_JUDGE: begin
-                if(dnum >= DEVICE_NUM - 1'b1) next_state <= TRGG_WORK;
-                else if(device_stat[dnum]) next_state <= DATA_GAP;
-                else next_state <= DATA_REST;
+
+            DATA_REST: next_state <= DATA_CRIT;
+            DATA_DOOR: next_state <= DATA_CRIT;
+            DATA_CRIT: begin
+                if(dev >= DEVICE_NUM - 1'b1) next_state <= DATA_TRGG;
+                else if(dev_stat[dev] != 2'b00) next_state <= DATA_MAKE;
+                else next_state <= DATA_DOOR;
             end
-            TRGG_WORK: begin
-                if(dlen >= TLEN) next_state <= MAIN_DONE;
-                else next_state <= TRGG_WORK;
+            DATA_TRGG: begin
+                if(num >= TLEN - 1'b1) next_state <= DATA_DONE;
+                else next_state <= DATA_TRGG;
             end
+            DATA_DONE: next_state <= MAIN_DONE;
+
             default: next_state <= MAIN_IDLE;
         endcase
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_txa <= COM_RAM_ADDR_INIT;
-        else if(state == MAIN_IDLE) ram_txa <= COM_RAM_ADDR_INIT;
-        else if(state == MAIN_WAIT) ram_txa <= ram_addr_init;
-        else if(state == MAIN_DONE) ram_txa <= ram_addr_init;
-
-        else if(state == STAT_WAIT) ram_txa <= ram_addr_init;
-        else if(state == STAT_WORK && dlen == 12'h000) ram_txa <= ram_txa;
-        else if(state == STAT_WORK) ram_txa <= ram_txa + 1'b1;
-
-        else if(state == DATA_WAIT) ram_txa <= ram_addr_init;
-        else if(state == DATA_HEAD && dlen == 12'h000) ram_txa <= ram_txa;
-        else if(state == DATA_HEAD) ram_txa <= ram_txa + 1'b1;
-        else if(state == DATA_WORK) ram_txa <= ram_txa + 1'b1;
-
-        else ram_txa <= ram_txa;
+        if(rst) num <= 12'h000;
+        else if(state == MAIN_IDLE) num <= 12'h000;
+        else if(state != next_state) num <= 12'h000;
+        else if(state == STAT_WORK) num <= num + 1'b1;
+        else if(state == DATA_HEAD) num <= num + 1'b1;
+        else if(state == DATA_LAST) num <= num + 1'b1;
+        else if(state == DATA_WORK) num <= num + 1'b1;
+        else if(state == DATA_TRGG) num <= num + 1'b1;
+        else num <= 12'h000;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_addr_init <= COM_RAM_ADDR_INIT;
-        else if(state == MAIN_IDLE) ram_addr_init <= COM_RAM_ADDR_INIT;
-        else if(state == MAIN_WAIT) ram_addr_init <= COM_RAM_ADDR_INIT;
-        else if(state == MAIN_DONE) ram_addr_init <= COM_RAM_ADDR_INIT;
-
-        else if(state == STAT_IDLE) ram_addr_init <= COM_RAM_ADDR_STAT;
-        else if(state == DATA_IDLE && data_idx == 4'h0) ram_addr_init <= COM_RAM_ADDR_DATA0;
-        else if(state == DATA_IDLE && data_idx == 4'h1) ram_addr_init <= COM_RAM_ADDR_DATA1;
-        else if(state == DATA_IDLE && data_idx == 4'h2) ram_addr_init <= COM_RAM_ADDR_DATA2;
-        else if(state == DATA_IDLE && data_idx == 4'h3) ram_addr_init <= COM_RAM_ADDR_DATA3;
-        else if(state == DATA_IDLE && data_idx == 4'h4) ram_addr_init <= COM_RAM_ADDR_DATA4;
-        else if(state == DATA_IDLE && data_idx == 4'h5) ram_addr_init <= COM_RAM_ADDR_DATA5;
-
-        else ram_addr_init <= ram_addr_init;
+        if(rst) dev <= 4'h0;
+        else if(state == MAIN_WAIT) dev <= 4'h0;
+        else if(state == DATA_DONE) dev <= 4'h0;
+        else if(state == DATA_DOOR) dev <= dev + 1'b1;
+        else dev <= dev;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) cache_ram_rxa <= ADC_RAM_ADDR_INIT;
-        else if(state == MAIN_IDLE) cache_ram_rxa <= ADC_RAM_ADDR_INIT;
-        else if(state == MAIN_WAIT) cache_ram_rxa <= cache_ram_addr_init;
-        else if(state == MAIN_DONE) cache_ram_rxa <= cache_ram_addr_init;
+        if(rst) dlen <= DLEN_00;
+        else if(state == DATA_MAKE && dev_stat[dev] == 2'b00) dlen <= DLEN_00;
+        else if(state == DATA_MAKE && dev_stat[dev] == 2'b01) dlen <= DLEN_01;
+        else if(state == DATA_MAKE && dev_stat[dev] == 2'b10) dlen <= DLEN_10;
+        else if(state == DATA_MAKE && dev_stat[dev] == 2'b11) dlen <= DLEN_11;
+        else if(state == DATA_MAKE) dlen <= 2'b00;
+        else dlen <= dlen;
+    end 
 
-        else if(state == DATA_WAIT) cache_ram_rxa <= cache_ram_addr_init;
-        else if(state == DATA_GAP) cache_ram_rxa <= cache_ram_rxa + 1'b1;
-        else if(state == DATA_WORK) cache_ram_rxa <= cache_ram_rxa + 1'b1;
-        else if(state == DATA_REST) cache_ram_rxa <= cache_ram_addr_init;
-
-        else cache_ram_rxa <= cache_ram_rxa;
+    always@(posedge clk or posedge rst) begin
+        if(rst) ram_data_txa <= RAM_DATA_TXA_INIT;
+        else if(state == STAT_WAIT) ram_data_txa <= RAM_DATA_TXA_INFO - 1'b1;
+        else if(state == DATA_WAIT && data_idx == 4'h0) ram_data_txa <= RAM_DATA_TXA_DAT0 - 1'b1;
+        else if(state == DATA_WAIT && data_idx == 4'h1) ram_data_txa <= RAM_DATA_TXA_DAT1 - 1'b1;
+        else if(state == DATA_WAIT && data_idx == 4'h2) ram_data_txa <= RAM_DATA_TXA_DAT2 - 1'b1;
+        else if(state == DATA_WAIT && data_idx == 4'h3) ram_data_txa <= RAM_DATA_TXA_DAT3 - 1'b1;
+        else if(state == DATA_WAIT && data_idx == 4'h4) ram_data_txa <= RAM_DATA_TXA_DAT4 - 1'b1;
+        else if(state == DATA_WAIT && data_idx == 4'h5) ram_data_txa <= RAM_DATA_TXA_DAT5 - 1'b1;
+        else if(state == STAT_WORK) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == DATA_HEAD) ram_data_txa <= ram_data_txa + 1'b1; 
+        else if(state == DATA_WORK) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == DATA_TRGG) ram_data_txa <= ram_data_txa + 1'b1;
+        else if(state == MAIN_WAIT) ram_data_txa <= RAM_DATA_TXA_INIT;
+        else if(state == MAIN_DONE) ram_data_txa <= RAM_DATA_TXA_INIT;
+        else ram_data_txa <= ram_data_txa;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) cache_ram_addr_init <= ADC_RAM_ADDR_INIT; 
-        else if(state == MAIN_IDLE) cache_ram_addr_init <= ADC_RAM_ADDR_INIT;
-        else if(state == MAIN_WAIT) cache_ram_addr_init <= ADC_RAM_ADDR_INIT;
-        else if(state == MAIN_DONE) cache_ram_addr_init <= ADC_RAM_ADDR_INIT;
+        if(rst) ram_rxa <= RAM_RXA_INIT;
+        else if(state == DATA_MAKE && data_idx == 4'h0) ram_rxa <= RAM_RXA_DAT0;
+        else if(state == DATA_MAKE && data_idx == 4'h1) ram_rxa <= RAM_RXA_DAT1;
+        else if(state == DATA_MAKE && data_idx == 4'h2) ram_rxa <= RAM_RXA_DAT2;
+        else if(state == DATA_MAKE && data_idx == 4'h3) ram_rxa <= RAM_RXA_DAT3;
+        else if(state == DATA_MAKE && data_idx == 4'h4) ram_rxa <= RAM_RXA_DAT4;
+        else if(state == DATA_MAKE && data_idx == 4'h5) ram_rxa <= RAM_RXA_DAT5;
+        else if(state == DATA_LAST) ram_rxa <= ram_rxa + 1'b1;
+        else if(state == DATA_WORK) ram_rxa <= ram_rxa + 1'b1;
+        else if(state == DATA_DONE) ram_rxa <= RAM_RXA_INIT;
+        else if(state == MAIN_WAIT) ram_rxa <= RAM_RXA_INIT;
+        else ram_rxa <= ram_rxa;
+    end 
 
-        else if(state == DATA_IDLE && data_idx == 4'h0) cache_ram_addr_init <= ADC_RAM_ADDR_DATA0;
-        else if(state == DATA_IDLE && data_idx == 4'h1) cache_ram_addr_init <= ADC_RAM_ADDR_DATA1;
-        else if(state == DATA_IDLE && data_idx == 4'h2) cache_ram_addr_init <= ADC_RAM_ADDR_DATA2;
-        else if(state == DATA_IDLE && data_idx == 4'h3) cache_ram_addr_init <= ADC_RAM_ADDR_DATA3;
-        else if(state == DATA_IDLE && data_idx == 4'h4) cache_ram_addr_init <= ADC_RAM_ADDR_DATA4;
-        else if(state == DATA_IDLE && data_idx == 4'h5) cache_ram_addr_init <= ADC_RAM_ADDR_DATA5;
-        
-        else cache_ram_addr_init <= cache_ram_addr_init;
+    always@(posedge clk or posedge rst) begin
+        if(rst) ram_data_txd <= 8'h00;
+        else if(state == STAT_WORK && num == 8'h00) ram_data_txd <= 8'h66;
+        else if(state == STAT_WORK && num == 8'h01) ram_data_txd <= 8'hBB;
+        else if(state == STAT_WORK && num == 8'h02) ram_data_txd <= 8'h00;
+        else if(state == STAT_WORK && num == 8'h03) ram_data_txd <= 8'h2D;
+        else if(state == STAT_WORK && num == 8'h04) ram_data_txd <= {dev_stat[0], dev_stat[1], dev_stat[2], dev_stat[3]};  
+        else if(state == STAT_WORK && num == 8'h05) ram_data_txd <= {dev_stat[4], dev_stat[5], dev_stat[6], dev_stat[7]};  
+        else if(state == STAT_WORK && num == 8'h06) ram_data_txd <= dev_temp[0];
+        else if(state == STAT_WORK && num == 8'h07) ram_data_txd <= dev_temp[1];
+        else if(state == STAT_WORK && num == 8'h08) ram_data_txd <= dev_temp[2];
+        else if(state == STAT_WORK && num == 8'h09) ram_data_txd <= dev_temp[3];
+        else if(state == STAT_WORK && num == 8'h0A) ram_data_txd <= dev_temp[4];
+        else if(state == STAT_WORK && num == 8'h0B) ram_data_txd <= dev_temp[5];
+        else if(state == STAT_WORK && num == 8'h0C) ram_data_txd <= dev_temp[6];
+        else if(state == STAT_WORK && num == 8'h0D) ram_data_txd <= dev_temp[7];
+        else if(state == DATA_WORK && dev == 4'h0) ram_data_txd <= ram_rxd[0:7];
+        else if(state == DATA_WORK && dev == 4'h1) ram_data_txd <= ram_rxd[8:15];
+        else if(state == DATA_WORK && dev == 4'h2) ram_data_txd <= ram_rxd[16:23];
+        else if(state == DATA_WORK && dev == 4'h3) ram_data_txd <= ram_rxd[24:31];
+        else if(state == DATA_WORK && dev == 4'h4) ram_data_txd <= ram_rxd[32:39];
+        else if(state == DATA_WORK && dev == 4'h5) ram_data_txd <= ram_rxd[40:47];
+        else if(state == DATA_WORK && dev == 4'h6) ram_data_txd <= ram_rxd[48:55];
+        else if(state == DATA_WORK && dev == 4'h7) ram_data_txd <= ram_rxd[56:63];
+        else if(state == DATA_HEAD && num == 8'h00) ram_data_txd <= 8'h55;
+        else if(state == DATA_HEAD && num == 8'h01) ram_data_txd <= 8'hAA;
+        else if(state == DATA_HEAD && num == 8'h02) ram_data_txd <= com_stat;
+        else if(state == DATA_HEAD && num == 8'h03) ram_data_txd <= data_idx;
+        else if(state == DATA_TRGG && num == 8'h00) ram_data_txd <= trgg_rxd[31:24];
+        else if(state == DATA_TRGG && num == 8'h01) ram_data_txd <= trgg_rxd[23:16];
+        else if(state == DATA_TRGG && num == 8'h02) ram_data_txd <= trgg_rxd[15:8];
+        else if(state == DATA_TRGG && num == 8'h03) ram_data_txd <= trgg_rxd[7:0];
+        else if(state == DATA_WORK) ram_data_txd <= 8'h00;
+        else if(state == MAIN_WAIT) ram_data_txd <= 8'h00;
+        else if(state == DATA_DONE) ram_data_txd <= 8'h00;
+        else ram_data_txd <= ram_data_txd;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_txd <= 8'h00;
-        else if(state == MAIN_IDLE) ram_txd <= 8'h00;
-        else if(state == MAIN_WAIT) ram_txd <= 8'h00;
-        else if(state == MAIN_DONE) ram_txd <= 8'h00;
-        else if(state == STAT_WORK && dlen == 12'h00) ram_txd <= 8'h66;
-        else if(state == STAT_WORK && dlen == 12'h01) ram_txd <= 8'hBB;
-        else if(state == STAT_WORK && dlen == 12'h02) ram_txd <= cache_info[95:88];
-        else if(state == STAT_WORK && dlen == 12'h03) ram_txd <= cache_info[87:80];
-        else if(state == STAT_WORK && dlen == 12'h04) ram_txd <= cache_info[79:72];
-        else if(state == STAT_WORK && dlen == 12'h05) ram_txd <= cache_info[71:64];
-        else if(state == STAT_WORK && dlen == 12'h06) ram_txd <= cache_info[63:56];
-        else if(state == STAT_WORK && dlen == 12'h07) ram_txd <= cache_info[55:48];
-        else if(state == STAT_WORK && dlen == 12'h08) ram_txd <= cache_info[47:40];
-        else if(state == STAT_WORK && dlen == 12'h09) ram_txd <= cache_info[39:32];
-        else if(state == STAT_WORK && dlen == 12'h0A) ram_txd <= cache_info[31:24];
-        else if(state == STAT_WORK && dlen == 12'h0B) ram_txd <= cache_info[23:16];
-        else if(state == STAT_WORK && dlen == 12'h0C) ram_txd <= cache_info[15:8];
-        else if(state == STAT_WORK && dlen == 12'h0D) ram_txd <= cache_info[7:0];
-        else if(state == DATA_HEAD && dlen == 12'h00) ram_txd <= 8'h55;
-        else if(state == DATA_HEAD && dlen == 12'h01) ram_txd <= 8'hAA;
-        else if(state == DATA_HEAD && dlen == 12'h02) ram_txd <= device_stat;
-        else if(state == DATA_HEAD && dlen == 12'h03) ram_txd <= {4'h0, data_idx};
-        else if(state == TRGG_WORK && dlen == 12'h00) ram_txd <= cache_trigger_rxd[31:24];
-        else if(state == TRGG_WORK && dlen == 12'h01) ram_txd <= cache_trigger_rxd[23:16];
-        else if(state == TRGG_WORK && dlen == 12'h02) ram_txd <= cache_trigger_rxd[15:8];
-        else if(state == TRGG_WORK && dlen == 12'h03) ram_txd <= cache_trigger_rxd[7:0];
-        else if(state == DATA_WORK && dnum == 4'h0) ram_txd <= cache_ram_rxd[63:56]; 
-        else if(state == DATA_WORK && dnum == 4'h1) ram_txd <= cache_ram_rxd[55:48]; 
-        else if(state == DATA_WORK && dnum == 4'h2) ram_txd <= cache_ram_rxd[47:40]; 
-        else if(state == DATA_WORK && dnum == 4'h3) ram_txd <= cache_ram_rxd[39:32]; 
-        else if(state == DATA_WORK && dnum == 4'h4) ram_txd <= cache_ram_rxd[31:24]; 
-        else if(state == DATA_WORK && dnum == 4'h5) ram_txd <= cache_ram_rxd[23:16]; 
-        else if(state == DATA_WORK && dnum == 4'h6) ram_txd <= cache_ram_rxd[15:8]; 
-        else if(state == DATA_WORK && dnum == 4'h7) ram_txd <= cache_ram_rxd[7:0]; 
-        else ram_txd <= 8'h00;
+        if(rst) ram_data_txen <= 1'b0;
+        else if(state == DATA_HEAD) ram_data_txen <= 1'b1;
+        else if(state == DATA_WORK) ram_data_txen <= 1'b1;
+        else if(state == DATA_TRGG) ram_data_txen <= 1'b1;
+        else if(state == STAT_WORK) ram_data_txen <= 1'b1;
+        else ram_data_txen <= 1'b0;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) ram_txen <= 1'b0;
-        else if(state == MAIN_IDLE) ram_txen <= 1'b0;
-        else if(state == MAIN_WAIT) ram_txen <= 1'b0;
-        else if(state == MAIN_DONE) ram_txen <= 1'b0;
-        else if(state == STAT_WORK) ram_txen <= 1'b1;
-        else if(state == DATA_HEAD) ram_txen <= 1'b1;
-        else if(state == DATA_WORK) ram_txen <= 1'b1;
-        else ram_txen <= 1'b0;
+        if(rst) data_idx <= DATA_IDX;
+        else if(state == DATA_IDLE && data_idx == DATA_IDX) data_idx <= 4'h0;
+        else if(state == DATA_IDLE) data_idx <= data_idx + 1'b1;
+        else data_idx <= data_idx;
     end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dlen <= 12'h00;
-        else if(state == MAIN_IDLE) dlen <= 12'h00;
-        else if(state == MAIN_WAIT) dlen <= 12'h00;
-        else if(state == MAIN_DONE) dlen <= 12'h00;
-        else if(state == STAT_WORK) dlen <= dlen + 1'b1;
-        else if(state == DATA_HEAD) dlen <= dlen + 1'b1;
-        else if(state == DATA_WORK) dlen <= dlen + 1'b1;
-        else if(state == TRGG_WORK) dlen <= dlen + 1'b1;
-        else dlen <= 12'h00;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) lnum <= 4'h0;
-        else if(state == MAIN_IDLE) lnum <= 4'h0;
-        else if(state == MAIN_WAIT) lnum <= 4'h0;
-        else if(state == DATA_GAP) lnum <= lnum + 1'b1;
-        else lnum <= 4'h0;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) dnum <= 4'hF;
-        else if(state == MAIN_IDLE) dnum <= 4'hF;
-        else if(state == MAIN_WAIT) dnum <= 4'hF;
-        else if(state == MAIN_DONE) dnum <= 4'hF;
-        else if(state == DATA_REST) dnum <= dnum + 1'b1;
-        else dnum <= dnum;
-    end
-
 
 endmodule

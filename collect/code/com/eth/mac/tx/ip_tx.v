@@ -55,8 +55,8 @@ parameter WAIT_MAC         = 8'b0010_0000 ;
 parameter IP_SEND          = 8'b0100_0000 ;
 parameter IP_END           = 8'b1000_0000 ;
 
-reg [6:0]    state  ;
-reg [6:0]    next_state ;
+reg [7:0]    state  ;
+reg [7:0]    next_state ;
 
 always @(posedge clk or negedge rst_n)
   begin

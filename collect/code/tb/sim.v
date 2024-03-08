@@ -16,8 +16,8 @@ module sim();
         rst <= 1'b0;
     end
 
-    tb_com_send
-    tb_com_send_dut(
+    tb_data_make
+    tb_data_make_dut(
         .clk(clk),
         .rst(rst)
     );

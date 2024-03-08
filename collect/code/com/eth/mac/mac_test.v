@@ -123,7 +123,9 @@ module mac_test(
     always@(posedge gmii_tx_clk or posedge rst) begin
         if(rst) wait_cnt <= 32'h00;
         else if(state != next_state) wait_cnt <= 32'h00;  
-        else if(state == IDLE || state == WAIT || state == ARP_WAIT) wait_cnt <= wait_cnt + 1'b1;
+        else if(state == IDLE) wait_cnt <= wait_cnt + 1'b1;
+        else if(state == WAIT) wait_cnt <= wait_cnt + 1'b1;
+        else if(state == ARP_WAIT) wait_cnt <= wait_cnt + 1'b1;
         else wait_cnt <= 32'h00;
     end
 

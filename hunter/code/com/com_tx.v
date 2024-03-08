@@ -17,7 +17,7 @@ module com_tx(
 );
 
     localparam RAM_LATANECY = 4'h2;
-    localparam NLEN = 8'h02, CLEN = 8'h02, PLEN = 8'h04;
+    localparam NLEN = 8'h02, CLEN = 8'h02, PLEN = 8'h00;
 
     localparam BAG_INIT = 4'b0000; 
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
@@ -59,7 +59,8 @@ module com_tx(
         case(state)
             IDLE: next_state <= WAIT;
             WAIT: begin
-                if(fs) next_state <= PREM;
+                if(fs && PLEN == 4'h0) next_state <= SYNC;
+                else if(fs) next_state <= PREM;
                 else next_state <= WAIT;
             end
             PREM: begin

@@ -10,6 +10,7 @@ module com_txf(
 );
 
     localparam SYNC_DATA = 8'h0F;
+    localparam PID_PREM = 8'h5A;
 
     reg [3:0] state, next_state;
     localparam IDLE = 4'h0, WAIT = 4'h2, WORK = 4'h3, DONE = 4'h4;

@@ -38,7 +38,7 @@ module console(
     localparam RAM_ADDR_DATA0 = 12'h000, RAM_ADDR_DATA1 = 12'h240, RAM_ADDR_DATA2 = 12'h480;
     localparam RAM_ADDR_DATA3 = 12'h6C0, RAM_ADDR_DATA4 = 12'h900, RAM_ADDR_DATA5 = 12'hB40;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
     localparam LINK_IDLE = 8'h10, LINK_WORK = 8'h11, LINK_TAKE = 8'h12;

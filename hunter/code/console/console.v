@@ -72,8 +72,9 @@ module console(
     assign fs_adc_type = (state == TYPE_WORK);
     assign fs_adc_conf = (state == CONF_WORK);
     assign fs_adc_conv = (state == CONV_WORK);
-    assign fs_adc_tran = (state[3:0] == CONV_SEND[3:0]);
 
+    // assign fs_adc_tran = (state[3:0] == 4'h3);
+    assign fs_adc_tran = (state == LINK_SEND) || (state == TYPE_SEND) || (state == CONF_SEND) || (state == CONV_SEND);
     assign fs_com_send = (state == LINK_SEND) || (state == TYPE_SEND) || (state == CONF_SEND) || (state == CONV_SEND);
     assign fd_com_read = (state == TYPE_IDLE) || (state == CONF_IDLE) || (state == CONV_IDLE) || (state == EROR_IDLE);
 
@@ -97,7 +98,7 @@ module console(
             end
             LINK_TAKE: next_state <= LINK_SEND;
             LINK_SEND: begin
-                if(fd_com_send) next_state <= LINK_DONE;
+                if(fd_adc_tran && fd_com_send) next_state <= LINK_DONE;
                 else if(fd_com_txer) next_state <= LINK_WAIT;
                 else next_state <= LINK_SEND;
             end
@@ -125,7 +126,7 @@ module console(
             end
             TYPE_TAKE: next_state <= TYPE_SEND;
             TYPE_SEND: begin
-                if(fd_com_send) next_state <= TYPE_DONE;
+                if(fd_adc_tran && fd_com_send) next_state <= TYPE_DONE;
                 else next_state <= TYPE_SEND;
             end
             TYPE_DONE: next_state <= MAIN_WAIT;
@@ -135,7 +136,7 @@ module console(
                 else next_state <= CONF_IDLE;
             end
             CONF_WORK: begin
-                if(fd_adc_conf) next_state <= CONF_TAKE;
+                if(fd_adc_tran && fd_adc_conf) next_state <= CONF_TAKE;
                 else next_state <= CONF_WORK;
             end
             CONF_TAKE: next_state <= CONF_SEND;

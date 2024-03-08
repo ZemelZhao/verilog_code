@@ -12,9 +12,7 @@ module spi(
     output reg cs,
 
     input [15:0] chip_txd,
-    output reg [31:0] chip_rxd,
-    output reg chip_txen,
-    output reg chip_rxen
+    output reg [31:0] chip_rxd
 );
 
     reg [7:0] state, next_state;

@@ -17,7 +17,7 @@ module intan(
     output fd_conf,
     output fd_conv,
 
-    input [2:0] freq_samp, 
+    input [3:0] freq_samp, 
     output reg [1:0] device_type,
     output reg [15:0] device_temp,
 
@@ -52,8 +52,8 @@ module intan(
     localparam WAIT_FOR_0US = 16'h0000, WAIT_FOR_100US = 16'd5_000; 
     localparam WAIT_FOR_200US = 16'd10_000, WAIT_FOR_250US = 16'd12_500;
 
-    localparam FS_1KHZ = 3'h1, FS_2KHZ = 3'h2, FS_4KHZ = 3'h3; 
-    localparam FS_8KHZ = 3'h4, FS_16KHZ = 3'h5;
+    localparam FS_1KHZ = 4'h1, FS_2KHZ = 4'h2, FS_4KHZ = 4'h3; 
+    localparam FS_8KHZ = 4'h4, FS_16KHZ = 4'h5, FS_1HZ = 4'h0;
 
     localparam FILTUP_20K = 4'h1, FILTUP_15K = 4'h2, FILTUP_10K = 4'h3, FILTUP_7K5 = 4'h4;
     localparam FILTUP_5K0 = 4'h5, FILTUP_3K0 = 4'h6, FILTUP_2K5 = 4'h7, FILTUP_2K0 = 4'h8;
@@ -184,12 +184,8 @@ module intan(
     localparam CONV_IDLE = 8'hF0, CONV_DONE = 8'hF1, CONV_RXD0 = 8'hF2, CONV_RXD1 = 8'hF3;
 
     reg [15:0] chip_txd;
-    wire [15:0] chip_txd_fifo;
     reg [15:0] chip_rxda, chip_rxdb;
-    wire [31:0] chip_rxd_fifo;
     wire [31:0] chip_rxd;
-    reg fsys_txen, fspi_rxen;
-    wire fsys_rxen, fspi_txen;
 
     reg [7:0] data_reg01, data_reg02;
 
@@ -822,7 +818,7 @@ module intan(
 
     always@(posedge clk or posedge rst) begin // data_reg02
         if(rst) data_reg02 <= 8'h00;
-        else if(state == MAIN_IDLE) data_reg02  <=  8'h00;
+        else if(state == MAIN_IDLE) data_reg02 <= 8'h00;
         else if((state == CONF_REG02) && (freq_samp == FS_1KHZ)) data_reg02 <= DATA_REG02_12KHZ;
         else if((state == CONF_REG02) && (freq_samp == FS_2KHZ)) data_reg02 <= DATA_REG02_12KHZ;
         else if((state == CONF_REG02) && (freq_samp == FS_4KHZ)) data_reg02 <= DATA_REG02_4KHZ;
@@ -1117,29 +1113,6 @@ module intan(
         .rd_en(fifo_rxen[0])
     );
 
-    // fifo_sys2spi
-    // fifo_sys2spi(
-    //     .rst(rst),
-    //     .wr_clk(clk),
-    //     .din(chip_txd),
-    //     .wr_en(fsys_txen),
-
-    //     .rd_clk(spi_clk),
-    //     .dout(chip_txd_fifo),
-    //     .rd_en(fsys_rxen)
-    // );
-
-    // fifo_spi2sys
-    // fifo_spi2sys_dut(
-    //     .rst(rst),
-    //     .wr_clk(spi_clk),
-    //     .din(chip_rxd_fifo),
-    //     .wr_en(fspi_txen),
-
-    //     .rd_clk(clk),
-    //     .dout(chip_rxd),
-    //     .rd_en(fspi_rxen)
-    // );
 
 
 

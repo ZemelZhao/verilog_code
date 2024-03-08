@@ -75,7 +75,7 @@ module adc(
                 .fd_conf(fdc_conf[i]),
                 .fd_conv(fdc_conv[i]),
 
-                .freq_samp(freq_samp[2:0]),
+                .freq_samp(freq_samp),
                 .device_type(device_type[2*i +: 2]),
                 .device_temp(temp[i]),
 

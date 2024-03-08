@@ -13,10 +13,10 @@ module spi2fifo(
     output [15:0] fifo_txd 
 );
 
-    reg [3:0] state; 
-    reg [3:0] next_state;
-    localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
-    localparam DAT0 = 4'h4, DAT1 = 4'h5;
+    reg [7:0] state; 
+    reg [7:0] next_state;
+    localparam IDLE = 8'h01, WAIT = 8'h02, WORK = 8'h04, DONE = 8'h08;
+    localparam DAT0 = 8'h10, DAT1 = 8'h20;
 
     wire txen;
 

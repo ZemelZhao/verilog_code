@@ -136,12 +136,12 @@ module console(
                 else next_state <= CONF_IDLE;
             end
             CONF_WORK: begin
-                if(fd_adc_tran && fd_adc_conf) next_state <= CONF_TAKE;
+                if(fd_adc_conf) next_state <= CONF_TAKE;
                 else next_state <= CONF_WORK;
             end
             CONF_TAKE: next_state <= CONF_SEND;
             CONF_SEND: begin
-                if(fd_com_send) next_state <= CONF_DONE;
+                if(fd_adc_tran && fd_com_send) next_state <= CONF_DONE;
                 else next_state <= CONF_SEND;
             end
             CONF_DONE: next_state <= MAIN_WAIT;

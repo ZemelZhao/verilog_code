@@ -9,7 +9,7 @@ module console_usb_core(
 
     output fs_send,
     input [0:7] fd_send,
-    input [0:7] fs_read,
+    (*MARK_DEBUG = "true"*)input [0:7] fs_read,
     output fd_read,
 
     output reg [3:0] send_btype,
@@ -54,7 +54,7 @@ module console_usb_core(
             MAIN_WAIT: begin
                 if(fs_conf) next_state <= CONF_IDLE;
                 else if(fs_conv) next_state <= CONV_IDLE;
-                else if(fs_read == 8'hFF) next_state <= READ_IDLE;
+                else if(&fs_read) next_state <= READ_IDLE;
                 else if(num == LINK_NUM - 1'b1) next_state <= LINK_IDLE;
                 else next_state <= MAIN_WAIT;
             end
@@ -62,7 +62,7 @@ module console_usb_core(
             LINK_IDLE: next_state <= LINK_WAIT;
             LINK_WAIT: next_state <= LINK_WORK;
             LINK_WORK: begin
-                if(fd_send == 8'hFF) next_state <= LINK_DONE;
+                if(&fd_send) next_state <= LINK_DONE;
                 else next_state <= LINK_WORK;
             end
             LINK_DONE: next_state <= MAIN_WAIT;
@@ -70,7 +70,7 @@ module console_usb_core(
             CONF_IDLE: next_state <= CONF_WAIT;
             CONF_WAIT: next_state <= CONF_WORK;
             CONF_WORK: begin
-                if(fd_send == 8'hFF) next_state <= CONF_DONE;
+                if(&fd_send) next_state <= CONF_DONE;
                 else next_state <= CONF_WORK;
             end
             CONF_DONE: begin
@@ -81,7 +81,7 @@ module console_usb_core(
             CONV_IDLE: next_state <= CONV_WAIT;
             CONV_WAIT: next_state <= CONV_WORK;
             CONV_WORK: begin
-                if(fd_send == 8'hFF) next_state <= CONV_DONE;
+                if(&fd_send) next_state <= CONV_DONE;
                 else next_state <= CONV_WORK;
             end
             CONV_DONE: begin
@@ -93,7 +93,7 @@ module console_usb_core(
             READ_WAIT: next_state <= READ_WORK;
             READ_WORK: next_state <= READ_DONE;
             READ_DONE: begin
-                if(fs_read == 8'h00) next_state <= MAIN_WAIT;
+                if(~|fs_read) next_state <= MAIN_WAIT;
                 else next_state <= READ_DONE;
             end
 

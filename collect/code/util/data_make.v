@@ -2,20 +2,20 @@ module data_make(
     input clk,
     input rst,
 
-    (*MARK_DEBUG = "true"*)input fs,
-    (*MARK_DEBUG = "true"*)output fd,
+    input fs,
+    output fd,
 
     input [3:0] btype,
 
     input [0:79] usb_stat,
     input [31:0] trgg_rxd,
 
-    (*MARK_DEBUG = "true"*)output reg [14:0] ram_data_txa,
-    (*MARK_DEBUG = "true"*)output reg [7:0] ram_data_txd,
-    (*MARK_DEBUG = "true"*)output reg ram_data_txen,
+    output reg [14:0] ram_data_txa,
+    output reg [7:0] ram_data_txd,
+    output reg ram_data_txen,
 
-    (*MARK_DEBUG = "true"*)output reg [11:0] ram_rxa,
-    (*MARK_DEBUG = "true"*)input [0:63] ram_rxd
+    output reg [11:0] ram_rxa,
+    input [0:63] ram_rxd
 ); 
 
     localparam DATA_LATENCY = 4'h2;
@@ -216,7 +216,7 @@ module data_make(
         else if(state == STAT_WORK && num == 8'h00) ram_data_txd <= 8'h66;
         else if(state == STAT_WORK && num == 8'h01) ram_data_txd <= 8'hBB;
         else if(state == STAT_WORK && num == 8'h02) ram_data_txd <= 8'h00;
-        else if(state == STAT_WORK && num == 8'h03) ram_data_txd <= 8'h2D;
+        else if(state == STAT_WORK && num == 8'h03) ram_data_txd <= 8'h1E;
         else if(state == STAT_WORK && num == 8'h04) ram_data_txd <= {dev_stat[0], dev_stat[1], dev_stat[2], dev_stat[3]};  
         else if(state == STAT_WORK && num == 8'h05) ram_data_txd <= {dev_stat[4], dev_stat[5], dev_stat[6], dev_stat[7]};  
         else if(state == STAT_WORK && num == 8'h06) ram_data_txd <= dev_temp[0];
@@ -259,7 +259,7 @@ module data_make(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_idx <= DATA_IDX;
+        if(rst) data_idx <= 4'h0;
         else if(state == DATA_IDLE && data_idx == DATA_IDX) data_idx <= 4'h0;
         else if(state == DATA_IDLE) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;

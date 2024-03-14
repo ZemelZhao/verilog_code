@@ -183,7 +183,7 @@ module mac_test(
         if(rst) nosend_len <= 16'h0000;
         else if(tx_state == TX_IDLE) nosend_len <= 16'h0000;
         else if(tx_state == TX_WAIT) nosend_len <= tx_len_i;
-        else if(tx_state == TX_MAKE && nosend_len > PKG_LEN) nosend_len <= nosend_len  - PKG_LEN; 
+        else if(tx_state == TX_MAKE && nosend_len > PKG_LEN) nosend_len <= nosend_len - PKG_LEN; 
         else if(tx_state == TX_DONE) nosend_len <= 16'h0000;
         else nosend_len <= nosend_len; 
     end
@@ -200,7 +200,7 @@ module mac_test(
         else if(tx_state == TX_IDLE) tx_addr_o <= RAM_SEND_RXA_INIT;
         else if(tx_state == TX_WAIT) tx_addr_o <= tx_addr_i;
         else if(tx_state == TX_TAKE && (udp_ram_data_req)) tx_addr_o <= tx_addr_o + 1'b1;
-        else if(tx_state == TX_WORK) tx_addr_o <= tx_addr_o + 1'b1;
+        else if(tx_state == TX_WORK && next_tx_state == TX_WORK) tx_addr_o <= tx_addr_o + 1'b1;
         else tx_addr_o <= tx_addr_o;
     end
 

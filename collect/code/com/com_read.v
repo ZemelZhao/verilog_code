@@ -13,7 +13,7 @@ module com_read(
 
     input [15:0] password,
 
-    (*MARK_DEBUG = "true"*)output reg [3:0] btype,
+    output reg [3:0] btype,
     output reg [11:0] com_cmd,
     output reg [39:0] trgg_cmd
 );

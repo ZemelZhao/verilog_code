@@ -13,14 +13,14 @@ module crep(
     output gmii_txc,
     output gmii_rxc,
 
-    (*MARK_DEBUG = "true"*)output [0:31] u_rxd,
-    (*MARK_DEBUG = "true"*)input [0:7] u_txd,
+    output [0:31] u_rxd,
+    input [0:7] u_txd,
 
     output reg [0:7] usb_read,
     input [0:7] usb_send,
 
-    (*MARK_DEBUG = "true"*)output reg [0:7] u_txen,
-    (*MARK_DEBUG = "true"*)input [0:7] u_rxdv,
+    output reg [0:7] u_txen,
+    input [0:7] u_rxdv,
 
     input [0:31] u_rxd_p,
     input [0:31] u_rxd_n,

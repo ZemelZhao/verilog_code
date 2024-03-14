@@ -28,6 +28,7 @@ module adc(
     output [0:63] fifo_rxd
 );
     localparam INTAN_NUM = 4;
+    localparam LED0 = 4'h2, LED1 = 4'h3, LED2 = 4'h0, LED3 = 4'h1;
 
     wire [0:3] fdc_init, fdc_type, fdc_conf, fdc_conv;
     wire [15:0] temp[0:3];
@@ -52,6 +53,14 @@ module adc(
     assign freq_samp = cache_cmd[23:20];
     assign filt_up = cache_cmd[19:16];
     assign filt_low = cache_cmd[15:12];
+
+
+    // always@(posedge clk) begin
+    //     led[0] <= device_idx[LED0];
+    //     led[1] <= device_idx[LED1];
+    //     led[2] <= device_idx[LED2];
+    //     led[3] <= device_idx[LED3];
+    // end
 
     genvar i;
     generate

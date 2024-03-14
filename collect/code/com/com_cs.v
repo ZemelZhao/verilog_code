@@ -19,7 +19,8 @@ module com_cs(
     output reg [3:0] com_btype
 );
 
-    reg [9:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [9:0] state; 
+    reg [9:0] next_state;
     localparam MAIN_IDLE = 10'h001, MAIN_WAIT = 10'h002;
     localparam READ_IDLE = 10'h004, READ_WAIT = 10'h008, READ_WORK = 10'h010, READ_DONE = 10'h020;
     localparam SEND_IDLE = 10'h040, SEND_WAIT = 10'h080, SEND_WORK = 10'h100, SEND_DONE = 10'h200;
@@ -105,7 +106,7 @@ module com_cs(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_idx <= DATA_IDX - 1'b1;
+        if(rst) data_idx <= DATA_IDX;
         else if(state == MAIN_WAIT && fs_send && data_idx == DATA_IDX) data_idx <= 4'h0;
         else if(state == MAIN_WAIT && fs_send) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;

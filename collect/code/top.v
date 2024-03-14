@@ -26,7 +26,7 @@ module top(
     output [0:7] u_txd_n,
 
     output [0:7] u_txen,
-    input [0:7] u_rxdv,
+    (*MARK_DEBUG = "true"*)input [0:7] u_rxdv,
 
     output [7:0] led_n
 );

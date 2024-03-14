@@ -5,8 +5,8 @@ module usb_rx(
     output fs,
     input fd,
 
-    (*MARK_DEBUG = "true"*)input [7:0] usb_rxd,
-    (*MARK_DEBUG = "true"*)output reg [3:0] btype, 
+    input [7:0] usb_rxd,
+    output reg [3:0] btype, 
     output [31:0] cache_stat,
 
     input [11:0] ram_txa_init,
@@ -32,7 +32,7 @@ module usb_rx(
 
     localparam RAM_ADDR_INIT = 12'h000;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, EROR = 8'h02, DONE = 8'h03;
     localparam RPID = 8'h04, RACK = 8'h05, RNAK = 8'h06, RSTL = 8'h07;

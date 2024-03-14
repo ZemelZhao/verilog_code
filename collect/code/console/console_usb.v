@@ -20,7 +20,7 @@ module console_usb(
     output [0:255] usb_cmd,
 
     input [0:255] usb_stat,
-    (*MARK_DEBUG = "true"*)output [0:79] dev_stat,
+    output [0:79] dev_stat,
 
     output [12:0] com_dlen
 );

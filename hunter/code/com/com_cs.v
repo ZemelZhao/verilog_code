@@ -38,8 +38,12 @@ module com_cs(
 
     localparam DEBUG_NUM = 8'h80;
 
-    reg [15:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [15:0] state; 
+    reg [15:0] next_state;
     reg [15:0] state_goto;
+
+    (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
+    (*MARK_DEBUG = "true"*)reg [63:0] time_num;
 
     localparam MAIN_IDLE = 16'h0101, MAIN_WAIT = 16'h0102;
     localparam SEND_PREP = 16'h0201, SEND_DATA = 16'h0202, SEND_DONE = 16'h0204, SEND_FAIL = 16'h0208;
@@ -181,6 +185,20 @@ module com_cs(
         else if(state == WANS_PREP) num_cnt <= num_cnt + 1'b1;
         else num_cnt <= num_cnt;
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) time_num <= 64'h0000;
+        else if(state == MAIN_IDLE) time_num <= 64'h0000;
+        else time_num <= time_num + 1'b1;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) fail_num <= 32'h0000;
+        else if(state == MAIN_IDLE) fail_num <= 32'h0000;
+        else if(state == SEND_FAIL && next_state == MAIN_WAIT) fail_num <= fail_num + 1'b1;
+        else fail_num <= fail_num;
+    end
+
 
 
 endmodule

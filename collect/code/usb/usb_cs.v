@@ -38,7 +38,8 @@ module usb_cs(
     localparam ADC_RAM_ADDR_DATA4 = 12'h900, ADC_RAM_ADDR_DATA5 = 12'hB40;
     localparam ADC_RAM_ADDR_INIT = 12'hF00;
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] next_state;
     reg [7:0] state_goto;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01;
@@ -48,7 +49,7 @@ module usb_cs(
     localparam WANS_PREP = 8'h50, WANS_DONE = 8'h51;
 
     reg [7:0] time_cnt; 
-    (*MARK_DEBUG = "true"*)reg [7:0] num_cnt;
+    reg [7:0] num_cnt;
 
     reg [3:0] data_idx;
     localparam DATA_IDX = 4'h5;
@@ -178,7 +179,7 @@ module usb_cs(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_idx <= DATA_IDX - 4'h3;
+        if(rst) data_idx <= 4'h1;
         else if(state == MAIN_WAIT && fs_rx && data_idx == DATA_IDX) data_idx <= 4'h0;
         else if(state == MAIN_WAIT && fs_rx) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;

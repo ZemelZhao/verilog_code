@@ -9,7 +9,7 @@ module console_usb_dev(
 
     output fs_usb_send,
     input fd_usb_send,
-    (*MARK_DEBUG = "true"*)input ff_usb_send,
+    input ff_usb_send,
     input fs_usb_read,
     output fd_usb_read,
 
@@ -27,17 +27,17 @@ module console_usb_dev(
     output [9:0] dev_stat
 );
 
-    (*MARK_DEBUG = "true"*)reg [9:0] state; 
-    reg [9:0] next_state;
-    localparam MAIN_IDLE = 10'h000;
-    localparam MAIN_WAIT = 10'h001, MAIN_TAKE = 10'h002, MAIN_WORK = 10'h004, MAIN_DOOR = 10'h008;
-    localparam LINK_IDLE = 10'h011, LINK_TAKE = 10'h012, DIDX_WAIT = 10'h014, DIDX_WORK = 10'h018;
-    localparam TYPE_IDLE = 10'h021, TYPE_TAKE = 10'h022, TYPE_DONE = 10'h024;
-    localparam TEMP_IDLE = 10'h041, TEMP_TAKE = 10'h042, TEMP_DONE = 10'h044;
-    localparam DATA_IDLE = 10'h081, DATA_TAKE = 10'h082, DATA_DONE = 10'h084;
-    localparam CONF_IDLE = 10'h101, CONF_WAIT = 10'h102, CONF_WORK = 10'h104, CONF_DONE = 10'h108;
-    localparam CONV_IDLE = 10'h201, CONV_WAIT = 10'h202, CONV_WORK = 10'h204, CONV_DONE = 10'h208;
-    localparam IDLE_IDLE = 10'h301, IDLE_WAIT = 10'h302, IDLE_WORK = 10'h304, IDLE_DONE = 10'h308;
+    (*MARK_DEBUG = "true"*)reg [11:0] state; 
+    reg [11:0] next_state;
+    localparam MAIN_IDLE = 12'h000;
+    localparam MAIN_WAIT = 12'h001, MAIN_TAKE = 12'h002, MAIN_WORK = 12'h004, MAIN_DOOR = 12'h008;
+    localparam LINK_IDLE = 12'h011, LINK_TAKE = 12'h012, DIDX_WAIT = 12'h014, DIDX_WORK = 12'h018;
+    localparam TYPE_IDLE = 12'h021, TYPE_TAKE = 12'h022, TYPE_DONE = 12'h024;
+    localparam TEMP_IDLE = 12'h041, TEMP_TAKE = 12'h042, TEMP_DONE = 12'h044;
+    localparam DATA_IDLE = 12'h081, DATA_TAKE = 12'h082, DATA_DONE = 12'h084;
+    localparam CONF_IDLE = 12'h101, CONF_WAIT = 12'h102, CONF_WORK = 12'h104, CONF_DONE = 12'h108;
+    localparam CONV_IDLE = 12'h201, CONV_WAIT = 12'h202, CONV_WORK = 12'h204, CONV_DONE = 12'h208;
+    localparam IDLE_IDLE = 12'h401, IDLE_WAIT = 12'h402, IDLE_WORK = 12'h404, IDLE_DONE = 12'h408;
 
     localparam BAG_INIT = 4'b0000;
     localparam BAG_LINK = 4'b0100;
@@ -49,7 +49,10 @@ module console_usb_dev(
 
     wire [7:0] usb_temp, usb_type;
     wire [3:0] usb_link, usb_idx, usb_didx;
+
     localparam DEV_STAT = 4'hF;
+    localparam FF_CNT = 4'h4;
+    localparam TIMEOUT = 8'h8;
 
     reg [7:0] dev_temp;
     reg [1:0] dev_type;
@@ -58,6 +61,10 @@ module console_usb_dev(
 
     wire fd_com_send;
     wire fs_com_read;
+
+    reg [1:0] ff_usb_send_b;
+    reg [3:0] ff_cnt; 
+    reg [7:0] num;
 
     assign cri_stat = (usb_idx == device_idx);
 
@@ -135,6 +142,7 @@ module console_usb_dev(
             TYPE_TAKE: next_state <= MAIN_WAIT;
             TYPE_DONE: begin
                 if(fd_read) next_state <= MAIN_WAIT;
+                else if(num == TIMEOUT) next_state <= MAIN_WAIT;
                 else next_state <= TYPE_DONE;
             end
 
@@ -142,6 +150,7 @@ module console_usb_dev(
             TEMP_TAKE: next_state <= TEMP_DONE;
             TEMP_DONE: begin
                 if(fd_read) next_state <= MAIN_WAIT;
+                else if(num == TIMEOUT) next_state <= MAIN_WAIT;
                 else next_state <= TEMP_DONE;
             end
 
@@ -149,6 +158,7 @@ module console_usb_dev(
             DATA_TAKE: next_state <= DATA_DONE;
             DATA_DONE: begin
                 if(fd_read) next_state <= MAIN_WAIT;
+                else if(num == TIMEOUT) next_state <= MAIN_WAIT;
                 else next_state <= DATA_DONE;
             end
 
@@ -208,7 +218,7 @@ module console_usb_dev(
         else if(state == DATA_TAKE && dev_type == 2'b01 && usb_link != 4'h8) dev_link <= 1'b0;
         else if(state == DATA_TAKE && dev_type == 2'b10 && usb_link != 4'hC) dev_link <= 1'b0;
         else if(state == DATA_TAKE && dev_type == 2'b11 && usb_link != 4'hF) dev_link <= 1'b0;
-        else if(ff_usb_send) dev_link <= 1'b0;
+        else if(ff_cnt == FF_CNT) dev_link <= 1'b0;
         else dev_link <= dev_link;
     end
 
@@ -220,5 +230,46 @@ module console_usb_dev(
         else if(state == IDLE_WAIT) send_usb_btype <= BAG_LINK;
         else send_usb_btype <= send_usb_btype;
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) ff_usb_send_b <= 2'b00;
+        else ff_usb_send_b <= {ff_usb_send_b[0], ff_usb_send};
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) ff_cnt <= 4'h0;
+        else if(state == MAIN_IDLE) ff_cnt <= 4'h0;
+        else if(~dev_link) ff_cnt <= 4'h0;
+        else if(ff_usb_send_b == 2'b01) ff_cnt <= ff_cnt + 1'b1;
+        else if(ff_usb_send ^ fd_usb_send) ff_cnt <= 4'h0; 
+        else ff_cnt <= ff_cnt;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) num <= 8'h00;
+        else if(state == MAIN_IDLE) num <= 8'h00;
+        else if(state == TYPE_DONE) num <= num + 1'b1;
+        else if(state == TEMP_DONE) num <= num + 1'b1;
+        else if(state == DATA_DONE) num <= num + 1'b1;
+        else num <= 8'h00;
+    end
+
+
+    // // TEST MODULE
+    // (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
+    // (*MARK_DEBUG = "true"*)reg [31:0] time_num;
+
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) fail_num <= 32'h00000;
+    //     else if(state == MAIN_IDLE) fail_num <= 32'h0000;
+    //     else if(ff_send_b == 2'b01) fail_num <= fail_num + 1'b1;
+    //     else fail_num <= fail_num;
+    // end
+
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) time_num <= 32'h0000;
+    //     else if(state == MAIN_IDLE) time_num <= 32'h0000;
+    //     else time_num <= time_num + 1'b1;
+    // end
 
 endmodule

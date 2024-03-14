@@ -50,9 +50,9 @@ module eth
     wire [1:0]      speed      ;
     wire            link       ;
     wire            e_rx_dv    ;
-    (*MARK_DEBUG = "true"*)wire [7:0]      e_rxd      ;
+    wire [7:0]      e_rxd      ;
     wire            e_tx_en    ;
-    (*MARK_DEBUG = "true"*)wire [7:0]      e_txd      ;
+    wire [7:0]      e_txd      ;
     wire            e_rst_n    ;
     always @(posedge sys_clk) begin
         if(rst) begin

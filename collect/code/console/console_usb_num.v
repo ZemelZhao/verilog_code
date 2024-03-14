@@ -9,7 +9,8 @@ module console_usb_num(
     input [3:0] read_btype
 );
 
-    reg [4:0] state, next_state;
+    reg [4:0] state; 
+    reg [4:0] next_state;
     localparam IDLE = 5'h01, WAIT = 5'h02, WORK = 5'h04, DONE = 5'h08;
     localparam MAKE = 5'h10;
 

@@ -19,6 +19,8 @@ module adc(
     input [31:0] cache_cmd,
     output [31:0] cache_stat,
 
+    input idx,
+
     input [0:3] pin_miso,
     output [0:3] pin_mosi,
     output [0:3] pin_sclk,
@@ -95,6 +97,8 @@ module adc(
                 .mosi(pin_mosi[i]),
                 .sclk(pin_sclk[i]),
                 .cs(pin_cs[i]),
+
+                .idx(idx),
                 
                 .fifo_rxen(fifo_rxen[2*i +: 2]),
                 .fifo_rxd(fifo_rxd[16*i +: 16]),

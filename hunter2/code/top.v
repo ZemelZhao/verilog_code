@@ -78,6 +78,8 @@ module top(
         .fs_com_read(fs_com_read),
         .fd_com_read(fd_com_read),
         .fd_com_txer(fd_com_txer),
+        
+        .idx(idx),
 
         .read_btype(read_btype),
         .send_btype(send_btype),
@@ -143,6 +145,8 @@ module top(
         .pin_mosi(pin_mosi),
         .pin_sclk(pin_sclk),
         .pin_cs(pin_cs),
+
+        .idx(idx),
 
         .fifo_rxen(fifo_rxen),
         .fifo_rxd(fifo_rxd)

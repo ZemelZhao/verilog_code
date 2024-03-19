@@ -20,6 +20,8 @@ module console(
     input fs_com_read,
     output fd_com_read,
 
+    output idx,
+
     input [3:0] read_btype,
     output reg [3:0] send_btype,
 
@@ -67,11 +69,13 @@ module console(
     localparam NUM = 4'h6;
     localparam LNUM = 4'hC;
     reg [3:0] num;
-    
+
+    assign idx = num[0];
+
     assign fs_adc_init = (state == LINK_WORK);
     assign fs_adc_type = (state == TYPE_WORK);
     assign fs_adc_conf = (state == CONF_WORK);
-    assign fs_adc_conv = (state == CONV_WORK);
+    assign fs_adc_conv = (state == CONV_SEND);
 
     // assign fs_adc_tran = (state[3:0] == 4'h3);
     assign fs_adc_tran = (state == LINK_SEND) || (state == TYPE_SEND) || (state == CONF_SEND) || (state == CONV_SEND);
@@ -147,16 +151,12 @@ module console(
             CONF_DONE: next_state <= MAIN_WAIT;
 
             CONV_IDLE: begin
-                if(~fs_com_read) next_state <= CONV_WORK;
+                if(~fs_com_read) next_state <= CONV_TAKE;
                 else next_state <= CONV_IDLE;
-            end
-            CONV_WORK: begin
-                if(fd_adc_conv) next_state <= CONV_TAKE;
-                else next_state <= CONV_WORK;
             end
             CONV_TAKE: next_state <= CONV_SEND;
             CONV_SEND: begin
-                if(fd_adc_tran && fd_com_send) next_state <= CONV_DONE;
+                if(fd_adc_conv && fd_adc_tran && fd_com_send) next_state <= CONV_DONE;
                 else next_state <= CONV_SEND;
             end
             CONV_DONE: next_state <= MAIN_WAIT;

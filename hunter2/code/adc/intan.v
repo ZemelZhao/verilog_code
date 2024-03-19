@@ -29,6 +29,8 @@ module intan(
     output sclk,
     output cs,
 
+    input idx,
+
     input [1:0] fifo_rxen,
     output [15:0] fifo_rxd,
 
@@ -203,7 +205,11 @@ module intan(
     wire fd_spi, fd_prd;
     wire fs_fifo, fd_fifo;
     wire [15:0] fifo_txd;
-    wire [1:0] fifo_txen, fifo_full;
+    wire [1:0] fifo_txen; 
+    wire [3:0] fifo_full;
+
+    wire [15:0] fifo_rxd0, fifo_rxd1;
+    assign fifo_rxd = idx ?fifo_rxd0 :fifo_rxd1;
 
     assign fs_fifo = (state == WRAM_WORK);
     assign fd_init = (state == INIT_DONE);
@@ -1088,29 +1094,55 @@ module intan(
     );
 
     fifo_intan
-    fifo_intan_duta(
+    fifo_intan_duta0(
         .rst(rst),
         .wr_clk(fifo_txc),
         .din(fifo_txd[15:8]),
-        .wr_en(fifo_txen[1]),
-        .full(fifo_full[1]),
-
-        .rd_clk(fifo_rxc),
-        .dout(fifo_rxd[15:8]),
-        .rd_en(fifo_rxen[1])
-    );
-
-    fifo_intan
-    fifo_intan_dutb(
-        .rst(rst),
-        .wr_clk(fifo_txc),
-        .din(fifo_txd[7:0]),
-        .wr_en(fifo_txen[0]),
+        .wr_en(fifo_txen[1] && (~idx)),
         .full(fifo_full[0]),
 
         .rd_clk(fifo_rxc),
-        .dout(fifo_rxd[7:0]),
-        .rd_en(fifo_rxen[0])
+        .dout(fifo_rxd0[15:8]),
+        .rd_en(fifo_rxen[1] && idx)
+    );
+
+    fifo_intan
+    fifo_intan_dutb0(
+        .rst(rst),
+        .wr_clk(fifo_txc),
+        .din(fifo_txd[7:0]),
+        .wr_en(fifo_txen[0] && (~idx)),
+        .full(fifo_full[1]),
+
+        .rd_clk(fifo_rxc),
+        .dout(fifo_rxd0[7:0]),
+        .rd_en(fifo_rxen[0] && idx)
+    );
+
+    fifo_intan
+    fifo_intan_duta1(
+        .rst(rst),
+        .wr_clk(fifo_txc),
+        .din(fifo_txd[15:8]),
+        .wr_en(fifo_txen[1] && idx),
+        .full(fifo_full[2]),
+
+        .rd_clk(fifo_rxc),
+        .dout(fifo_rxd1[15:8]),
+        .rd_en(fifo_rxen[1] && (~idx))
+    );
+
+    fifo_intan
+    fifo_intan_dutb1(
+        .rst(rst),
+        .wr_clk(fifo_txc),
+        .din(fifo_txd[7:0]),
+        .wr_en(fifo_txen[0] && idx),
+        .full(fifo_full[3]),
+
+        .rd_clk(fifo_rxc),
+        .dout(fifo_rxd1[7:0]),
+        .rd_en(fifo_rxen[0] && (~idx))
     );
 
 

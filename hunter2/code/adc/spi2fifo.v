@@ -8,7 +8,7 @@ module spi2fifo(
     input [15:0] chip_rxda, 
     input [15:0] chip_rxdb,
 
-    input [1:0] fifo_full,
+    input [3:0] fifo_full,
     output [1:0] fifo_txen,
     output [15:0] fifo_txd 
 );

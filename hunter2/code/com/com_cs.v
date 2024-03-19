@@ -32,9 +32,9 @@ module com_cs(
     localparam BAG_INIT = 4'b0000;
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
+    localparam BAG_ERROR = 4'b1111, BAG_LINK = 4'b1001;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
-    localparam BAG_ERROR = 4'b1111;
 
     localparam DEBUG_NUM = 8'h80;
 

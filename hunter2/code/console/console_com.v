@@ -1,4 +1,4 @@
-module console(
+module console_com(
     input clk,
     input rst,
 
@@ -40,7 +40,7 @@ module console(
     localparam RAM_ADDR_DATA0 = 12'h000, RAM_ADDR_DATA1 = 12'h240, RAM_ADDR_DATA2 = 12'h480;
     localparam RAM_ADDR_DATA3 = 12'h6C0, RAM_ADDR_DATA4 = 12'h900, RAM_ADDR_DATA5 = 12'hB40;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
     localparam LINK_IDLE = 8'h10, LINK_WORK = 8'h11, LINK_TAKE = 8'h12;
@@ -89,7 +89,7 @@ module console(
     
     always@(*) begin
         case(state)
-            MAIN_IDLE: next_state <= LINK_WAIT;
+            MAIN_IDLE: next_state <= MAIN_WAIT;
 
             LINK_WAIT: begin
                 if(num >= LNUM - 1'b1) next_state <= LINK_TAKE;
@@ -111,7 +111,8 @@ module console(
                 if(read_btype == BAG_DIDX) next_state <= TYPE_IDLE;
                 else if(read_btype == BAG_DPARAM) next_state <= CONF_IDLE;
                 else if(read_btype == BAG_DDIDX) next_state <= CONV_IDLE;
-                else next_state <= EROR_IDLE;
+                else if(read_btype == BAG_ERROR) next_state <= EROR_IDLE;
+                else next_state <= MAIN_TAKE;
             end
 
             TYPE_IDLE: begin

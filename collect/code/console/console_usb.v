@@ -64,9 +64,6 @@ module console_usb(
         .rst(rst),
 
         .dev_stat(stat),
-        .fd_read(fd_read),
-        .read_btype(read_btype),
-
         .data_len(com_dlen)
     );
 

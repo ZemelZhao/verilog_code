@@ -14,7 +14,7 @@ module com_rx(
     localparam BAG_INIT = 4'b0000;
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
-    localparam BAG_ERROR = 4'b1111;
+    localparam BAG_ERROR = 4'b1111, BAG_LINK = 4'h1001;
 
     localparam PID_SYNC = 8'h01, PID_CMD = 8'h1E; 
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
@@ -112,6 +112,7 @@ module com_rx(
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) btype <= BAG_DIDX;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) btype <= BAG_DDIDX;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) btype <= BAG_DPARAM;
+        else if(state == WORK && num == 16'h0000) btype <= BAG_LINK;
         else if(state == EROR) btype <= BAG_ERROR;
         else btype <= btype;
     end

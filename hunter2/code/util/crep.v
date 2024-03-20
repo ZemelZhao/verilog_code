@@ -5,6 +5,7 @@ module crep(
     output clk_norm,
     output clk_fast,
     output clk_ulta,
+    output clk_chip,
 
     output [3:0] com_txd_p,
     output [3:0] com_txd_n,
@@ -96,7 +97,8 @@ module crep(
         .clk_slow(clk_slow),
         .clk_norm(clk_norm),
         .clk_fast(clk_fast),
-        .clk_ulta(clk_ulta)
+        .clk_ulta(clk_ulta),
+        .clk_chip(clk_chip)
     );
 
     OBUFDS

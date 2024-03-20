@@ -9,13 +9,13 @@ module com_rxf(
 
     localparam SYNC_DATA = 8'h01;
 
-    reg [3:0] state; 
+    (*MARK_DEBUG = "true"*)reg [3:0] state; 
     reg [3:0] next_state;
     localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
     localparam R0 = 4'h4, R1 = 4'h5, R2 = 4'h6, R3 = 4'h7;
     localparam R4 = 4'h8, R5 = 4'h9, R6 = 4'hA, R7 = 4'hB;
 
-    reg [6:0] tmp_rxd;
+    (*MARK_DEBUG = "true"*)reg [6:0] tmp_rxd;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;

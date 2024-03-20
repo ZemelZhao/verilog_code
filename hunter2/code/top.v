@@ -15,12 +15,11 @@ module top(
     input com_rxf,
     output com_txf,
 
-    inout [1:0] com_trf,
-
     input [1:0] com_cc
 );
 
     wire clk_slow, clk_norm, clk_fast;
+    wire clk_ulta, clk_chip;
 
     wire [3:0] pin_txd;
     wire pin_rxd;
@@ -183,6 +182,7 @@ module top(
         .clk_norm(clk_norm),
         .clk_fast(clk_fast),
         .clk_ulta(clk_ulta),
+        .clk_chip(clk_chip),
 
         .com_txd_p(com_txd_p),
         .com_txd_n(com_txd_n),

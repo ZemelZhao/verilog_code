@@ -31,6 +31,12 @@ set_property PACKAGE_PIN H19 [get_ports {com_rxd_p[1]}]
 set_property PACKAGE_PIN T19 [get_ports com_txf]
 set_property PACKAGE_PIN T20 [get_ports com_rxf]
 
+set_property DRIVE 16 [get_ports com_txf]
+set_property SLEW FAST [get_ports com_txf]
+set_property PULLUP true [get_ports com_txf]
+set_property PULLUP true [get_ports com_rxf]
+
+
 set_property PACKAGE_PIN R19 [get_ports {com_cc[0]}]
 set_property PACKAGE_PIN R20 [get_ports {com_cc[1]}]
 
@@ -59,4 +65,5 @@ set_property PACKAGE_PIN G11 [get_ports {adc_cs[0]}]
 set_property PACKAGE_PIN F12 [get_ports {adc_cs[1]}]
 set_property PACKAGE_PIN C15 [get_ports {adc_cs[2]}]
 set_property PACKAGE_PIN B14 [get_ports {adc_cs[3]}]
+
 

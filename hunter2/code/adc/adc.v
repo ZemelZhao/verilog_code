@@ -42,6 +42,8 @@ module adc(
     wire [0:3] device_idx;
     wire [3:0] freq_samp, filt_up, filt_low;
 
+    reg [0:3] led;
+
     assign temp_all = temp[0] + temp[1] + temp[2] + temp[3];
     assign device_temp = temp_all[17:2];
 
@@ -57,12 +59,12 @@ module adc(
     assign filt_low = cache_cmd[15:12];
 
 
-    // always@(posedge clk) begin
-    //     led[0] <= device_idx[LED0];
-    //     led[1] <= device_idx[LED1];
-    //     led[2] <= device_idx[LED2];
-    //     led[3] <= device_idx[LED3];
-    // end
+    always@(posedge clk) begin
+        led[0] <= device_idx[LED0];
+        led[1] <= device_idx[LED1];
+        led[2] <= device_idx[LED2];
+        led[3] <= device_idx[LED3];
+    end
 
     genvar i;
     generate
@@ -103,7 +105,7 @@ module adc(
                 .fifo_rxen(fifo_rxen[2*i +: 2]),
                 .fifo_rxd(fifo_rxd[16*i +: 16]),
 
-                .led(device_idx[i]),
+                .led(led[i]),
                 .stat(device_stat[i])
             );
         end

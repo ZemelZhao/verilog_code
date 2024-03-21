@@ -155,7 +155,10 @@ module console_usb_dev(
             end
 
             DATA_IDLE: next_state <= DATA_TAKE;
-            DATA_TAKE: next_state <= DATA_DONE;
+            DATA_TAKE: begin
+                if(cri_stat) next_state <= DATA_DONE;
+                else next_state <= MAIN_WAIT;
+            end
             DATA_DONE: begin
                 if(fd_read) next_state <= MAIN_WAIT;
                 else if(num == TIMEOUT) next_state <= MAIN_WAIT;
@@ -214,7 +217,7 @@ module console_usb_dev(
         else if(state == MAIN_IDLE) dev_link <= 1'b0;
         else if(state == LINK_TAKE) dev_link <= 1'b1;
         else if(state == TEMP_TAKE && read_btype != BAG_DTEMP) dev_link <= 1'b0;
-        else if(state == DATA_TAKE && read_btype != BAG_DATA && cri_stat) dev_link <= 1'b0;
+        else if(state == DATA_TAKE && read_btype != BAG_DATA) dev_link <= 1'b0;
         else if(state == DATA_TAKE && dev_type == 2'b01 && usb_link != 4'h8) dev_link <= 1'b0;
         else if(state == DATA_TAKE && dev_type == 2'b10 && usb_link != 4'hC) dev_link <= 1'b0;
         else if(state == DATA_TAKE && dev_type == 2'b11 && usb_link != 4'hF) dev_link <= 1'b0;
@@ -255,21 +258,21 @@ module console_usb_dev(
     end
 
 
-    // // TEST MODULE
-    // (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
-    // (*MARK_DEBUG = "true"*)reg [31:0] time_num;
+    // TEST MODULE
+    (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
+    (*MARK_DEBUG = "true"*)reg [31:0] time_num;
 
-    // always@(posedge clk or posedge rst) begin
-    //     if(rst) fail_num <= 32'h00000;
-    //     else if(state == MAIN_IDLE) fail_num <= 32'h0000;
-    //     else if(ff_send_b == 2'b01) fail_num <= fail_num + 1'b1;
-    //     else fail_num <= fail_num;
-    // end
+    always@(posedge clk or posedge rst) begin
+        if(rst) fail_num <= 32'h00000;
+        else if(state == MAIN_IDLE) fail_num <= 32'h0000;
+        else if(ff_usb_send_b == 2'b01) fail_num <= fail_num + 1'b1;
+        else fail_num <= fail_num;
+    end
 
-    // always@(posedge clk or posedge rst) begin
-    //     if(rst) time_num <= 32'h0000;
-    //     else if(state == MAIN_IDLE) time_num <= 32'h0000;
-    //     else time_num <= time_num + 1'b1;
-    // end
+    always@(posedge clk or posedge rst) begin
+        if(rst) time_num <= 32'h0000;
+        else if(state == MAIN_IDLE) time_num <= 32'h0000;
+        else time_num <= time_num + 1'b1;
+    end
 
 endmodule

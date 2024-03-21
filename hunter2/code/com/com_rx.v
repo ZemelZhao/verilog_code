@@ -5,6 +5,7 @@ module com_rx(
     output fs,
     input fd,
 
+    input fire,
     input [7:0] com_rxd,
 
     output reg [3:0] btype,
@@ -14,7 +15,7 @@ module com_rx(
     localparam BAG_INIT = 4'b0000;
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
-    localparam BAG_ERROR = 4'b1111, BAG_LINK = 4'h1001;
+    localparam BAG_ERROR = 4'b1111, BAG_LINK = 4'b1001;
 
     localparam PID_SYNC = 8'h01, PID_CMD = 8'h1E; 
     localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
@@ -23,10 +24,11 @@ module com_rx(
 
     localparam NLEN = 16'h0002;
 
-    reg [7:0] state, next_state;
+    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] next_state;
 
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
-    localparam RPID = 8'h04, DNUM = 8'h05, CRC5 = 8'h06;
+    localparam RPID = 8'h04, DNUM = 8'h05, CRC5 = 8'h06, REST = 8'h07;
     localparam EROR = 8'h10;
 
     localparam DATA_CMD_INIT = 32'h00000000;
@@ -59,9 +61,9 @@ module com_rx(
             end
             RPID: begin
                 if(com_rxd == PID_CMD) next_state <= DNUM;
-                else if(com_rxd == PID_ACK) next_state <= DONE;
-                else if(com_rxd == PID_NAK) next_state <= DONE;
-                else if(com_rxd == PID_STL) next_state <= DONE;
+                else if(com_rxd == PID_ACK) next_state <= REST;
+                else if(com_rxd == PID_NAK) next_state <= REST;
+                else if(com_rxd == PID_STL) next_state <= REST;
                 else next_state <= EROR;
             end
             DNUM: begin
@@ -73,14 +75,18 @@ module com_rx(
                 else next_state <= WORK;
             end
             CRC5: begin
-                if(com_rxd == cout) next_state <= DONE;
+                if(com_rxd == cout) next_state <= REST;
                 else next_state <= EROR;
+            end
+            REST: begin
+                if(~fire) next_state <= DONE;
+                else next_state <= REST;
             end
             DONE: begin
                 if(fd) next_state <= WAIT;
                 else next_state <= DONE;
             end
-            EROR: next_state <= DONE;
+            EROR: next_state <= REST;
             default: next_state <= IDLE;
         endcase
     end

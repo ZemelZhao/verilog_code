@@ -107,7 +107,15 @@ module usb_cs(
                 if(~fs_rx) next_state <= WANS_PREP;
                 else next_state <= READ_DATA;
             end
-            WANS_PREP: next_state <= WANS_DONE;
+            WANS_PREP: begin
+                if(rx_btype == BAG_DLINK) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_DTYPE) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_DTEMP) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_DATA0) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_DATA1) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_ERROR) next_state <= WANS_DONE;
+                else next_state <= MAIN_WAIT;
+            end
             WANS_DONE: begin
                 if(fd_tx) next_state <= READ_DONE;
                 else next_state <= WANS_DONE;

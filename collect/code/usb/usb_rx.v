@@ -5,6 +5,7 @@ module usb_rx(
     output fs,
     input fd,
 
+    input fire,
     input [7:0] usb_rxd,
     output reg [3:0] btype, 
     output [31:0] cache_stat,
@@ -36,6 +37,7 @@ module usb_rx(
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, EROR = 8'h02, DONE = 8'h03;
     localparam RPID = 8'h04, RACK = 8'h05, RNAK = 8'h06, RSTL = 8'h07;
+    localparam REST = 8'h08;
     localparam SNUM0 = 8'h10, SNUM1 = 8'h11, STAT0 = 8'h12, STAT1 = 8'h13;
     localparam DNUM0 = 8'h20, DNUM1 = 8'h21, HEAD0 = 8'h22, HEAD1 = 8'h23;
     localparam PDATA = 8'h24, RDATA = 8'h25;
@@ -69,7 +71,11 @@ module usb_rx(
                 if(usb_rxd == PID_SYNC) next_state <= RPID;
                 else next_state <= WAIT;
             end
-            EROR: next_state <= DONE;
+            EROR: next_state <= REST;
+            REST: begin
+                if(~fire) next_state <= DONE;
+                else next_state <= REST;
+            end
             DONE: begin
                 if(fd) next_state <= WAIT;
                 else next_state <= DONE;
@@ -85,9 +91,9 @@ module usb_rx(
                 else next_state <= EROR;
             end
 
-            RACK: next_state <= DONE;
-            RNAK: next_state <= DONE;
-            RSTL: next_state <= DONE;
+            RACK: next_state <= REST;
+            RNAK: next_state <= REST;
+            RSTL: next_state <= REST;
 
             SNUM0: next_state <= SNUM1;
             SNUM1: next_state <= STAT0;
@@ -105,7 +111,7 @@ module usb_rx(
             end
 
             CRC5: begin
-                if(usb_rxd == cout5) next_state <= DONE;
+                if(usb_rxd == cout5) next_state <= REST;
                 else next_state <= EROR;
             end
             CRC160: begin
@@ -113,7 +119,7 @@ module usb_rx(
                 else next_state <= EROR;
             end
             CRC161: begin
-                if(usb_rxd == cout16[7:0]) next_state <= DONE;
+                if(usb_rxd == cout16[7:0]) next_state <= REST;
                 else next_state <= EROR;
             end
 

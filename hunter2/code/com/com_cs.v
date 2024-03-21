@@ -23,11 +23,11 @@ module com_cs(
     output reg [11:0] tx_ram_init,
     output reg [11:0] tx_ram_rlen,
 
-    input [3:0] rx_btype
+    (*MARK_DEBUG = "true"*)input [3:0] rx_btype
 );
 
     localparam TIMEOUT = 8'h80;
-    localparam NUMOUT = 8'h03;
+    localparam NUMOUT = 8'h0A;
 
     localparam BAG_INIT = 4'b0000;
     localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
@@ -107,7 +107,13 @@ module com_cs(
                 if(~fs_rx) next_state <= WANS_PREP;
                 else next_state <= READ_DATA;
             end
-            WANS_PREP: next_state <= WANS_DONE;
+            WANS_PREP: begin
+                if(rx_btype == BAG_DIDX) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_DPARAM) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_DDIDX) next_state <= WANS_DONE;
+                else if(rx_btype == BAG_LINK) next_state <= WANS_DONE;
+                else next_state <= MAIN_WAIT;
+            end
             WANS_DONE: begin
                 if(fd_tx) next_state <= READ_DONE;
                 else next_state <= WANS_DONE;

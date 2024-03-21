@@ -75,6 +75,7 @@ module com(
         .fs(fs_rx),
         .fd(fd_rx),
 
+        .fire(fire_rxd),
         .com_rxd(com_rxd),
         .btype(rx_btype),
         .cache_cmd(cache_cmd)

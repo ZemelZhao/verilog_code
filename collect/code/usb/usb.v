@@ -75,6 +75,7 @@ module usb(
         .fs(fs_rx),
         .fd(fd_rx),
 
+        .fire(pin_read),
         .usb_rxd(com_rxd),
         .btype(rx_btype),
         .cache_stat(cache_stat),

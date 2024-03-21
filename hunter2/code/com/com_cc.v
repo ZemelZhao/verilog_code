@@ -6,21 +6,22 @@ module com_cc(
     input [3:0] usb_txd,
     output [3:0] pin_txd,
 
-    input pin_rxd,
+    (*MARK_DEBUG = "true"*)input pin_rxd,
     output reg usb_rxd 
 );
 
     assign pin_txd = usb_txd;
     // assign usb_rxd = pin_rxd;
 
-    reg [3:0] state, next_state;
-    localparam IDLE = 4'h4, WAIT = 4'h8;
+    (*MARK_DEBUG = "true"*)reg [3:0] state; 
+    reg [3:0] next_state;
+    localparam IDLE = 4'h4, WAIT = 4'h5;
     localparam W0 = 4'h0, W1 = 4'h1, W2 = 4'h2, W3 = 4'h3;
 
-    reg rxd; 
+    (*MARK_DEBUG = "true"*)reg rxd; 
     wire rst;
 
-    reg [2:0] lut;
+    (*MARK_DEBUG = "true"*)reg [2:0] lut;
     assign rst = ~fire;
 
     always@(posedge clk or posedge rst) begin
@@ -30,16 +31,16 @@ module com_cc(
 
     always@(*) begin
         case(state)
-            IDLE: next_state <= WAIT;
+            IDLE: next_state = WAIT;
             WAIT: begin
-                if(pin_rxd) next_state <= W0;
-                else next_state <= WAIT;
+                if(pin_rxd) next_state = W0;
+                else next_state = WAIT;
             end
-            W0: next_state <= W1;
-            W1: next_state <= W2;
-            W2: next_state <= W3;
-            W3: next_state <= W0;
-            default: next_state <= IDLE;
+            W0: next_state = W1;
+            W1: next_state = W2;
+            W2: next_state = W3;
+            W3: next_state = W0;
+            default: next_state = IDLE;
         endcase
     end
 

@@ -6,18 +6,22 @@ module usb_cc(
     input usb_txd,
     output pin_txd,
 
-    input [3:0] pin_rxd,
-    output reg [3:0] usb_rxd
+    (*MARK_DEBUG = "true"*)input [3:0] pin_rxd,
+    (*MARK_DEBUG = "true"*)output reg [3:0] usb_rxd
 );
 
     assign pin_txd = usb_txd;
 
-    reg [3:0] state, next_state;
-    localparam IDLE = 4'h0, WAIT = 4'h1;
-    localparam W0 = 4'h4, W1 = 4'h5, W2 = 4'h6, W3 = 4'h7;
+    // Here is a very interesting bug here.
+    // state would change into 0x00 sometimes when state is a 6-bit regsiter.
 
-    reg [2:0] lut0, lut1, lut2, lut3;
-    reg [3:0] rxd;
+    (*MARK_DEBUG = "true"*)reg [3:0] state; 
+    (*MARK_DEBUG = "true"*)reg [3:0] next_state;
+    localparam IDLE = 4'h4, WAIT = 4'h5;
+    localparam W0 = 4'h0, W1 = 4'h1, W2 = 4'h2, W3 = 4'h3;
+
+    (*MARK_DEBUG = "true"*)reg [2:0] lut0, lut1, lut2, lut3;
+    (*MARK_DEBUG = "true"*)reg [3:0] rxd;
     wire rst;
 
     assign rst = ~fire;
@@ -29,16 +33,16 @@ module usb_cc(
     
     always@(*) begin
         case(state)
-            IDLE: next_state <= WAIT;
+            IDLE: next_state = WAIT;
             WAIT: begin
-                if(&pin_rxd) next_state <= W0;
-                else next_state <= WAIT;
+                if(&pin_rxd) next_state = W0;
+                else next_state = WAIT;
             end
-            W0: next_state <= W1;
-            W1: next_state <= W2;
-            W2: next_state <= W3;
-            W3: next_state <= W0;
-            default: next_state <= IDLE;
+            W0: next_state = W1;
+            W1: next_state = W2;
+            W2: next_state = W3;
+            W3: next_state = W0;
+            default: next_state = IDLE;
         endcase
     end
 

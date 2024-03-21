@@ -79,6 +79,7 @@ module top(
         .fd_com_txer(fd_com_txer),
         
         .idx(idx),
+        .cache_cmd(cache_cmd),
 
         .read_btype(read_btype),
         .send_btype(send_btype),

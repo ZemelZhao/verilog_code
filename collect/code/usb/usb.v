@@ -31,7 +31,7 @@ module usb(
 
     wire [3:0] usb_rxd;
     wire usb_txd;
-    (*MARK_DEBUG = "true"*)wire [7:0] com_rxd, com_txd;
+    wire [7:0] com_rxd, com_txd;
 
     wire fs_tx, fd_tx;
     wire fs_rx, fd_rx;

@@ -27,7 +27,7 @@ module console_usb_dev(
     output [9:0] dev_stat
 );
 
-    (*MARK_DEBUG = "true"*)reg [11:0] state; 
+    reg [11:0] state; 
     reg [11:0] next_state;
     localparam MAIN_IDLE = 12'h000;
     localparam MAIN_WAIT = 12'h001, MAIN_TAKE = 12'h002, MAIN_WORK = 12'h004, MAIN_DOOR = 12'h008;
@@ -259,20 +259,20 @@ module console_usb_dev(
 
 
     // TEST MODULE
-    (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
-    (*MARK_DEBUG = "true"*)reg [31:0] time_num;
+    // (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
+    // (*MARK_DEBUG = "true"*)reg [31:0] time_num;
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) fail_num <= 32'h00000;
-        else if(state == MAIN_IDLE) fail_num <= 32'h0000;
-        else if(ff_usb_send_b == 2'b01) fail_num <= fail_num + 1'b1;
-        else fail_num <= fail_num;
-    end
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) fail_num <= 32'h00000;
+    //     else if(state == MAIN_IDLE) fail_num <= 32'h0000;
+    //     else if(ff_usb_send_b == 2'b01) fail_num <= fail_num + 1'b1;
+    //     else fail_num <= fail_num;
+    // end
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) time_num <= 32'h0000;
-        else if(state == MAIN_IDLE) time_num <= 32'h0000;
-        else time_num <= time_num + 1'b1;
-    end
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) time_num <= 32'h0000;
+    //     else if(state == MAIN_IDLE) time_num <= 32'h0000;
+    //     else time_num <= time_num + 1'b1;
+    // end
 
 endmodule

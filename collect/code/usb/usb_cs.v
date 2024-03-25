@@ -38,7 +38,7 @@ module usb_cs(
     localparam ADC_RAM_ADDR_DATA4 = 12'h900, ADC_RAM_ADDR_DATA5 = 12'hB40;
     localparam ADC_RAM_ADDR_INIT = 12'hF00;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] state; 
+    reg [7:0] state; 
     reg [7:0] next_state;
     reg [7:0] state_goto;
 

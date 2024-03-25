@@ -6,8 +6,8 @@ module usb_cc(
     input usb_txd,
     output pin_txd,
 
-    (*MARK_DEBUG = "true"*)input [3:0] pin_rxd,
-    (*MARK_DEBUG = "true"*)output reg [3:0] usb_rxd
+    input [3:0] pin_rxd,
+    output reg [3:0] usb_rxd
 );
 
     assign pin_txd = usb_txd;
@@ -15,13 +15,13 @@ module usb_cc(
     // Here is a very interesting bug here.
     // state would change into 0x00 sometimes when state is a 6-bit regsiter.
 
-    (*MARK_DEBUG = "true"*)reg [3:0] state; 
-    (*MARK_DEBUG = "true"*)reg [3:0] next_state;
+    reg [3:0] state; 
+    reg [3:0] next_state;
     localparam IDLE = 4'h4, WAIT = 4'h5;
     localparam W0 = 4'h0, W1 = 4'h1, W2 = 4'h2, W3 = 4'h3;
 
-    (*MARK_DEBUG = "true"*)reg [2:0] lut0, lut1, lut2, lut3;
-    (*MARK_DEBUG = "true"*)reg [3:0] rxd;
+    reg [2:0] lut0, lut1, lut2, lut3;
+    reg [3:0] rxd;
     wire rst;
 
     assign rst = ~fire;

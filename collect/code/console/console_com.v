@@ -28,7 +28,9 @@ module console_com(
     localparam READ_IDLE = 10'h004, READ_WAIT = 10'h008, READ_WORK = 10'h010, READ_DONE = 10'h020;
     localparam SEND_IDLE = 10'h040, SEND_WAIT = 10'h080, SEND_WORK = 10'h100, SEND_DONE = 10'h200;
 
-    localparam COM_DELAY = 8'h20;
+    localparam TIMEOUT = 8'h80;
+
+    reg [7:0] num;
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_WAIT);
@@ -53,6 +55,7 @@ module console_com(
             READ_WORK: next_state <= READ_WAIT;
             READ_WAIT: begin
                 if(fd_read) next_state <= READ_DONE;
+                else if(num+1'b1 >= TIMEOUT) next_state <= READ_DONE;
                 else next_state <= READ_WAIT;
             end
             READ_DONE: begin
@@ -67,7 +70,7 @@ module console_com(
             end
             SEND_WORK: next_state <= SEND_DONE;
             SEND_DONE: begin
-                if(~fs_send) next_state <= MAIN_IDLE;
+                if(~fs_send) next_state <= MAIN_WAIT;
                 else next_state <= SEND_DONE;
             end
             default: next_state <= MAIN_IDLE;
@@ -89,6 +92,12 @@ module console_com(
         else if(state == SEND_WORK && com_btype == BTYPE_RXD0) com_state <= COM_STATE_SAME;
         else if(state == SEND_WORK && com_btype == BTYPE_RXD1) com_state <= COM_STATE_SAME;
         else com_state <= com_state;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) num <= 8'h00;
+        else if(state == READ_WAIT) num <= num + 1'b1;
+        else num <= 8'h00;
     end
 
 

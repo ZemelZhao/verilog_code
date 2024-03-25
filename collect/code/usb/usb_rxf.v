@@ -4,17 +4,17 @@ module usb_rxf(
 
     input [3:0] din,
     input fire,
-    (*MARK_DEBUG = "true"*)output reg [7:0] dout
+    output reg [7:0] dout
 );
 
     localparam SYNC_DATA = 8'h0F;
 
-    (*MARK_DEBUG = "true"*)reg [3:0] state; 
+    reg [3:0] state; 
     reg [3:0] next_state;
     localparam IDLE = 4'h0, WAIT = 4'h1, WORK = 4'h2, DONE = 4'h3;
     localparam R0 = 4'h5, R1 = 4'h6;
 
-    (*MARK_DEBUG = "true"*)reg [3:0] tmp_rxd;
+    reg [3:0] tmp_rxd;
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;

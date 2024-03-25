@@ -9,7 +9,7 @@ module console_usb_core(
 
     output fs_send,
     input [0:7] fd_send,
-    (*MARK_DEBUG = "true"*)input [0:7] fs_read,
+    input [0:7] fs_read,
     output fd_read,
 
     output reg [3:0] send_btype,
@@ -25,7 +25,7 @@ module console_usb_core(
 
     reg [31:0] num;
 
-    (*MARK_DEBUG = "true"*)reg [19:0] state; 
+    reg [19:0] state; 
     reg [19:0] next_state;
     localparam MAIN_IDLE = 20'h00001, MAIN_WAIT = 20'h00002;
     localparam CONF_IDLE = 20'h00010, CONF_WAIT = 20'h00020, CONF_WORK = 20'h00040, CONF_DONE = 20'h00080;

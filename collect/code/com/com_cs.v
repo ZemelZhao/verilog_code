@@ -25,11 +25,11 @@ module com_cs(
     localparam READ_IDLE = 10'h004, READ_WAIT = 10'h008, READ_WORK = 10'h010, READ_DONE = 10'h020;
     localparam SEND_IDLE = 10'h040, SEND_WAIT = 10'h080, SEND_WORK = 10'h100, SEND_DONE = 10'h200;
 
-    reg [31:0] time_cnt;
+    (*MARK_DEBUG = "true"*)reg [31:0] time_cnt;
     reg [7:0] num_cnt;
 
     localparam NUM_OUT = 8'h03;
-    localparam TIMEOUT = 32'd1_500;
+    localparam TIMEOUT = 32'd450; // 6us here
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_WAIT);

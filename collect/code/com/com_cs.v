@@ -74,12 +74,7 @@ module com_cs(
             SEND_WAIT: begin
                 if(num_cnt >= NUM_OUT - 1'b1) next_state <= SEND_DONE;
                 else if(time_cnt >= TIMEOUT - 1'b1) next_state <= SEND_IDLE;
-                else if(fs_com_read) next_state <= SEND_WORK;
                 else next_state <= SEND_WAIT;
-            end
-            SEND_WORK: begin
-                if(~fs_com_read) next_state <= SEND_DONE;
-                else next_state <= SEND_WORK;
             end
             SEND_DONE: begin
                 if(~fs_send) next_state <= MAIN_IDLE;
@@ -123,7 +118,6 @@ module com_cs(
     always@(posedge clk or posedge rst) begin
         if(rst) com_btype <= BTYPE_INIT;
         else if(state == MAIN_IDLE) com_btype <= BTYPE_INIT;
-        else if(state == SEND_WAIT && fs_com_read) com_btype <= com_rx_btype;
         else if(state == READ_IDLE) com_btype <= com_rx_btype;
         else if(state == MAIN_WAIT) com_btype <= BTYPE_INIT;
         else com_btype <= com_btype;

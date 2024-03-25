@@ -73,6 +73,7 @@ module console_core(
             end
             CONV_WORK: begin
                 if(tick_b == 2'b01) next_state <= CONV_TAKE;
+                else if(fs_read) next_state <= MAIN_WAIT;
                 else next_state <= CONV_WORK;
             end
             CONV_TAKE: begin

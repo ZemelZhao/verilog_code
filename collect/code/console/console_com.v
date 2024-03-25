@@ -83,14 +83,6 @@ module console_com(
         else if(state == READ_WORK && com_btype == BTYPE_CONF) com_state <= COM_STATE_CONF;
         else if(state == READ_WORK && com_btype == BTYPE_READ) com_state <= COM_STATE_READ;
         else if(state == READ_WORK && com_btype == BTYPE_STOP) com_state <= COM_STATE_IDLE;
-        else if(state == READ_WORK && com_btype == BTYPE_RXD0) com_state <= COM_STATE_IDLE;
-        else if(state == READ_WORK && com_btype == BTYPE_RXD1) com_state <= COM_STATE_IDLE;
-        else if(state == SEND_WORK && com_btype == BTYPE_INIT) com_state <= COM_STATE_SAME;
-        else if(state == SEND_WORK && com_btype == BTYPE_CONF) com_state <= COM_STATE_IDLE;
-        else if(state == SEND_WORK && com_btype == BTYPE_READ) com_state <= COM_STATE_IDLE;
-        else if(state == SEND_WORK && com_btype == BTYPE_STOP) com_state <= COM_STATE_IDLE;
-        else if(state == SEND_WORK && com_btype == BTYPE_RXD0) com_state <= COM_STATE_SAME;
-        else if(state == SEND_WORK && com_btype == BTYPE_RXD1) com_state <= COM_STATE_SAME;
         else com_state <= com_state;
     end
 

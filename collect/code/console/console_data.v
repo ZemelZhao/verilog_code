@@ -10,7 +10,7 @@ module console_data(
     input fs_com_read
 );
 
-    (*MARK_DEBUG = "true"*)reg [5:0] state; 
+    reg [5:0] state; 
     reg [5:0] next_state;
     localparam IDLE = 6'h01, WAIT = 6'h02, WORK = 6'h04, DONE = 6'h08;
     localparam DATA = 6'h10, STAT = 6'h20;

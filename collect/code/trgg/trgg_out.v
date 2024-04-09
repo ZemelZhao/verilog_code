@@ -22,8 +22,16 @@ module trgg_out(
     // 110 1000 0500 1000
     // 111 2000 2000
 
-    reg [31:0] num;
-    reg [15:0] cnt;
+    (*MARK_DEBUG = "true"*)reg [31:0] num;
+    (*MARK_DEBUG = "true"*)reg [15:0] cnt;
+
+    (*MARK_DEBUG = "true"*)reg [15:0] state; 
+    reg [15:0] next_state;
+
+    localparam IDLE = 16'h0001, WAIT = 16'h0002, WORK = 16'h0004, DONE = 16'h0008;
+    localparam DLY0 = 16'h0010, DLY1 = 16'h0020, DLY2 = 16'h0040;
+    localparam STG0 = 16'h0100, STG1 = 16'h0200, STG2 = 16'h0400, STG3 = 16'h0800;
+    localparam STG4 = 16'h1000, STG5 = 16'h2000, STG6 = 16'h4000, STG7 = 16'h8000;
 
     localparam TIME_500MS = 32'd37_500_000, TIME_1MS = 32'd75_000;
 
@@ -61,31 +69,31 @@ module trgg_out(
             end
             STG1: begin
                 if(num == TIME_500MS - 1'b1) next_state <= STG2;
-                else next_state <= STG0;
+                else next_state <= STG1;
             end
             STG2: begin
                 if(num == TIME_500MS - 1'b1) next_state <= STG3;
-                else next_state <= STG0;
+                else next_state <= STG2;
             end
             STG3: begin
                 if(num == TIME_500MS - 1'b1) next_state <= STG4;
-                else next_state <= STG0;
+                else next_state <= STG3;
             end
             STG4: begin
                 if(num == TIME_500MS - 1'b1) next_state <= STG5;
-                else next_state <= STG0;
+                else next_state <= STG4;
             end
             STG5: begin
                 if(num == TIME_500MS - 1'b1) next_state <= STG6;
-                else next_state <= STG0;
+                else next_state <= STG5;
             end
             STG6: begin
                 if(num == TIME_500MS - 1'b1) next_state <= STG7;
-                else next_state <= STG0;
+                else next_state <= STG6;
             end
             STG7: begin
                 if(num == TIME_500MS - 1'b1) next_state <= DONE;
-                else next_state <= STG0;
+                else next_state <= STG7;
             end
             DONE: begin
                 if(~fs) next_state <= WAIT;

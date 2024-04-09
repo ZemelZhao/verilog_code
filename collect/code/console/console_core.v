@@ -12,6 +12,9 @@ module console_core(
     input fs_read,
     output fd_read,
 
+    output reg fs_trgg,
+    input fd_trgg,
+
     input tick,
 
     input [1:0] com_state
@@ -20,7 +23,7 @@ module console_core(
     localparam COM_STATE_IDLE = 2'b00, COM_STATE_CONF = 2'b01;
     localparam COM_STATE_READ = 2'b10, COM_STATE_SAME = 2'b11;
 
-    (*MARK_DEBUG = "true"*)reg [11:0] state; 
+    reg [11:0] state; 
     reg [11:0] next_state;
     localparam MAIN_IDLE = 12'h001, MAIN_WAIT = 12'h002, MAIN_DONE = 12'h004;
     localparam CONF_IDLE = 12'h008, CONF_WAIT = 12'h010, CONF_WORK = 12'h020, CONF_DONE = 12'h040;
@@ -97,5 +100,11 @@ module console_core(
         else tick_b <= {tick_b[0], tick};
     end
 
+    always@(posedge clk or posedge rst) begin
+        if(rst) fs_trgg <= 1'b0;
+        else if(state == CONV_IDLE) fs_trgg <= 1'b1;
+        else if(fd_trgg) fs_trgg <= 1'b0;
+        else fs_trgg <= fs_trgg;
+    end
 
 endmodule

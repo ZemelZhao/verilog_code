@@ -8,11 +8,11 @@ module com(
     inout e_mdio,
     output e_rstn,
 
-    (*MARK_DEBUG = "true"*)input [7:0] e_rxd,
-    (*MARK_DEBUG = "true"*)input e_rxdv,
+    input [7:0] e_rxd,
+    input e_rxdv,
     input e_rxer,
-    (*MARK_DEBUG = "true"*)output [7:0] e_txd,
-    (*MARK_DEBUG = "true"*)output e_txen,
+    output [7:0] e_txd,
+    output e_txen,
     output e_txer,
 
     output fs_read,
@@ -40,8 +40,8 @@ module com(
     wire [14:0] ram_data_rxa_init;
     wire [12:0] ram_data_dlen;
 
-    (*MARK_DEBUG = "true"*)wire fs_com_send, fd_com_send;
-    (*MARK_DEBUG = "true"*)wire fs_com_read, fd_com_read;
+    wire fs_com_send, fd_com_send;
+    wire fs_com_read, fd_com_read;
     wire [3:0] data_idx;
 
     wire [3:0] com_tx_btype, com_rx_btype;

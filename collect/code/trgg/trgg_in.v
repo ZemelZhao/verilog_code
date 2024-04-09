@@ -2,8 +2,8 @@ module trgg_in(
     input clk,
     input rst,
 
-    input [0:1] din,
-    output [0:1] dout,
+    input [0:1] miso,
+    output [0:1] mosi,
     output [0:1] cs,
     output [0:1] sclk,
 
@@ -18,12 +18,12 @@ module trgg_in(
                 .clk(clk),
                 .rst(rst),
 
-                .din(din[i]),
-                .dout(dout[i]),
+                .miso(miso[i]),
+                .mosi(mosi[i]),
                 .cs(cs[i]),
                 .sclk(sclk[i]),
 
-                tout(tout[16*i +: 16])
+                .trgg(tout[16*i +: 16])
             );
         end
     endgenerate

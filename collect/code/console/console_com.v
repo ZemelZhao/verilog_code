@@ -22,7 +22,7 @@ module console_com(
     localparam BTYPE_INIT = 4'h0, BTYPE_CONF = 4'h1, BTYPE_READ = 4'h2; 
     localparam BTYPE_STOP = 4'h3, BTYPE_RXD0 = 4'h4, BTYPE_RXD1 = 4'h5;
 
-    (*MARK_DEBUG = "true"*)reg [9:0] state; 
+    reg [9:0] state; 
     reg [9:0] next_state;
     localparam MAIN_IDLE = 10'h001, MAIN_WAIT = 10'h002;
     localparam READ_IDLE = 10'h004, READ_WAIT = 10'h008, READ_WORK = 10'h010, READ_DONE = 10'h020;

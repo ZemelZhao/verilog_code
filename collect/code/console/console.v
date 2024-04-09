@@ -13,6 +13,9 @@ module console(
     input [7:0] fs_usb_read,
     output [7:0] fd_usb_read,
 
+    output fs_trgg_out,
+    input fd_trgg_out,
+
     output fs_data,
     input fd_data,
 
@@ -27,13 +30,16 @@ module console(
     output [79:0] dev_stat,
 
     output [12:0] com_dlen,
-    output [3:0] data_btype
+    output [3:0] data_btype,
+
+    output [39:0] trgg_info
 ); 
 
     wire fs_conf, fd_conf;
     wire fs_conv, fd_conv;
     wire fs_send, fd_send;
     wire fs_read, fd_read;
+    wire fs_trgg, fd_trgg;
 
     wire tick;
 
@@ -61,6 +67,9 @@ module console(
         .fd_send(fd_send),
         .fs_read(fs_read),
         .fd_read(fd_read),
+
+        .fs_trgg(fs_trgg),
+        .fd_trgg(fd_trgg),
 
         .tick(tick),
         .com_state(com_state)
@@ -112,6 +121,21 @@ module console(
         .com_dlen(com_dlen)
     );
 
+    console_trgg
+    console_trgg_dut(
+        .clk(clk),
+        .rst(rst),
+
+        .fs(fs_trgg),
+        .fd(fd_trgg),
+
+        .fs_trgg(fs_trgg_out),
+        .fd_trgg(fd_trgg_out),
+
+        .com_cmd(trgg_cmd),
+        .trgg_cmd(trgg_info)
+    );
+    
     console_data
     console_data_dut(
         .clk(clk),

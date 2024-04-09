@@ -5,18 +5,24 @@ module spi(
     input fs,
     output fd,
 
-    input din,
-    output reg cs,
+    input miso,
+    output cs,
     output reg sclk,
-    output reg dout,
+    output reg mosi,
 
     input [15:0] txd,
     output reg [15:0] rxd 
 ); 
 
+    localparam MODE_NUM = 8'd20, SEMI_NUM = 8'd09, SYNC_NUM = 8'h10; 
+
+    reg [7:0] num;
     reg [15:0] data;
 
     reg [7:0] state, next_state;
+    
+    assign fd = (state == DONE);
+    assign cs = 1'b0;
 
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02;
     localparam LAST = 8'h04, DONE = 8'h08;
@@ -120,15 +126,6 @@ module spi(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) cs <= 1'b1;
-        else if(state == IDLE) cs <= 1'b1;
-        else if(state == WAIT) cs <= 1'b1;
-        else if(state == WORK) cs <= 1'b0;
-        else if(state == DONE) cs <= 1'b1;
-        else cs <= cs;
-    end
-
-    always@(posedge clk or posedge rst) begin
         if(rst) sclk <= 1'b0;
         else if(state == IDLE) sclk <= 1'b0;
         else if(state == WAIT) sclk <= 1'b0;
@@ -152,64 +149,64 @@ module spi(
         else if(state == WE && num == 8'h00) sclk <= 1'b1;
         else if(state == WF && num == 8'h00) sclk <= 1'b1;
         else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
-        else if(state == W0 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W1 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W2 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W3 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W4 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W5 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W6 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W7 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W8 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == W9 && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == WA && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == WB && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == WC && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == WD && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == WE && num == SEMI_NUM) sclk <= 1'b0;
+        else if(state == WF && num == SEMI_NUM) sclk <= 1'b0;
         else sclk <= sclk;
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) dout <= 1'b0; 
-        else if(state == W0) dout <= txd[15];
-        else if(state == W1) dout <= txd[14];
-        else if(state == W2) dout <= txd[13];
-        else if(state == W3) dout <= txd[12];
-        else if(state == W4) dout <= txd[11];
-        else if(state == W5) dout <= txd[10];
-        else if(state == W6) dout <= txd[9];
-        else if(state == W7) dout <= txd[8];
-        else if(state == W8) dout <= txd[7];
-        else if(state == W9) dout <= txd[6];
-        else if(state == WA) dout <= txd[5];
-        else if(state == WB) dout <= txd[4];
-        else if(state == WC) dout <= txd[3];
-        else if(state == WD) dout <= txd[2];
-        else if(state == WE) dout <= txd[1];
-        else if(state == WF) dout <= txd[0];
-        else dout <= 1'b0;
+        if(rst) mosi <= 1'b0; 
+        else if(state == W0) mosi <= txd[15];
+        else if(state == W1) mosi <= txd[14];
+        else if(state == W2) mosi <= txd[13];
+        else if(state == W3) mosi <= txd[12];
+        else if(state == W4) mosi <= txd[11];
+        else if(state == W5) mosi <= txd[10];
+        else if(state == W6) mosi <= txd[9];
+        else if(state == W7) mosi <= txd[8];
+        else if(state == W8) mosi <= txd[7];
+        else if(state == W9) mosi <= txd[6];
+        else if(state == WA) mosi <= txd[5];
+        else if(state == WB) mosi <= txd[4];
+        else if(state == WC) mosi <= txd[3];
+        else if(state == WD) mosi <= txd[2];
+        else if(state == WE) mosi <= txd[1];
+        else if(state == WF) mosi <= txd[0];
+        else mosi <= 1'b0;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) data <= 16'h0000;
         else if(state == IDLE) data <= 16'h0000;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[15] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[14] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[13] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[12] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[11] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[10] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[9] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[8] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[7] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[6] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[5] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[4] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[3] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[2] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[1] <= din;
-        else if(state == W0 && num == SEMI_NUM + 1'b1) data[0] <= din;
+        else if(state == W0 && num == SEMI_NUM + 1'b1) data[15] <= miso;
+        else if(state == W1 && num == SEMI_NUM + 1'b1) data[14] <= miso;
+        else if(state == W2 && num == SEMI_NUM + 1'b1) data[13] <= miso;
+        else if(state == W3 && num == SEMI_NUM + 1'b1) data[12] <= miso;
+        else if(state == W4 && num == SEMI_NUM + 1'b1) data[11] <= miso;
+        else if(state == W5 && num == SEMI_NUM + 1'b1) data[10] <= miso;
+        else if(state == W6 && num == SEMI_NUM + 1'b1) data[9] <= miso;
+        else if(state == W7 && num == SEMI_NUM + 1'b1) data[8] <= miso;
+        else if(state == W8 && num == SEMI_NUM + 1'b1) data[7] <= miso;
+        else if(state == W9 && num == SEMI_NUM + 1'b1) data[6] <= miso;
+        else if(state == WA && num == SEMI_NUM + 1'b1) data[5] <= miso;
+        else if(state == WB && num == SEMI_NUM + 1'b1) data[4] <= miso;
+        else if(state == WC && num == SEMI_NUM + 1'b1) data[3] <= miso;
+        else if(state == WD && num == SEMI_NUM + 1'b1) data[2] <= miso;
+        else if(state == WE && num == SEMI_NUM + 1'b1) data[1] <= miso;
+        else if(state == WF && num == SEMI_NUM + 1'b1) data[0] <= miso;
         else data <= data;
     end
 
@@ -220,8 +217,10 @@ module spi(
         else rxd <= rxd;
     end
 
-
-
-
+    always@(posedge clk or posedge rst) begin
+        if(rst) num <= 8'h00;
+        else if(state != next_state) num <= 8'h00;
+        else num <= num + 1'b1;
+    end 
 
 endmodule

@@ -5,10 +5,10 @@ module trgg(
     input fs,
     output fd,
 
-    input [0:1] din,
-    output [0:1] dout,
-    output [0:1] cs,
-    output [0:1] sclk,
+    input [0:1] pin_miso,
+    output [0:1] pin_mosi,
+    output [0:1] pin_cs,
+    output [0:1] pin_sclk,
 
     input [0:39] trgg_cmd,
 
@@ -35,7 +35,7 @@ module trgg(
                 .clk(clk),
                 .rst(rst),
                 .fs(fs),
-                .fd(fd_dev[0]),
+                .fd(fd_dev[i]),
                 .mod(mod[4*i +: 4]),
                 .delay(delay[16*i +: 16]),
                 .pin(pin_out[i])
@@ -48,10 +48,10 @@ module trgg(
         .clk(clk),
         .rst(rst),
 
-        .din(din),
-        .dout(dout),
-        .cs(cs),
-        .sclk(sclk),
+        .miso(pin_miso),
+        .mosi(pin_mosi),
+        .cs(pin_cs),
+        .sclk(pin_sclk),
 
         .tout(trgg_data)
     );

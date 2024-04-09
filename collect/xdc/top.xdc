@@ -34,6 +34,25 @@ set_property PACKAGE_PIN E28 [get_ports {led_n[5]}]
 set_property PACKAGE_PIN F30 [get_ports {led_n[6]}]
 set_property PACKAGE_PIN G29 [get_ports {led_n[7]}]
 
+##############TRGG define##################
+set_property IOSTANDARD LVCMOS33 [get_ports {pin_trgg[*]}]
+set_property PACKAGE_PIN J29 [get_ports  {pin_trgg[0]}] 
+set_property PACKAGE_PIN J27 [get_ports  {pin_trgg[1]}] 
+
+set_property IOSTANDARD LVCMOS33 [get_ports {pin_miso[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {pin_mosi[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {pin_sclk[*]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {pin_cs[*]}]
+
+set_property PACKAGE_PIN H25 [get_ports {pin_sclk[0]}]
+set_property PACKAGE_PIN E23 [get_ports {pin_sclk[1]}]
+set_property PACKAGE_PIN H24 [get_ports {pin_cs[0]}]
+set_property PACKAGE_PIN D23 [get_ports {pin_cs[1]}]
+set_property PACKAGE_PIN A23 [get_ports {pin_mosi[0]}]
+set_property PACKAGE_PIN G24 [get_ports {pin_mosi[1]}]
+set_property PACKAGE_PIN B23 [get_ports {pin_miso[0]}]
+set_property PACKAGE_PIN G23 [get_ports {pin_miso[1]}]
+
 ##############ETH define##################
 create_clock -period 8.000 [get_ports e_grxc]
 
@@ -85,7 +104,7 @@ set_property PACKAGE_PIN L20 [get_ports e_txen]
 set_property PACKAGE_PIN M29 [get_ports e_txer]
 
 
-##############ETH define##################
+##############USB define##################
 set_property IOSTANDARD LVDS_25 [get_ports {u_rxd_p[*]}]
 set_property IOSTANDARD LVDS_25 [get_ports {u_txd_p[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {u_txen[*]}]
@@ -155,4 +174,5 @@ set_property PACKAGE_PIN C24 [get_ports {u_rxdv[4]}]
 set_property PACKAGE_PIN B24 [get_ports {u_rxdv[5]}]
 set_property PACKAGE_PIN C30 [get_ports {u_rxdv[6]}]
 set_property PACKAGE_PIN D29 [get_ports {u_rxdv[7]}]
+
 

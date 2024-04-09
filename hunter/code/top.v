@@ -148,7 +148,6 @@ module top(
         .fifo_rxd(fifo_rxd)
     );
 
-
     data_make
     data_make_dut(
         .clk(clk_fast),

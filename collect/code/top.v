@@ -26,7 +26,13 @@ module top(
     output [0:7] u_txd_n,
 
     output [0:7] u_txen,
-    (*MARK_DEBUG = "true"*)input [0:7] u_rxdv,
+    input [0:7] u_rxdv,
+
+    input [1:0] pin_miso,
+    output [1:0] pin_mosi,
+    output [1:0] pin_cs,
+    output [1:0] pin_sclk,
+    output [1:0] pin_trgg,
 
     output [7:0] led_n
 );
@@ -41,12 +47,17 @@ module top(
     wire [3:0] com_btype, data_btype;
     wire [0:31] send_usb_btype, read_usb_btype;
 
+    wire fs_trgg_out, fd_trgg_out;
+
     wire [51:0] cache_cmd;
     wire [0:255] usb_stat; 
     wire [0:255] usb_cmd;
     wire [0:79] dev_stat;
 
     wire [12:0] com_dlen;
+
+    wire [39:0] trgg_cmd;
+    wire [31:0] trgg_rxd;
 
     wire [11:0] ram_usb_rxa;
     wire [0:63] ram_usb_rxd;
@@ -93,6 +104,9 @@ module top(
         .fs_usb_read(fs_usb_read),
         .fd_usb_read(fd_usb_read),
 
+        .fs_trgg_out(fs_trgg_out),
+        .fd_trgg_out(fd_trgg_out),
+
         .fs_data(fs_data),
         .fd_data(fd_data),
 
@@ -107,7 +121,9 @@ module top(
         .dev_stat(dev_stat),
 
         .com_dlen(com_dlen),
-        .data_btype(data_btype)
+        .data_btype(data_btype),
+
+        .trgg_info(trgg_cmd)
     );
 
 
@@ -184,6 +200,25 @@ module top(
         );
         end
     endgenerate
+
+    trgg
+    trgg_dut(
+        .clk(clk_norm),
+        .rst(rst),
+        
+        .fs(fs_trgg_out),
+        .fd(fd_trgg_out),
+
+        .pin_miso(pin_miso),
+        .pin_mosi(pin_mosi),
+        .pin_cs(pin_cs),
+        .pin_sclk(pin_sclk),
+
+        .pin_out(pin_trgg),
+
+        .trgg_cmd(trgg_cmd),
+        .trgg_data(trgg_rxd)
+    );
 
     data_make
     data_make_dut(

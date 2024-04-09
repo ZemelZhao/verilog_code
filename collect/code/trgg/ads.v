@@ -2,15 +2,20 @@ module ads(
     input clk,
     input rst,
 
-    input din,
-    output cs,
+    input miso,
+    output mosi,
     output sclk,
-    output dout,
+    output cs,
 
     output reg [15:0] trgg
 );
 
-    reg [7:0] state, next_state;
+    localparam TIME_50US = 16'd3_750;
+
+    reg [15:0] num;
+
+    reg [7:0] state; 
+    reg [7:0] next_state;
 
     localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01;
     localparam INIT_IDLE = 8'h11, INIT_WAIT = 8'h12, INIT_WORK = 8'h14, INIT_DONE = 8'h18;
@@ -34,8 +39,8 @@ module ads(
         case(state)
             MAIN_IDLE: next_state <= INIT_IDLE;
             MAIN_WAIT: begin
-                if(~din) next_state <= WORK_IDLE;
-                next_state <= MAIN_WAIT;
+                if(~miso) next_state <= WORK_IDLE;
+                else next_state <= MAIN_WAIT;
             end
 
             INIT_IDLE: next_state <= INIT_WAIT;
@@ -72,8 +77,15 @@ module ads(
     always@(posedge clk or posedge rst) begin
         if(rst) trgg <= 16'h0000;
         else if(state == MAIN_IDLE) trgg <= 16'h0000;
-        else if(staet == WORK_WORK) trgg <= rxd;
+        else if(state == WORK_WORK && rxd != CONFIG_DATA) trgg <= rxd;
         else trgg <= trgg;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) num <= 16'h0000;
+        else if(state == MAIN_IDLE) num <= 16'h0000;
+        else if(state == INIT_WAIT) num <= num + 1'b1;
+        else num <= 16'h0000;
     end
 
     spi
@@ -86,8 +98,8 @@ module ads(
 
         .cs(cs),
         .sclk(sclk),
-        .din(din),
-        .dout(dout),
+        .miso(miso),
+        .mosi(mosi),
 
         .txd(txd),
         .rxd(rxd)

@@ -44,9 +44,12 @@ module console(
     localparam ADDR_CMD_DEVICE_IDX = 8'h1F, DLEN_CMD_DEVICE_IDX = 8'h04;
     localparam ADDR_CMD_DATA_IDX = 8'h1B, DLEN_CMD_DATA_IDX = 8'h04;
 
+    localparam TIME_100MS = 32'd7_500_000;
+
     (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
-    localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02, MAIN_DATA = 8'h03;
+    localparam MAIN_IDLE = 8'h00, MAIN_WAIT = 8'h01, MAIN_TAKE = 8'h02;
+    localparam MAIN_DATA = 8'h04, MAIN_WORK = 8'h08;
     localparam LINK_IDLE = 8'h10, LINK_WORK = 8'h11, LINK_TAKE = 8'h12;
     localparam LINK_SEND = 8'h13, LINK_DONE = 8'h14, LINK_WAIT = 8'h15;
     localparam TYPE_IDLE = 8'h20, TYPE_WORK = 8'h21, TYPE_TAKE = 8'h22;
@@ -75,6 +78,7 @@ module console(
     localparam NUM = 4'h6;
     localparam LNUM = 4'hC;
     reg [3:0] num;
+    reg [31:0] cnt;
 
     reg [3:0] prev_data_idx;
     wire [3:0] data_idx;
@@ -99,93 +103,97 @@ module console(
     
     always@(*) begin
         case(state)
-            MAIN_IDLE: next_state <= LINK_WAIT;
+            MAIN_IDLE: next_state = MAIN_WORK;
+            MAIN_WORK: begin
+                if(cnt + 1'b1 >= TIME_100MS) next_state = LINK_WAIT;
+                else next_state = MAIN_WORK;
+            end
 
             LINK_WAIT: begin
-                if(num >= LNUM - 1'b1) next_state <= LINK_TAKE;
-                else next_state <= LINK_WAIT;
+                if(num >= LNUM - 1'b1) next_state = LINK_TAKE;
+                else next_state = LINK_WAIT;
             end
-            LINK_TAKE: next_state <= LINK_SEND;
+            LINK_TAKE: next_state = LINK_SEND;
             LINK_SEND: begin
-                if(fd_adc_tran && fd_com_send) next_state <= LINK_DONE;
-                else if(fd_com_txer) next_state <= LINK_WAIT;
-                else next_state <= LINK_SEND;
+                if(fd_adc_tran && fd_com_send) next_state = LINK_DONE;
+                else if(fd_com_txer) next_state = LINK_WAIT;
+                else next_state = LINK_SEND;
             end
-            LINK_DONE: next_state <= MAIN_WAIT;
+            LINK_DONE: next_state = MAIN_WAIT;
 
             MAIN_WAIT: begin
-                if(fs_com_read) next_state <= MAIN_TAKE;
-                else next_state <= MAIN_WAIT;
+                if(fs_com_read) next_state = MAIN_TAKE;
+                else next_state = MAIN_WAIT;
             end
             MAIN_TAKE: begin
-                if(read_btype == BAG_DIDX) next_state <= TYPE_IDLE;
-                else if(read_btype == BAG_DPARAM) next_state <= CONF_IDLE;
-                else if(read_btype == BAG_DDIDX) next_state <= MAIN_DATA;
-                else next_state <= EROR_IDLE;
+                if(read_btype == BAG_DIDX) next_state = TYPE_IDLE;
+                else if(read_btype == BAG_DPARAM) next_state = CONF_IDLE;
+                else if(read_btype == BAG_DDIDX) next_state = MAIN_DATA;
+                else next_state = EROR_IDLE;
             end
             MAIN_DATA: begin
-                if(data_idx != prev_data_idx) next_state <= CONV_IDLE;
-                else next_state <= SEND_IDLE;
+                if(data_idx != prev_data_idx) next_state = CONV_IDLE;
+                else next_state = SEND_IDLE;
             end
 
             TYPE_IDLE: begin
-                if(~fs_com_read) next_state <= TYPE_WORK;
-                else next_state <= TYPE_IDLE;
+                if(~fs_com_read) next_state = TYPE_WORK;
+                else next_state = TYPE_IDLE;
             end
             TYPE_WORK: begin
-                if(fd_adc_type) next_state <= TYPE_TAKE;
-                else next_state <= TYPE_WORK;
+                if(fd_adc_type) next_state = TYPE_TAKE;
+                else next_state = TYPE_WORK;
             end
-            TYPE_TAKE: next_state <= TYPE_SEND;
+            TYPE_TAKE: next_state = TYPE_SEND;
             TYPE_SEND: begin
-                if(fd_adc_tran && fd_com_send) next_state <= TYPE_DONE;
-                else next_state <= TYPE_SEND;
+                if(fd_adc_tran && fd_com_send) next_state = TYPE_DONE;
+                else next_state = TYPE_SEND;
             end
-            TYPE_DONE: next_state <= MAIN_WAIT;
+            TYPE_DONE: next_state = MAIN_WAIT;
 
             CONF_IDLE: begin
-                if(~fs_com_read) next_state <= CONF_WORK;
-                else next_state <= CONF_IDLE;
+                if(~fs_com_read) next_state = CONF_WORK;
+                else next_state = CONF_IDLE;
             end
             CONF_WORK: begin
-                if(fd_adc_conf) next_state <= CONF_TAKE;
-                else next_state <= CONF_WORK;
+                if(fd_adc_conf) next_state = CONF_TAKE;
+                else next_state = CONF_WORK;
             end
-            CONF_TAKE: next_state <= CONF_SEND;
+            CONF_TAKE: next_state = CONF_SEND;
             CONF_SEND: begin
-                if(fd_adc_tran && fd_com_send) next_state <= CONF_DONE;
-                else next_state <= CONF_SEND;
+                if(fd_adc_tran && fd_com_send) next_state = CONF_DONE;
+                else next_state = CONF_SEND;
             end
-            CONF_DONE: next_state <= MAIN_WAIT;
+            CONF_DONE: next_state = MAIN_WAIT;
 
             CONV_IDLE: begin
-                if(~fs_com_read) next_state <= CONV_TAKE;
-                else next_state <= CONV_IDLE;
+                if(~fs_com_read) next_state = CONV_TAKE;
+                else next_state = CONV_IDLE;
             end
-            CONV_TAKE: next_state <= CONV_SEND;
+            CONV_TAKE: next_state = CONV_SEND;
             CONV_SEND: begin
-                if(fd_adc_tran && fd_com_send) next_state <= CONV_DONE;
-                else next_state <= CONV_SEND;
+                if(fd_adc_tran && fd_com_send) next_state = CONV_DONE;
+                else next_state = CONV_SEND;
             end
             CONV_DONE: next_state <= MAIN_WAIT;
 
             SEND_IDLE: begin
-                if(~fs_com_read) next_state <= SEND_TAKE;
-                else next_state <= SEND_IDLE;
+                if(~fs_com_read) next_state = SEND_TAKE;
+                else next_state = SEND_IDLE;
             end
-            SEND_TAKE: next_state <= SEND_SEND;
+            SEND_TAKE: next_state = SEND_SEND;
             SEND_SEND: begin
-                if(fd_com_send) next_state <= SEND_DONE;
-                else next_state <= SEND_SEND;
+                if(fd_com_send) next_state = SEND_DONE;
+                else next_state = SEND_SEND;
             end
-            SEND_DONE: next_state <= MAIN_WAIT;
+            SEND_DONE: next_state = MAIN_WAIT;
 
             EROR_IDLE: begin
-                if(~fs_com_read) next_state <= MAIN_WAIT;
-                else next_state <= EROR_IDLE;
+                if(~fs_com_read) next_state = MAIN_WAIT;
+                else next_state = EROR_IDLE;
             end
 
-            default: next_state <= MAIN_IDLE;
+            default: next_state = MAIN_IDLE;
         endcase
     end
 
@@ -254,6 +262,14 @@ module console(
         else if(state == MAIN_DATA) prev_data_idx <= data_idx;
         else prev_data_idx <= prev_data_idx;
     end 
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) cnt <= 32'h00;
+        else if(state == MAIN_IDLE) cnt <= 32'h00;
+        else if(state == MAIN_WORK) cnt <= cnt + 1'b1;
+        else cnt <= 32'h00;
+    end
+
 
 
 endmodule

@@ -19,17 +19,17 @@ module com_cs(
     output reg [3:0] com_btype
 );
 
-    (*MARK_DEBUG = "true"*)reg [9:0] state; 
+    reg [9:0] state; 
     reg [9:0] next_state;
     localparam MAIN_IDLE = 10'h001, MAIN_WAIT = 10'h002;
     localparam READ_IDLE = 10'h004, READ_WAIT = 10'h008, READ_WORK = 10'h010, READ_DONE = 10'h020;
     localparam SEND_IDLE = 10'h040, SEND_WAIT = 10'h080, SEND_WORK = 10'h100, SEND_DONE = 10'h200;
 
-    (*MARK_DEBUG = "true"*)reg [31:0] time_cnt;
+    reg [31:0] time_cnt;
     reg [7:0] num_cnt;
 
     localparam NUM_OUT = 8'h03;
-    localparam TIMEOUT = 32'd450; // 6us here
+    localparam TIMEOUT = 32'd750; // 10us here
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_WAIT);
@@ -74,7 +74,12 @@ module com_cs(
             SEND_WAIT: begin
                 if(num_cnt >= NUM_OUT - 1'b1) next_state <= SEND_DONE;
                 else if(time_cnt >= TIMEOUT - 1'b1) next_state <= SEND_IDLE;
+                else if(fs_com_read) next_state <= SEND_WORK;
                 else next_state <= SEND_WAIT;
+            end
+            SEND_WORK: begin
+                if(~fs_com_read) next_state <= SEND_DONE;
+                else next_state <= SEND_WORK;
             end
             SEND_DONE: begin
                 if(~fs_send) next_state <= MAIN_IDLE;

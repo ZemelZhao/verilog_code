@@ -52,9 +52,4 @@ module spi2fifo(
         endcase
     end
 
-
-
-
-
-
 endmodule

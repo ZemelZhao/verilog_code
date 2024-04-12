@@ -14,10 +14,10 @@ module com_cs(
     input [11:0] send_dlen,
     input [11:0] ram_addr_init,
 
-    output fs_tx,
-    input fd_tx,
-    input fs_rx,
-    output fd_rx,
+    (*MARK_DEBUG = "true"*)output fs_tx,
+    (*MARK_DEBUG = "true"*)input fd_tx,
+    (*MARK_DEBUG = "true"*)input fs_rx,
+    (*MARK_DEBUG = "true"*)output fd_rx,
 
     output reg [3:0] tx_btype,
     output reg [11:0] tx_ram_init,
@@ -26,11 +26,11 @@ module com_cs(
     (*MARK_DEBUG = "true"*)input [3:0] rx_btype
 );
 
-    localparam TIMEOUT = 8'h80;
+    localparam TIMEOUT = 8'h40;
     localparam NUMOUT = 8'h0A;
 
     localparam BAG_INIT = 4'b0000;
-    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
+    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_RLY = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_ERROR = 4'b1111, BAG_LINK = 4'b1001;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
@@ -42,23 +42,24 @@ module com_cs(
     reg [15:0] next_state;
     reg [15:0] state_goto;
 
-    (*MARK_DEBUG = "true"*)reg [31:0] fail_num;
-    (*MARK_DEBUG = "true"*)reg [63:0] time_num;
+    reg [31:0] fail_num;
+    reg [63:0] time_num;
 
     localparam MAIN_IDLE = 16'h0101, MAIN_WAIT = 16'h0102;
     localparam SEND_PREP = 16'h0201, SEND_DATA = 16'h0202, SEND_DONE = 16'h0204, SEND_FAIL = 16'h0208;
     localparam READ_PREP = 16'h0401, READ_DATA = 16'h0402, READ_DONE = 16'h0404;
     localparam RANS_WAIT = 16'h0801, RANS_TOUT = 16'h0802, RANS_TAKE = 16'h0804, RANS_DONE = 16'h0808;
-    localparam WANS_PREP = 16'h1001, WANS_DONE = 16'h1002;
+    localparam WANS_PREP = 16'h1001, WANS_WORK = 16'h1002, WANS_WAIT = 16'h1004, WANS_DONE = 16'h1008;
+    localparam WANS_TAKE = 16'h2001;
 
-    reg [7:0] time_cnt; 
+    (*MARK_DEBUG = "true"*)reg [7:0] time_cnt; 
     (*MARK_DEBUG = "true"*)reg [7:0] num_cnt;
 
     assign fd_send = (state == SEND_DONE) || (state == SEND_FAIL);
     assign fd_txer = (state == SEND_FAIL);
     assign fs_read = (state == READ_DONE);
-    assign fs_tx = (state == SEND_DATA) || (state == WANS_DONE);
-    assign fd_rx = (state == RANS_DONE) || (state == READ_DATA);
+    assign fs_tx = (state == SEND_DATA) || (state == WANS_WORK);
+    assign fd_rx = (state == RANS_DONE) || (state == READ_DATA) || (state == WANS_DONE);
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -80,12 +81,12 @@ module com_cs(
                 else next_state <= SEND_DATA;
             end
             RANS_WAIT: begin
-                if(time_cnt >= TIMEOUT- 1'b1) next_state <= RANS_TOUT; 
-                else if(fs_rx) next_state <= RANS_TAKE;
+                if(fs_rx) next_state <= RANS_TAKE;
+                else if(time_cnt + 1'b1 >= TIMEOUT) next_state <= RANS_TOUT; 
                 else next_state <= RANS_WAIT;
             end
             RANS_TOUT: begin
-                if(num_cnt >= NUMOUT - 1'b1) next_state <= SEND_FAIL;
+                if(num_cnt + 1'b1 >= NUMOUT) next_state <= SEND_FAIL;
                 else next_state <= SEND_DATA;
             end
             RANS_TAKE: next_state <= RANS_DONE;
@@ -108,14 +109,24 @@ module com_cs(
                 else next_state <= READ_DATA;
             end
             WANS_PREP: begin
-                if(rx_btype == BAG_DIDX) next_state <= WANS_DONE;
-                else if(rx_btype == BAG_DPARAM) next_state <= WANS_DONE;
-                else if(rx_btype == BAG_DDIDX) next_state <= WANS_DONE;
-                else if(rx_btype == BAG_LINK) next_state <= WANS_DONE;
+                if(rx_btype == BAG_DIDX) next_state <= WANS_WORK;
+                else if(rx_btype == BAG_DPARAM) next_state <= WANS_WORK;
+                else if(rx_btype == BAG_DDIDX) next_state <= WANS_WORK;
+                else if(rx_btype == BAG_LINK) next_state <= WANS_WORK;
                 else next_state <= MAIN_WAIT;
             end
+            WANS_WORK: begin
+                if(fd_tx) next_state <= WANS_WAIT;
+                else next_state <= WANS_WORK;
+            end
+            WANS_WAIT: begin
+                if(fs_rx) next_state <= WANS_TAKE;
+                else if(time_cnt >= TIMEOUT - 1'b1) next_state <= WANS_WORK;
+                else next_state <= WANS_WAIT;
+            end
+            WANS_TAKE: next_state <= WANS_DONE;
             WANS_DONE: begin
-                if(fd_tx) next_state <= READ_DONE;
+                if(~fs_rx) next_state <= state_goto;
                 else next_state <= WANS_DONE;
             end
             READ_DONE: begin
@@ -135,6 +146,8 @@ module com_cs(
         else if(state == RANS_TAKE && rx_btype == BAG_NAK && num_cnt >= NUMOUT - 1'b1) state_goto <= SEND_FAIL;
         else if(state == RANS_TAKE && rx_btype == BAG_NAK) state_goto <= SEND_DATA;
         else if(state == RANS_TAKE) state_goto <= SEND_DONE;
+        else if(state == WANS_TAKE && rx_btype == BAG_RLY) state_goto <= READ_DONE;
+        else if(state == WANS_TAKE) state_goto <= WANS_WORK;
         else state_goto <= state_goto;
     end
 
@@ -179,6 +192,7 @@ module com_cs(
         else if(state == MAIN_WAIT) time_cnt <= 8'h00;
         else if(state == RANS_WAIT) time_cnt <= time_cnt + 1'b1;
         else if(state == READ_DONE) time_cnt <= time_cnt + 1'b1;
+        else if(state == WANS_WAIT) time_cnt <= time_cnt + 1'b1;
         else time_cnt <= 8'h00;
     end
 

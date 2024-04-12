@@ -14,12 +14,12 @@ module usb_tx(
     localparam NLEN = 4'h2, PLEN = 4'h0;
 
     localparam BAG_INIT = 4'b0000;
-    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
+    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_RLY = 4'b0011;
     localparam BAG_LINK = 4'b0100;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
 
     localparam PID_INIT = 8'h00, PID_SYNC = 8'h01, PID_PREM = 8'h5A;
-    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
+    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_RLY = 8'hE1;
     localparam PID_CMD = 8'h1E;
 
     localparam HEAD_DDIDX = 4'h1, HEAD_DPARAM = 4'h5, HEAD_DIDX = 4'h9;
@@ -28,7 +28,8 @@ module usb_tx(
     reg [3:0] num;
     reg [7:0] dlen;
 
-    reg [7:0] state, next_state;
+    reg [7:0] state; 
+    reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, WORK = 8'h02, DONE = 8'h03;
     localparam DNUM = 8'h04;
     localparam SYNC = 8'h08, WPID = 8'h09, WCMD = 8'h0A, CRC5 = 8'h0B;
@@ -72,7 +73,7 @@ module usb_tx(
             WPID: begin
                 if(btype == BAG_ACK) next_state <= DONE;
                 else if(btype == BAG_NAK) next_state <= DONE;
-                else if(btype == BAG_STL) next_state <= DONE;
+                else if(btype == BAG_RLY) next_state <= DONE;
                 else next_state <= DNUM;
             end
 
@@ -131,7 +132,7 @@ module usb_tx(
         else if(state == WAIT) pid <= PID_INIT;
         else if(state == SYNC && btype == BAG_ACK) pid <= PID_ACK;
         else if(state == SYNC && btype == BAG_NAK) pid <= PID_NAK;
-        else if(state == SYNC && btype == BAG_STL) pid <= PID_STL;
+        else if(state == SYNC && btype == BAG_RLY) pid <= PID_RLY;
         else if(state == SYNC && btype == BAG_LINK) pid <= PID_CMD;
         else if(state == SYNC && btype == BAG_DIDX) pid <= PID_CMD;
         else if(state == SYNC && btype == BAG_DDIDX) pid <= PID_CMD;

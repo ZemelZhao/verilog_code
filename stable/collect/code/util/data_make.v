@@ -260,9 +260,11 @@ module data_make(
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_idx <= 4'h0;
+        else if(state == MAIN_IDLE) data_idx <= 4'h0;
         else if(state == DATA_IDLE && data_idx == DATA_IDX) data_idx <= 4'h0;
         else if(state == DATA_IDLE) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;
     end
+
 
 endmodule

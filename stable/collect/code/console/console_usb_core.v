@@ -103,6 +103,7 @@ module console_usb_core(
 
     always@(posedge clk or posedge rst) begin
         if(rst) data_idx <= DATA_IDX;
+        else if(state == MAIN_IDLE) data_idx <= DATA_IDX;
         else if(state == CONV_WAIT && data_idx == DATA_IDX) data_idx <= 4'h0;
         else if(state == CONV_WAIT) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;

@@ -2,9 +2,9 @@ module com_rxf(
     input clk,
     input rst,
 
-    input din,
-    input fire,
-    output reg [7:0] dout
+    (*MARK_DEBUG = "true"*)input din,
+    (*MARK_DEBUG = "true"*)input fire,
+    (*MARK_DEBUG = "true"*)output reg [7:0] dout
 );
 
     localparam SYNC_DATA = 8'h01;

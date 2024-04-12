@@ -10,12 +10,12 @@ module console(
     input fd_adc_conf,
 
     output fs_adc_conv,
-    (*MARK_DEBUG = "true"*)input fd_adc_conv,
+    input fd_adc_conv,
     output fs_adc_tran,
-    (*MARK_DEBUG = "true"*)input fd_adc_tran,
+    input fd_adc_tran,
 
     output fs_com_send,
-    (*MARK_DEBUG = "true"*)input fd_com_send,
+    input fd_com_send,
     input fd_com_txer,
     input fs_com_read,
     output fd_com_read,

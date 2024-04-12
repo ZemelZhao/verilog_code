@@ -222,11 +222,4 @@ module data_make(
         endcase
     end
 
-
-
-
-
-
-
-
 endmodule

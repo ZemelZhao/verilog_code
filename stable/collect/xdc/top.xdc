@@ -36,8 +36,8 @@ set_property PACKAGE_PIN G29 [get_ports {led_n[7]}]
 
 ##############TRGG define##################
 set_property IOSTANDARD LVCMOS33 [get_ports {pin_trgg[*]}]
-set_property PACKAGE_PIN J29 [get_ports  {pin_trgg[0]}] 
-set_property PACKAGE_PIN J27 [get_ports  {pin_trgg[1]}] 
+set_property PACKAGE_PIN J29 [get_ports {pin_trgg[0]}]
+set_property PACKAGE_PIN J27 [get_ports {pin_trgg[1]}]
 
 set_property IOSTANDARD LVCMOS33 [get_ports {pin_miso[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {pin_mosi[*]}]
@@ -110,9 +110,23 @@ set_property IOSTANDARD LVDS_25 [get_ports {u_txd_p[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {u_txen[*]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {u_rxdv[*]}]
 
-set_property PULLUP true [get_ports {u_rxdv[*]}]
+set_property PULLUP true [get_ports {u_rxdv[0]}]
+set_property PULLUP true [get_ports {u_rxdv[1]}]
+set_property PULLUP true [get_ports {u_rxdv[2]}]
+set_property PULLUP true [get_ports {u_rxdv[3]}]
+set_property PULLUP true [get_ports {u_rxdv[4]}]
+set_property PULLUP true [get_ports {u_rxdv[5]}]
+set_property PULLUP true [get_ports {u_rxdv[6]}]
+set_property PULLUP true [get_ports {u_rxdv[7]}]
 set_property SLEW FAST [get_ports {u_txen[*]}]
-set_property PULLUP true [get_ports {u_txen[*]}]
+set_property PULLUP true [get_ports {u_txen[0]}]
+set_property PULLUP true [get_ports {u_txen[1]}]
+set_property PULLUP true [get_ports {u_txen[2]}]
+set_property PULLUP true [get_ports {u_txen[3]}]
+set_property PULLUP true [get_ports {u_txen[4]}]
+set_property PULLUP true [get_ports {u_txen[5]}]
+set_property PULLUP true [get_ports {u_txen[6]}]
+set_property PULLUP true [get_ports {u_txen[7]}]
 set_property DRIVE 16 [get_ports {u_txen[*]}]
 
 set_property PACKAGE_PIN L15 [get_ports {u_rxd_p[0]}]
@@ -174,5 +188,7 @@ set_property PACKAGE_PIN C24 [get_ports {u_rxdv[4]}]
 set_property PACKAGE_PIN B24 [get_ports {u_rxdv[5]}]
 set_property PACKAGE_PIN C30 [get_ports {u_rxdv[6]}]
 set_property PACKAGE_PIN D29 [get_ports {u_rxdv[7]}]
+
+
 
 

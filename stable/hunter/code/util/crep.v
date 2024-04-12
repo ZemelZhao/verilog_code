@@ -22,8 +22,8 @@ module crep(
 
     input [3:0] pin_txd,
     output pin_rxd,
-    (*MARK_DEBUG = "true"*)input fire_send,
-    (*MARK_DEBUG = "true"*)output fire_read,
+    input fire_send,
+    output fire_read,
 
     input [3:0] pin_cs,
     input [3:0] pin_sclk,

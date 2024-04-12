@@ -59,11 +59,12 @@ module usb(
 
         .fs_tx(fs_tx),
         .fd_tx(fd_tx),
-        .tx_btype(tx_btype),
-
         .fs_rx(fs_rx),
         .fd_rx(fd_rx),
+
+        .tx_btype(tx_btype),
         .rx_btype(rx_btype),
+        .cache_cmd(cache_cmd),
         .rx_ram_init(rx_ram_init)
     );
 

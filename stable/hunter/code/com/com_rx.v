@@ -13,12 +13,12 @@ module com_rx(
 );
 
     localparam BAG_INIT = 4'b0000;
-    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
+    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_RLY = 4'b0011;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_ERROR = 4'b1111, BAG_LINK = 4'b1001;
 
     localparam PID_SYNC = 8'h01, PID_CMD = 8'h1E; 
-    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
+    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_RLY = 8'hE1;
 
     localparam HEAD_DDIDX = 4'h1, HEAD_DPARAM = 4'h5, HEAD_DIDX = 4'h9;
 
@@ -63,7 +63,7 @@ module com_rx(
                 if(com_rxd == PID_CMD) next_state <= DNUM;
                 else if(com_rxd == PID_ACK) next_state <= REST;
                 else if(com_rxd == PID_NAK) next_state <= REST;
-                else if(com_rxd == PID_STL) next_state <= REST;
+                else if(com_rxd == PID_RLY) next_state <= REST;
                 else next_state <= EROR;
             end
             DNUM: begin
@@ -114,7 +114,7 @@ module com_rx(
         else if(state == WAIT) btype <= BAG_INIT;
         else if(state == RPID && com_rxd == PID_ACK) btype <= BAG_ACK; 
         else if(state == RPID && com_rxd == PID_NAK) btype <= BAG_NAK; 
-        else if(state == RPID && com_rxd == PID_STL) btype <= BAG_STL; 
+        else if(state == RPID && com_rxd == PID_RLY) btype <= BAG_RLY; 
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DIDX) btype <= BAG_DIDX;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DDIDX) btype <= BAG_DDIDX;
         else if(state == WORK && num == 16'h0000 && com_rxd[7:4] == HEAD_DPARAM) btype <= BAG_DPARAM;

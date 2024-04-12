@@ -18,7 +18,7 @@ module usb_rx(
 );
 
     localparam PID_INIT = 8'h00, PID_SYNC = 8'h0F;
-    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5, PID_STL = 8'hE1;
+    localparam PID_ACK = 8'h2D, PID_NAK = 8'hA5;
     localparam PID_STAT = 8'hD2, PID_DATA0 = 8'h96, PID_DATA1 = 8'h5A;
 
     localparam BAG_INIT = 4'b0000; 
@@ -36,8 +36,8 @@ module usb_rx(
     reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, EROR = 8'h02, DONE = 8'h03;
-    localparam RPID = 8'h04, RACK = 8'h05, RNAK = 8'h06, RSTL = 8'h07;
-    localparam REST = 8'h08;
+    localparam RPID = 8'h04, RACK = 8'h05, RNAK = 8'h06;
+    localparam REST = 8'h0A; 
     localparam SNUM0 = 8'h10, SNUM1 = 8'h11, STAT0 = 8'h12, STAT1 = 8'h13;
     localparam DNUM0 = 8'h20, DNUM1 = 8'h21, HEAD0 = 8'h22, HEAD1 = 8'h23;
     localparam PDATA = 8'h24, RDATA = 8'h25;
@@ -57,7 +57,6 @@ module usb_rx(
     assign fs = (state == DONE);
     assign cache_stat = {device_temp, device_type, device_stat, device_idx, data_idx, 4'h0};
     assign cin = usb_rxd;
-
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -84,7 +83,6 @@ module usb_rx(
             RPID: begin
                 if(usb_rxd == PID_ACK) next_state <= RACK;
                 else if(usb_rxd == PID_NAK) next_state <= RNAK;
-                else if(usb_rxd == PID_STL) next_state <= RSTL;
                 else if(usb_rxd == PID_STAT) next_state <= SNUM0;
                 else if(usb_rxd == PID_DATA0) next_state <= DNUM0;
                 else if(usb_rxd == PID_DATA1) next_state <= DNUM0;
@@ -93,7 +91,6 @@ module usb_rx(
 
             RACK: next_state <= REST;
             RNAK: next_state <= REST;
-            RSTL: next_state <= REST;
 
             SNUM0: next_state <= SNUM1;
             SNUM1: next_state <= STAT0;
@@ -167,7 +164,6 @@ module usb_rx(
         if(rst) btype <= BAG_INIT;
         else if(state == RACK) btype <= BAG_ACK;
         else if(state == RNAK) btype <= BAG_NAK;
-        else if(state == RSTL) btype <= BAG_STL;
         else if(state == STAT0 && usb_rxd[7:4] == HEAD_DLINK) btype <= BAG_DLINK; 
         else if(state == STAT0 && usb_rxd[7:4] == HEAD_DTYPE) btype <= BAG_DTYPE; 
         else if(state == STAT0 && usb_rxd[7:4] == HEAD_DTEMP) btype <= BAG_DTEMP; 
@@ -236,7 +232,6 @@ module usb_rx(
         else if(state == RDATA && num < data_len - 3'h4) cen <= 1'b1;
         else cen <= 1'b0;
     end
-
 
     crc5
     crc5_dut(

@@ -67,3 +67,4 @@ set_property PACKAGE_PIN C15 [get_ports {adc_cs[2]}]
 set_property PACKAGE_PIN B14 [get_ports {adc_cs[3]}]
 
 
+

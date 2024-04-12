@@ -7,7 +7,7 @@ module com_cc(
     output [3:0] pin_txd,
 
     (*MARK_DEBUG = "true"*)input pin_rxd,
-    output reg usb_rxd 
+    (*MARK_DEBUG = "true"*)output reg usb_rxd 
 );
 
     assign pin_txd = usb_txd;
@@ -18,7 +18,7 @@ module com_cc(
     localparam IDLE = 4'h4, WAIT = 4'h5;
     localparam W0 = 4'h0, W1 = 4'h1, W2 = 4'h2, W3 = 4'h3;
 
-    (*MARK_DEBUG = "true"*)reg rxd; 
+    reg rxd; 
     wire rst;
 
     (*MARK_DEBUG = "true"*)reg [2:0] lut;

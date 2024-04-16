@@ -6,6 +6,9 @@ module console_data(
     input fd,
     output reg [3:0] btype,
 
+    input [3:0] core_data_idx,
+    output [3:0] data_idx,
+
     input fs_com_send,
     input fs_com_read
 );
@@ -17,9 +20,15 @@ module console_data(
     
     localparam BTYPE_INIT = 4'h0, BTYPE_INFO = 4'h1, BTYPE_DATA = 4'hE;
 
+    localparam DATA_IDX_INIT = 4'h0, DATA_IDX_NUM = 4'h6;
+
     reg [1:0] fs_send_b, fs_read_b;
 
+    reg [3:0] ram_data_idx;
+
     assign fs = (state == WORK);
+
+    assign data_idx = (ram_data_idx >= DATA_IDX_NUM) ?ram_data_idx - DATA_IDX_NUM :ram_data_idx; 
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= IDLE;
@@ -63,5 +72,13 @@ module console_data(
         else if(state == STAT) btype <= BTYPE_INFO;
         else btype <= btype;
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) ram_data_idx <= DATA_IDX_INIT;
+        else if(state == IDLE) ram_data_idx <= DATA_IDX_INIT;
+        else if(state == DATA) ram_data_idx <= core_data_idx + 1'b1;
+        else ram_data_idx <= ram_data_idx;
+    end
+
 
 endmodule

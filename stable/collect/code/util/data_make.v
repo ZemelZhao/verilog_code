@@ -11,12 +11,24 @@ module data_make(
     input [31:0] trgg_rxd,
 
     output reg [14:0] ram_data_txa,
-    output reg [7:0] ram_data_txd,
+    (*MARK_DEBUG = "true"*)output reg [7:0] ram_data_txd,
     output reg ram_data_txen,
+
+    input [3:0] data_idx,
 
     output reg [11:0] ram_rxa,
     input [0:63] ram_rxd
 ); 
+
+    (*MARK_DEBUG = "true"*)reg [7:0] test0, test1, test2, test3;
+    (*MARK_DEBUG = "true"*)reg [7:0] test4, test5, test6, test7;
+    (*MARK_DEBUG = "true"*)wire same4, same5, same6, same7;
+
+    assign same4 = (test0 == test4);
+    assign same5 = (test0 == test5);
+    assign same6 = (test0 == test6);
+    assign same7 = (test0 == test7);
+
 
     localparam DATA_LATENCY = 4'h2;
     localparam DEVICE_NUM = 4'h8;
@@ -45,12 +57,9 @@ module data_make(
     localparam DATA_HEAD = 20'h01000, DATA_REST = 20'h02000, DATA_DOOR = 20'h04000, DATA_CRIT = 20'h08000;
     localparam DATA_MAKE = 20'h10000, DATA_LAST = 20'h20000, DATA_TRGG = 20'h40000;
 
-    reg [7:0] hlen; 
     reg [11:0] dlen;
     reg [11:0] num;
     reg [3:0] dev;
-
-    reg [3:0] data_idx;
 
     wire [1:0] dev_stat[0:7];
     wire [7:0] dev_temp[0:7];
@@ -242,7 +251,7 @@ module data_make(
         else if(state == DATA_TRGG && num == 8'h00) ram_data_txd <= trgg_rxd[31:24];
         else if(state == DATA_TRGG && num == 8'h01) ram_data_txd <= trgg_rxd[23:16];
         else if(state == DATA_TRGG && num == 8'h02) ram_data_txd <= trgg_rxd[15:8];
-        else if(state == DATA_TRGG && num == 8'h03) ram_data_txd <= trgg_rxd[7:0];
+        else if(state == DATA_TRGG && num == 8'h03) ram_data_txd <= {trgg_rxd[7:4], same4, same5, same6, same7}; // 
         else if(state == DATA_WORK) ram_data_txd <= 8'h00;
         else if(state == MAIN_WAIT) ram_data_txd <= 8'h00;
         else if(state == DATA_DONE) ram_data_txd <= 8'h00;
@@ -259,12 +268,59 @@ module data_make(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_idx <= 4'h0;
-        else if(state == MAIN_IDLE) data_idx <= 4'h0;
-        else if(state == DATA_IDLE && data_idx == DATA_IDX) data_idx <= 4'h0;
-        else if(state == DATA_IDLE) data_idx <= data_idx + 1'b1;
-        else data_idx <= data_idx;
+        if(rst) test0 <= 8'h00;
+        else if(state == MAIN_IDLE) test0 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test0 <= ram_data_txd;
+        else test0 <= test0;
     end
 
+    always@(posedge clk or posedge rst) begin
+        if(rst) test1 <= 8'h00;
+        else if(state == MAIN_IDLE) test1 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test1 <= test0;
+        else test1 <= test1;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test2 <= 8'h00;
+        else if(state == MAIN_IDLE) test2 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test2 <= test1;
+        else test2 <= test2;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test3 <= 8'h00;
+        else if(state == MAIN_IDLE) test3 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test3 <= test2;
+        else test3 <= test3;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test4 <= 8'h00;
+        else if(state == MAIN_IDLE) test4 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test4 <= test3;
+        else test4 <= test4;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test5 <= 8'h00;
+        else if(state == MAIN_IDLE) test5 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test5 <= test4;
+        else test5 <= test5;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test6 <= 8'h00;
+        else if(state == MAIN_IDLE) test6 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test6 <= test5;
+        else test6 <= test6;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test7 <= 8'h00;
+        else if(state == MAIN_IDLE) test7 <= 8'h00;
+        else if(state == DATA_WORK && dev == 4'h0 && num == 12'h001) test7 <= test6;
+        else test7 <= test7;
+    end
 
 endmodule

@@ -31,7 +31,9 @@ module com(
     input [7:0] ram_cmd_rxd,
 
     output [3:0] com_btype,
-    output [51:0] cache_cmd
+    output [51:0] cache_cmd,
+
+    input [3:0] data_idx
 );
 
     wire fs_eth_read, fd_eth_read;
@@ -42,7 +44,6 @@ module com(
 
     wire fs_com_send, fd_com_send;
     wire fs_com_read, fd_com_read;
-    wire [3:0] data_idx;
 
     wire [3:0] com_tx_btype, com_rx_btype;
     wire [15:0] ram_cmd_dlen;
@@ -141,7 +142,6 @@ module com(
         .com_tx_btype(com_tx_btype),
         .com_rx_btype(com_rx_btype),
 
-        .data_idx(data_idx),
         .com_btype(com_btype)
     );
 

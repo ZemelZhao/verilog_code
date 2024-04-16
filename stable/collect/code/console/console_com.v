@@ -12,6 +12,9 @@ module console_com(
     input fs_com_read,
     output fd_com_read,
 
+    input [3:0] core_data_idx,
+    output [3:0] data_idx,
+
     input [3:0] com_btype,
     output reg [1:0] com_state
 );
@@ -30,12 +33,18 @@ module console_com(
 
     localparam TIMEOUT = 8'h80;
 
+    localparam DATA_IDX_INIT = 4'h0, DATA_IDX_NUM = 4'h6;
+
     reg [7:0] num;
+
+    reg [3:0] com_data_idx;
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_WAIT);
     assign fs_com_send = (state == SEND_WAIT);
     assign fd_com_read = (state == READ_DONE);
+
+    assign data_idx = (com_data_idx >= DATA_IDX_NUM) ?com_data_idx - DATA_IDX_NUM :com_data_idx; 
 
     always@(posedge clk or posedge rst) begin
         if(rst) state <= MAIN_IDLE;
@@ -90,6 +99,13 @@ module console_com(
         if(rst) num <= 8'h00;
         else if(state == READ_WAIT) num <= num + 1'b1;
         else num <= 8'h00;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) com_data_idx <= DATA_IDX_INIT;
+        else if(state == MAIN_IDLE) com_data_idx <= DATA_IDX_INIT;
+        else if(state == SEND_IDLE) com_data_idx <= core_data_idx;
+        else com_data_idx <= com_data_idx;
     end
 
 

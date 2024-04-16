@@ -22,6 +22,8 @@ module console_usb(
     input [0:255] usb_stat,
     output [0:79] dev_stat,
 
+    input [3:0] core_data_idx,
+
     output [12:0] com_dlen
 );
 
@@ -54,6 +56,7 @@ module console_usb(
         .send_btype(send_btype),
         .read_btype(read_btype),
 
+        .core_data_idx(core_data_idx),
         .data_idx(data_idx),
         .device_idx(device_idx)
     );

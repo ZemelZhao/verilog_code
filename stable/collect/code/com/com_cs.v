@@ -15,7 +15,6 @@ module com_cs(
     output reg [3:0] com_tx_btype,
     input [3:0] com_rx_btype,
 
-    output reg [3:0] data_idx,
     output reg [3:0] com_btype
 );
 
@@ -103,13 +102,6 @@ module com_cs(
         if(rst) time_cnt <= 32'h00;
         else if(state == SEND_WAIT) time_cnt <= time_cnt + 1'b1;
         else time_cnt <= 32'h00;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) data_idx <= DATA_IDX;
-        else if(state == MAIN_WAIT && fs_send && data_idx == DATA_IDX) data_idx <= 4'h0;
-        else if(state == MAIN_WAIT && fs_send) data_idx <= data_idx + 1'b1;
-        else data_idx <= data_idx;
     end
 
     always@(posedge clk or posedge rst) begin

@@ -78,6 +78,8 @@ module top(
 
     wire rst;
 
+    wire [3:0] com_data_idx, ram_data_idx;
+
     assign led_n[7] = |dev_stat[0:1] ?1'b0 : 1'b1;
     assign led_n[6] = |dev_stat[10:11] ?1'b0 : 1'b1;
     assign led_n[5] = |dev_stat[20:21] ?1'b0 : 1'b1;
@@ -123,6 +125,9 @@ module top(
         .com_dlen(com_dlen),
         .data_btype(data_btype),
 
+        .com_data_idx(com_data_idx),
+        .ram_data_idx(ram_data_idx),
+
         .trgg_info(trgg_cmd)
     );
 
@@ -149,6 +154,8 @@ module top(
         .ram_cmd_txd(ram_cmd_txd),
         .ram_cmd_rxa(ram_cmd_rxa),
         .ram_cmd_rxd(ram_cmd_rxd),
+
+        .data_idx(com_data_idx),
 
         .e_mdc(e_mdc),
         .e_mdio(e_mdio),
@@ -235,6 +242,8 @@ module top(
 
         .ram_rxa(ram_usb_rxa),
         .ram_rxd(ram_usb_rxd),
+
+        .data_idx(ram_data_idx),
 
         .ram_data_txa(ram_data_txa),
         .ram_data_txd(ram_data_txd),

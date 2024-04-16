@@ -15,13 +15,16 @@ module console_usb_core(
     output reg [3:0] send_btype,
     output reg [3:0] read_btype,
 
-    output reg [3:0] data_idx,
+    input [3:0] core_data_idx,
+    output [3:0] data_idx,
     output [31:0] device_idx
 );
 
     localparam DATA_IDX = 4'h5;
     localparam DEVICE_IDX = 32'h13579BDF;
     localparam LINK_NUM = 32'd7_500_000;
+
+    localparam DATA_IDX_INIT = 4'h0, DATA_IDX_NUM = 4'h6;
 
     reg [31:0] num;
 
@@ -36,6 +39,10 @@ module console_usb_core(
     localparam BAG_INIT = 4'b0000;
     localparam BAG_DCONF = 4'b0001, BAG_DCONV = 4'b1001, BAG_CLINK = 4'b1011;
     localparam BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010, BAG_DATA = 4'b0101;
+
+    reg [3:0] usb_data_idx;
+
+    assign data_idx = (usb_data_idx >= DATA_IDX_NUM) ?usb_data_idx - DATA_IDX_NUM :usb_data_idx; 
 
     assign fd_conf = (state == CONF_DONE);
     assign fd_conv = (state == CONV_DONE);
@@ -102,12 +109,12 @@ module console_usb_core(
     end
 
     always@(posedge clk or posedge rst) begin
-        if(rst) data_idx <= DATA_IDX;
-        else if(state == MAIN_IDLE) data_idx <= DATA_IDX;
-        else if(state == CONV_WAIT && data_idx == DATA_IDX) data_idx <= 4'h0;
-        else if(state == CONV_WAIT) data_idx <= data_idx + 1'b1;
-        else data_idx <= data_idx;
+        if(rst) usb_data_idx <= DATA_IDX_INIT;
+        else if(state == MAIN_IDLE) usb_data_idx <= DATA_IDX_INIT;
+        else if(state == CONV_IDLE) usb_data_idx <= 4'h2 + core_data_idx; 
+        else usb_data_idx <= usb_data_idx;
     end
+
 
     always@(posedge clk or posedge rst) begin
         if(rst) send_btype <= BAG_INIT;

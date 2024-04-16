@@ -32,6 +32,9 @@ module console(
     output [12:0] com_dlen,
     output [3:0] data_btype,
 
+    output [3:0] com_data_idx,
+    output [3:0] ram_data_idx,
+
     output [39:0] trgg_info
 ); 
 
@@ -42,6 +45,8 @@ module console(
     wire fs_trgg, fd_trgg;
 
     wire tick;
+
+    wire [3:0] core_data_idx;
 
     wire [1:0] com_state;
     wire [3:0] fsamp;
@@ -72,6 +77,8 @@ module console(
         .fd_trgg(fd_trgg),
 
         .tick(tick),
+        .data_idx(core_data_idx),
+
         .com_state(com_state)
     );
 
@@ -89,6 +96,9 @@ module console(
         .fd_com_send(fd_com_send),
         .fs_com_read(fs_com_read),
         .fd_com_read(fd_com_read),
+
+        .core_data_idx(core_data_idx),
+        .data_idx(com_data_idx),
 
         .com_btype(com_btype),
         .com_state(com_state)
@@ -117,6 +127,8 @@ module console(
         .usb_cmd(usb_cmd),
         .usb_stat(usb_stat),
         .dev_stat(dev_stat),
+        
+        .core_data_idx(core_data_idx),
 
         .com_dlen(com_dlen)
     );
@@ -146,7 +158,10 @@ module console(
         .fs_com_send(fs_com_send),
         .fs_com_read(fs_com_read),
 
-        .btype(data_btype)
+        .btype(data_btype),
+
+        .core_data_idx(core_data_idx),
+        .data_idx(ram_data_idx)
     );
 
     console_tick

@@ -16,12 +16,15 @@ module console_core(
     input fd_trgg,
 
     input tick,
+    output reg [3:0] data_idx,
 
     input [1:0] com_state
 );
 
     localparam COM_STATE_IDLE = 2'b00, COM_STATE_CONF = 2'b01;
     localparam COM_STATE_READ = 2'b10, COM_STATE_SAME = 2'b11;
+
+    localparam DATA_IDX_INIT = 4'h0, DATA_IDX_NUM = 4'h6;
 
     reg [11:0] state; 
     reg [11:0] next_state;
@@ -31,6 +34,7 @@ module console_core(
     localparam CONV_DONE = 12'h800;
 
     reg [1:0] tick_b;
+
 
     assign fs_conf = (state == CONF_WORK);
     assign fs_conv = (state == CONV_TAKE);
@@ -105,6 +109,15 @@ module console_core(
         else if(state == CONV_IDLE) fs_trgg <= 1'b1;
         else if(fd_trgg) fs_trgg <= 1'b0;
         else fs_trgg <= fs_trgg;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) data_idx <= DATA_IDX_INIT;
+        else if(state == MAIN_IDLE) data_idx <= DATA_IDX_INIT;
+        else if(state == CONV_IDLE) data_idx <= DATA_IDX_INIT;
+        else if(state == CONV_DONE && data_idx == DATA_IDX_NUM - 1'b1) data_idx <= DATA_IDX_INIT;
+        else if(state == CONV_DONE) data_idx <= data_idx + 1'b1;
+        else data_idx <= data_idx;
     end
 
 endmodule

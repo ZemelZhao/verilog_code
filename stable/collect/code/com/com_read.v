@@ -2,11 +2,11 @@ module com_read(
     input clk,
     input rst,
 
-    input fs_eth,
-    output fd_eth,
+    (*MARK_DEBUG = "true"*)input fs_eth,
+    (*MARK_DEBUG = "true"*)output fd_eth,
 
-    output fs,
-    input fd,
+    (*MARK_DEBUG = "true"*)output fs,
+    (*MARK_DEBUG = "true"*)input fd,
  
     output reg [7:0] rxa,
     input [7:0] rxd,

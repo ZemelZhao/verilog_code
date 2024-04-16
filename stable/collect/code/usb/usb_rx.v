@@ -12,9 +12,10 @@ module usb_rx(
 
     input [11:0] ram_txa_init,
 
-    output reg [11:0] ram_txa,
-    output reg [7:0] ram_txd,
-    output reg ram_txen
+    (*MARK_DEBUG = "true"*)output reg [11:0] ram_txa,
+    
+    (*MARK_DEBUG = "true"*)output reg [7:0] ram_txd,
+    (*MARK_DEBUG = "true"*)output reg ram_txen
 );
 
     localparam PID_INIT = 8'h00, PID_SYNC = 8'h0F;
@@ -33,11 +34,11 @@ module usb_rx(
 
     localparam RAM_ADDR_INIT = 12'h000;
 
-    reg [7:0] state; 
+    (*MARK_DEBUG = "true"*)reg [7:0] state; 
     reg [7:0] next_state;
     localparam IDLE = 8'h00, WAIT = 8'h01, EROR = 8'h02, DONE = 8'h03;
     localparam RPID = 8'h04, RACK = 8'h05, RNAK = 8'h06;
-    localparam REST = 8'h0A; 
+    localparam REST = 8'h0A; // 
     localparam SNUM0 = 8'h10, SNUM1 = 8'h11, STAT0 = 8'h12, STAT1 = 8'h13;
     localparam DNUM0 = 8'h20, DNUM1 = 8'h21, HEAD0 = 8'h22, HEAD1 = 8'h23;
     localparam PDATA = 8'h24, RDATA = 8'h25;
@@ -52,10 +53,19 @@ module usb_rx(
     wire [15:0] cout16;
 
     reg [11:0] data_len;
-    reg [11:0] num;
+    (*MARK_DEBUG = "true"*)reg [11:0] num;
+
+    (*MARK_DEBUG = "true"*)reg [7:0] test0, test1, test2, test3;
+    (*MARK_DEBUG = "true"*)reg [7:0] test4, test5, test6, test7;
+    (*MARK_DEBUG = "true"*)wire same4, same5, same6, same7;
+
+    assign same4 = (test0 == test4);
+    assign same5 = (test0 == test5);
+    assign same6 = (test0 == test6);
+    assign same7 = (test0 == test7);
 
     assign fs = (state == DONE);
-    assign cache_stat = {device_temp, device_type, device_stat, device_idx, data_idx, 4'h0};
+    assign cache_stat = {device_temp, device_type, device_stat, device_idx, data_idx, same4, same5, same6, same7};
     assign cin = usb_rxd;
 
     always@(posedge clk or posedge rst) begin
@@ -232,6 +242,64 @@ module usb_rx(
         else if(state == RDATA && num < data_len - 3'h4) cen <= 1'b1;
         else cen <= 1'b0;
     end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test0 <= 8'h00;
+        else if(state == IDLE) test0 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test0 <= ram_txd;
+        else test0 <= test0;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test1 <= 8'h00;
+        else if(state == IDLE) test1 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test1 <= test0;
+        else test1 <= test1;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test2 <= 8'h00;
+        else if(state == IDLE) test2 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test2 <= test1;
+        else test2 <= test2;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test3 <= 8'h00;
+        else if(state == IDLE) test3 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test3 <= test2;
+        else test3 <= test3;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test4 <= 8'h00;
+        else if(state == IDLE) test4 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test4 <= test3;
+        else test4 <= test4;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test5 <= 8'h00;
+        else if(state == IDLE) test5 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test5 <= test4;
+        else test5 <= test5;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test6 <= 8'h00;
+        else if(state == IDLE) test6 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test6 <= test5;
+        else test6 <= test6;
+    end
+
+    always@(posedge clk or posedge rst) begin
+        if(rst) test7 <= 8'h00;
+        else if(state == IDLE) test7 <= 8'h00;
+        else if(state == RDATA && num == 12'h000) test7 <= test6;
+        else test7 <= test7;
+    end
+
+
 
     crc5
     crc5_dut(

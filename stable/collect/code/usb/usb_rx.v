@@ -23,7 +23,7 @@ module usb_rx(
     localparam PID_STAT = 8'hD2, PID_DATA0 = 8'h96, PID_DATA1 = 8'h5A;
 
     localparam BAG_INIT = 4'b0000; 
-    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010, BAG_STL = 4'b0011;
+    localparam BAG_ACK = 4'b0001, BAG_NAK = 4'b0010;
     localparam BAG_DIDX = 4'b0101, BAG_DPARAM = 4'b0110, BAG_DDIDX = 4'b0111;
     localparam BAG_DLINK = 4'b1000, BAG_DTYPE = 4'b1001, BAG_DTEMP = 4'b1010;
     localparam BAG_DATA0 = 4'b1101, BAG_DATA1 = 4'b1110;
@@ -55,17 +55,8 @@ module usb_rx(
     reg [11:0] data_len;
     (*MARK_DEBUG = "true"*)reg [11:0] num;
 
-    (*MARK_DEBUG = "true"*)reg [7:0] test0, test1, test2, test3;
-    (*MARK_DEBUG = "true"*)reg [7:0] test4, test5, test6, test7;
-    (*MARK_DEBUG = "true"*)wire same4, same5, same6, same7;
-
-    assign same4 = (test0 == test4);
-    assign same5 = (test0 == test5);
-    assign same6 = (test0 == test6);
-    assign same7 = (test0 == test7);
-
     assign fs = (state == DONE);
-    assign cache_stat = {device_temp, device_type, device_stat, device_idx, data_idx, same4, same5, same6, same7};
+    assign cache_stat = {device_temp, device_type, device_stat, device_idx, data_idx, 4'h0};
     assign cin = usb_rxd;
 
     always@(posedge clk or posedge rst) begin
@@ -242,64 +233,6 @@ module usb_rx(
         else if(state == RDATA && num < data_len - 3'h4) cen <= 1'b1;
         else cen <= 1'b0;
     end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test0 <= 8'h00;
-        else if(state == IDLE) test0 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test0 <= ram_txd;
-        else test0 <= test0;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test1 <= 8'h00;
-        else if(state == IDLE) test1 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test1 <= test0;
-        else test1 <= test1;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test2 <= 8'h00;
-        else if(state == IDLE) test2 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test2 <= test1;
-        else test2 <= test2;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test3 <= 8'h00;
-        else if(state == IDLE) test3 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test3 <= test2;
-        else test3 <= test3;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test4 <= 8'h00;
-        else if(state == IDLE) test4 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test4 <= test3;
-        else test4 <= test4;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test5 <= 8'h00;
-        else if(state == IDLE) test5 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test5 <= test4;
-        else test5 <= test5;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test6 <= 8'h00;
-        else if(state == IDLE) test6 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test6 <= test5;
-        else test6 <= test6;
-    end
-
-    always@(posedge clk or posedge rst) begin
-        if(rst) test7 <= 8'h00;
-        else if(state == IDLE) test7 <= 8'h00;
-        else if(state == RDATA && num == 12'h000) test7 <= test6;
-        else test7 <= test7;
-    end
-
-
 
     crc5
     crc5_dut(

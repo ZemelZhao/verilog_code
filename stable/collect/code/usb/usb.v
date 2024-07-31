@@ -36,12 +36,22 @@ module usb(
     wire fs_tx, fd_tx;
     wire fs_rx, fd_rx;
 
-    wire [3:0] tx_btype, rx_btype;
-    wire [11:0] rx_ram_init;
+    wire fs_ram, fd_ram;
 
-    wire [7:0] ram_txd;
-    wire [11:0] ram_txa;
-    wire ram_txen;
+    wire [3:0] tx_btype, rx_btype;
+    wire [11:0] rx_ram_init, rm_ram_init;
+
+    wire [7:0] rx_ram_txd, rm_ram_txd; 
+    wire [11:0] rx_ram_txa, rm_ram_txa; 
+    wire rx_ram_txen, rm_ram_txen; 
+
+    (*MARK_DEBUG = "true"*)wire [7:0] ram_txd;
+    (*MARK_DEBUG = "true"*)wire [11:0] ram_txa;
+    (*MARK_DEBUG = "true"*)wire ram_txen;
+
+    assign ram_txd = rx_ram_txen ?rx_ram_txd :rm_ram_txd;
+    assign ram_txa = rx_ram_txen ?rx_ram_txa :rm_ram_txa;
+    assign ram_txen = rx_ram_txen ?rx_ram_txen :rm_ram_txen;
 
     usb_cs
     usb_cs_dut(
@@ -62,10 +72,14 @@ module usb(
         .fs_rx(fs_rx),
         .fd_rx(fd_rx),
 
+        .fs_ram(fs_ram),
+        .fd_ram(fd_ram),
+
         .tx_btype(tx_btype),
         .rx_btype(rx_btype),
         .cache_cmd(cache_cmd),
-        .rx_ram_init(rx_ram_init)
+        .rx_ram_init(rx_ram_init),
+        .rm_ram_init(rm_ram_init)
     );
 
     usb_rx
@@ -82,9 +96,9 @@ module usb(
         .cache_stat(cache_stat),
 
         .ram_txa_init(rx_ram_init),
-        .ram_txa(ram_txa),
-        .ram_txd(ram_txd),
-        .ram_txen(ram_txen)
+        .ram_txa(rx_ram_txa),
+        .ram_txd(rx_ram_txd),
+        .ram_txen(rx_ram_txen)
     );
 
     usb_tx
@@ -132,6 +146,20 @@ module usb(
 
         .usb_rxd(usb_rxd),
         .pin_rxd(pin_rxd)
+    );
+
+    usb_rm
+    usb_rm_dut(
+        .clk(usb_rxc),
+        .rst(rst),
+
+        .fs(fs_ram),
+        .fd(fd_ram),
+
+        .ram_txa_init(rm_ram_init),
+        .ram_txa(rm_ram_txa),
+        .ram_txd(rm_ram_txd),
+        .ram_txen(rm_ram_txen)
     );
 
     ram_usb

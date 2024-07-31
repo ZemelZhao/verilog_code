@@ -28,7 +28,7 @@ module com_cs(
     reg [7:0] num_cnt;
 
     localparam NUM_OUT = 8'h03;
-    localparam TIMEOUT = 32'd750; // 10us here
+    localparam TIMEOUT = 32'd750; // 20us here
 
     assign fd_send = (state == SEND_DONE);
     assign fs_read = (state == READ_WAIT);

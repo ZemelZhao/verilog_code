@@ -6,15 +6,15 @@ module console_tick(
     output tick
 );
 
-    localparam NUM_1S = 32'd75_000_000;
+    localparam NUM_1S = 32'd37_500_000;
 
-    localparam NUM_1KHZ = 32'd75_000, NUM_2KHZ = 32'd37_500;
-    localparam NUM_4KHZ = 32'd18_750, NUM_8KHZ = 32'd9_375;
-    localparam NUM_16KHZ0 = 32'd4_688, NUM_16KHZ1 = 32'd4_687;
-    localparam NUM_INIT = 32'd75_000_000;
+    localparam NUM_500HZ = 32'd75_000, NUM_1KHZ = 32'd37_500;
+    localparam NUM_2KHZ = 32'd18_750, NUM_4KHZ = 32'd9_375;
+    localparam NUM_8KHZ0 = 32'd4_688, NUM_8KHZ1 = 32'd4_687;
+    localparam NUM_INIT = 32'd37_500_000;
 
-    localparam FS_INIT = 4'h0, FS_1KHZ = 4'h1, FS_2KHZ = 4'h2; 
-    localparam FS_4KHZ = 4'h3, FS_8KHZ = 4'h4, FS_16KHZ = 4'h5;
+    localparam FS_INIT = 4'h0, FS_500HZ = 4'h1, FS_1KHZ = 4'h2; 
+    localparam FS_2KHZ = 4'h3, FS_4KHZ = 4'h4, FS_8KHZ = 4'h5;
 
     reg [5:0] state, next_state;
     localparam IDLE = 6'h01, WAIT = 6'h02, WORK = 6'h04, REST = 6'h08;
@@ -52,22 +52,22 @@ module console_tick(
 
     always@(posedge clk or posedge rst) begin
         if(rst) num_fs0 <= NUM_INIT;
+        else if(state == WAIT && fsamp == FS_500HZ) num_fs0 <= NUM_500HZ;
         else if(state == WAIT && fsamp == FS_1KHZ) num_fs0 <= NUM_1KHZ;
         else if(state == WAIT && fsamp == FS_2KHZ) num_fs0 <= NUM_2KHZ;
         else if(state == WAIT && fsamp == FS_4KHZ) num_fs0 <= NUM_4KHZ;
-        else if(state == WAIT && fsamp == FS_8KHZ) num_fs0 <= NUM_8KHZ;
-        else if(state == WAIT && fsamp == FS_16KHZ) num_fs0 <= NUM_16KHZ0;
+        else if(state == WAIT && fsamp == FS_8KHZ) num_fs0 <= NUM_8KHZ0;
         else if(state == WAIT) num_fs0 <= NUM_INIT;
         else num_fs0 <= num_fs0;
     end
 
     always@(posedge clk or posedge rst) begin
         if(rst) num_fs1 <= NUM_INIT;
+        else if(state == REST && fsamp == FS_500HZ) num_fs1 <= NUM_500HZ;
         else if(state == REST && fsamp == FS_1KHZ) num_fs1 <= NUM_1KHZ;
         else if(state == REST && fsamp == FS_2KHZ) num_fs1 <= NUM_2KHZ;
         else if(state == REST && fsamp == FS_4KHZ) num_fs1 <= NUM_4KHZ;
-        else if(state == REST && fsamp == FS_8KHZ) num_fs1 <= NUM_8KHZ;
-        else if(state == REST && fsamp == FS_16KHZ) num_fs1 <= NUM_16KHZ1;
+        else if(state == REST && fsamp == FS_8KHZ) num_fs1 <= NUM_8KHZ1;
         else if(state == REST) num_fs1 <= NUM_INIT;
         else num_fs1 <= num_fs1;
     end

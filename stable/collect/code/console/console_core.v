@@ -33,8 +33,11 @@ module console_core(
     localparam CONV_IDLE = 12'h080, CONV_WAIT = 12'h100, CONV_WORK = 12'h200, CONV_TAKE = 12'h400;
     localparam CONV_DONE = 12'h800;
 
-    reg [1:0] tick_b;
+    // localparam TEST = 32'd10_000;
 
+    // reg [31:0] test;
+
+    reg [1:0] tick_b;
 
     assign fs_conf = (state == CONF_WORK);
     assign fs_conv = (state == CONV_TAKE);
@@ -79,6 +82,7 @@ module console_core(
                 else next_state <= CONV_WAIT;
             end
             CONV_WORK: begin
+                // if (test == TEST) next_state <= CONV_WORK;
                 if(tick_b == 2'b01) next_state <= CONV_TAKE;
                 else if(fs_read) next_state <= MAIN_WAIT;
                 else next_state <= CONV_WORK;
@@ -119,5 +123,12 @@ module console_core(
         else if(state == CONV_DONE) data_idx <= data_idx + 1'b1;
         else data_idx <= data_idx;
     end
+
+    // always@(posedge clk or posedge rst) begin
+    //     if(rst) test <= 32'h0000;
+    //     else if(state == CONV_IDLE) test <= 32'h0000;
+    //     else if(state == CONV_DONE) test <= test + 1'b1;
+    //     else test <= test;
+    // end
 
 endmodule
